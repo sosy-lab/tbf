@@ -4,6 +4,7 @@ import re
 import sys
 import logging
 import argparse
+import os
 
 import klee
 import crest
@@ -40,7 +41,7 @@ def prepare(filename, module):
     :return: The name of the file containing the prepared content
     """
     suffix = filename.split('.')[-1]
-    name_new_file = '.'.join(filename.split('.')[:-1] + [module.get_name(), suffix])
+    name_new_file = '.'.join(os.path.basename(filename).split('.')[:-1] + [module.get_name(), suffix])
 
     with open(filename, 'r') as old_file:
         content = old_file.readlines()
@@ -117,8 +118,8 @@ def run():
     error_reached = module.analyze(file_for_analysis)
 
     if error_reached:
-        print("FALSE")
+        print("IUV: FALSE")
     else:
-        print("UNKNOWN")
+        print("IUV: UNKNOWN")
 
 run()
