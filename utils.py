@@ -1,6 +1,7 @@
 import logging
 import subprocess
 import re
+import os
 from abc import abstractmethod, ABCMeta
 
 class InputGenerationError(Exception):
@@ -49,6 +50,9 @@ class InputGenerator(object):
     def replace_with_assume(self, assumption):
         pass
 
+    def get_run_env(self):
+        return os.environ
+
     @staticmethod
     def failed(result):
         return result.returncode < 0
@@ -56,7 +60,7 @@ class InputGenerator(object):
     def generate_input(self, filename):
         cmds = self._create_input_generation_cmds(filename)
         for cmd in cmds:
-            result = execute(cmd)
+            result = execute(cmd, env=self.get_run_env())
             if InputGenerator.failed(result):
                 raise InputGenerationError('Generating input failed at command ' + ' '.join(cmd))
 

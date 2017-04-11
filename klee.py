@@ -2,10 +2,11 @@ from utils import execute
 import utils
 import glob
 import os
-import sys
+import logging
 
-include_dir = '../klee/include/'
-lib_dir = '../klee/build/lib'
+include_dir = './klee/include/'
+lib_dir = './klee/lib'
+bin_dir = './klee/bin'
 tests_dir = './klee-last'
 
 error_return = 117
@@ -20,9 +21,16 @@ class InputGenerator(utils.InputGenerator):
         else:
             self.search_heuristic = search_heuristic
 
+        self._run_env = os.environ.copy()
+        self._run_env['PATH'] = bin_dir + os.pathsep + self._run_env['PATH']
+        self._run_env['LD_LIBRARY_PATH'] = lib_dir + os.pathsep + self._run_env['LD_LIBRARY_PATH']
+
     @staticmethod
     def get_name():
         return 'klee'
+
+    def get_run_env(self):
+        return self._run_env
 
     def _get_sym_stmt(self, varname):
         statement = ["klee_make_symbolic(&", varname, ", sizeof(", varname, "), \"", varname, "\")"]
@@ -55,15 +63,18 @@ class InputGenerator(utils.InputGenerator):
 
     def check_inputs(self, filename):
         compile_cmd, output_file = self._create_compile_harness_cmd(filename)
-        execute(compile_cmd)
+        execute(compile_cmd, env=self.get_run_env())
+
+        if not os.path.exists(tests_dir):
+            raise FileNotFoundError("Directory " + tests_dir + " should have been created, but doesn't exist.")
 
         for test_case in glob.iglob(tests_dir + '/*.ktest'):
             test_cmd = ['./' + output_file]
-            test_env = os.environ.copy()
+            test_env = self.get_run_env().copy()
             test_env['KTEST_FILE'] = test_case
             result = execute(test_cmd, env=test_env)
 
-            if InputGenerator.error_reached(result):
+            if self.error_reached(result):
                 return True
         return False
 
