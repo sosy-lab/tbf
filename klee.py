@@ -45,7 +45,7 @@ class InputGenerator(utils.InputGenerator):
         return "klee_assume(" + c_assumption + ")"
 
     def _create_input_generation_cmds(self, filename):
-        compiled_file = '.'.join(filename.split('.')[:-1] + ['bc'])
+        compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
         compile_cmd = ['clang', '-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file, filename]
         input_generation_cmd = ['klee']
         if self.timelimit > 0:
@@ -57,7 +57,7 @@ class InputGenerator(utils.InputGenerator):
 
     @staticmethod
     def _create_compile_harness_cmd(filename):
-        compiled_file = '.'.join(filename.split('.')[:-1] + ['o'])
+        compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['o'])
         cmd = ['gcc', '-L', lib_dir, filename, '-l', 'kleeRuntest', '-o', compiled_file]
         return cmd, compiled_file
 
