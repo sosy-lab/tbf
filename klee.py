@@ -50,6 +50,7 @@ class InputGenerator(utils.InputGenerator):
         input_generation_cmd = ['klee']
         if self.timelimit > 0:
             input_generation_cmd += ['-max-time', str(self.timelimit)]
+        input_generation_cmd.append('-only-output-states-covering-new')
         input_generation_cmd += ['-search=' + h for h in self.search_heuristic]
         input_generation_cmd += [compiled_file]
 
