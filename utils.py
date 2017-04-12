@@ -34,9 +34,10 @@ class ExecutionResult(object):
 
 error_return = 117
 
-
 class InputGenerator(object):
     __metaclass__ = ABCMeta
+
+    var_counter = 0
 
     @abstractmethod
     def _create_input_generation_cmds(self, filename):
@@ -70,10 +71,16 @@ class InputGenerator(object):
             logging.info("Statement is nondet: %s", statement)
         return is_nondet
 
+    def is_nondet_assume(self, statement):
+        is_nondet = "__VERIFIER_nondet_" in statement and ('if' in statement or 'while' in statement)
+        if is_nondet:
+            logging.info("Statement is nondet: %s", statement)
+        return is_nondet
+
     def is_error(self, stmt):
         return stmt.strip() == "__VERIFIER_error()"
 
-    def replace_nondet(self, statement):
+    def replace_nondet_stmt(self, statement):
         split_statement = statement.split('=')
         if len(split_statement) <= 1:
             # TODO: handle __VERIFIER_nondet_X in while/if conditions
@@ -95,6 +102,27 @@ class InputGenerator(object):
         new_statement = [leading_braces, declaration, sym_stmt]
 
         return " ".join(new_statement)
+
+    def replace_nondet_assume(self, statement):
+        nondet_stmts = re.findall('__VERIFIER_nondet_.*?\)', statement)  # Regex .*? is non-greedy wildcard
+        new_vars = list()
+        modified_stmt = statement
+        for ns in nondet_stmts:
+            var_name = '__iuv' + str(self.var_counter)
+            self.var_counter += 1
+            var_type = self._get_var_type(ns)
+            new_vars.append((var_name, var_type))
+            modified_stmt = modified_stmt.replace(ns, var_name)
+
+        new_stmts = list()
+        for v in new_vars:
+            new_stmts.append(v[1] + ' ' + v[0])
+            new_stmts.append(self._get_sym_stmt(v[0]))
+        new_stmts.append(modified_stmt)
+        return ';\n'.join(new_stmts)
+
+    def _get_var_type(self, nondet_statement):
+        return nondet_statement.split('_')[-1][:-2]  # split __VERIFIER_nondet_int() to int() and then to int
 
     def error_reached(self, result):
         return result.returncode == error_return

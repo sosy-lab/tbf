@@ -17,10 +17,12 @@ __VERSION__ = 0.1
 def _prepare_line(line, module):
     logging.debug("Looking at following line: %s", line)
     new_line = ""
-    stmt_candidates = re.split('(;|:\ )', line)
+    stmt_candidates = re.split('(;|: )', line)
     for idx, stmt in enumerate(stmt_candidates):
         if module.is_nondet_assignment(stmt):
-            new_line += module.replace_nondet(stmt)
+            new_line += module.replace_nondet_stmt(stmt)
+        elif module.is_nondet_assume(stmt):
+            new_line += module.replace_nondet_assume(stmt)
         elif module.is_error(stmt):
             new_line += module.replace_with_exit(klee.error_return)
         else:

@@ -23,7 +23,6 @@ class InputGenerator(utils.InputGenerator):
 
         self._run_env = os.environ.copy()
         self._run_env['PATH'] = bin_dir + os.pathsep + self._run_env['PATH']
-        self._run_env['LD_LIBRARY_PATH'] = lib_dir + os.pathsep + self._run_env['LD_LIBRARY_PATH']
 
     @staticmethod
     def get_name():
