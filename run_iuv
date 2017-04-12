@@ -1,4 +1,5 @@
 #!/bin/bash
 
 export LD_LIBRARY_PATH=./klee/lib:$LD_LIBRARY_PATH
+export KLEE_RUNTIME_LIBRARY_PATH=./klee/lib
 python3 iuv.py $@
