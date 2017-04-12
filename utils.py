@@ -126,7 +126,7 @@ class InputGenerator(object):
         return stmt.strip().startswith('__VERIFIER_assume(')
 
     def replace_verifier_assume(self, stmt):
-        # __VERIFIER_assume(x) assumes, that x is true. To model this, we replace it by 'if(!x) exit(0);'
+        # __VERIFIER_assume(x) assumes that x is true. To model this, we replace it by 'if(!x) exit(0);'
         condition = '!' + stmt[stmt.find('('):stmt.rfind(')')+1]
         return self.get_conditional_exit_stmt(0, condition)
 
