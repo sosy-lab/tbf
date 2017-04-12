@@ -8,8 +8,10 @@ import os
 
 import klee
 import crest
+import utils
 
 import threading
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,14 +23,17 @@ def _prepare_line(line, module):
     new_line = ""
     stmt_candidates = re.split('(;|: )', line)
     for idx, stmt in enumerate(stmt_candidates):
-        if module.is_nondet_assignment(stmt):
-            new_line += module.replace_nondet_stmt(stmt)
-        elif module.is_nondet_assume(stmt):
-            new_line += module.replace_nondet_assume(stmt)
-        elif module.is_error(stmt):
-            new_line += module.replace_with_exit(klee.error_return)
-        else:
-            new_line += stmt
+        new_stmt = stmt
+        if module.is_verifier_assume(new_stmt):
+            new_stmt = module.replace_verifier_assume(new_stmt)
+        if module.is_nondet_assignment(new_stmt):
+            new_stmt = module.replace_nondet_stmt(new_stmt)
+        if module.is_nondet_assume(new_stmt):
+            new_stmt = module.replace_nondet_assume(new_stmt)
+        if module.is_error(new_stmt):
+            new_stmt = module.replace_with_exit(utils.error_return)
+
+        new_line += new_stmt
     return new_line
 
 
