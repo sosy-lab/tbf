@@ -9,6 +9,8 @@ import os
 import klee
 import crest
 
+import threading
+
 logging.basicConfig(level=logging.INFO)
 
 __VERSION__ = 0.1
@@ -80,12 +82,26 @@ def _create_parser():
                                            + " to this point."
                                       )
 
+    run_args.add_argument('--verbose', '-v',
+                          dest="log_verbose",
+                          action='store_true',
+                          default=False,
+                          help="print verbose information"
+                          )
+
+    run_args.add_argument('--no-parallel',
+                          dest='run_parallel',
+                          action='store_false',
+                          default=True,
+                          help="do not run input generation and tests in parallel"
+                          )
+
     run_args.add_argument("file",
                           type=str,
                           help="file to verify"
                           )
 
-    args.add_argument("--version", '-v',
+    args.add_argument("--version",
                       action="version", version='{}'.format(__VERSION__)
                       )
     args.add_argument('--help', '-h',
@@ -102,7 +118,7 @@ def _parse_args(argv):
 def _get_input_generator_module(args):
     input_generator = args.input_generator.lower()
     if input_generator == 'klee':
-        return klee.InputGenerator(args.ig_timelimit)
+        return klee.InputGenerator(args.ig_timelimit, args.log_verbose)
     elif input_generator == 'crest':
         return crest
     else:
@@ -116,8 +132,19 @@ def run():
     module = _get_input_generator_module(args)
 
     file_for_analysis = prepare(filename, module)
+    if args.run_parallel:
+        stop_event = threading.Event()
+        generator_thread = threading.Thread(target=module.generate_input, args=(file_for_analysis, stop_event))
+        generator_thread.start()
+    else:
+        stop_event = None
+        generator_thread = None
+        module.generate_input(file_for_analysis)
 
-    error_reached = module.analyze(file_for_analysis)
+    error_reached = module.check_inputs(file_for_analysis, generator_thread)
+
+    if stop_event:
+        stop_event.set()
 
     if error_reached:
         print("IUV: FALSE")

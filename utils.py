@@ -2,6 +2,7 @@ import logging
 import subprocess
 import re
 import os
+import time
 from abc import abstractmethod, ABCMeta
 
 class InputGenerationError(Exception):
@@ -58,7 +59,7 @@ class InputGenerator(object):
     def failed(result):
         return result.returncode < 0
 
-    def generate_input(self, filename):
+    def generate_input(self, filename, stop_flag=None):
         cmds = self._create_input_generation_cmds(filename)
         for cmd in cmds:
             result = execute(cmd, env=self.get_run_env())
@@ -134,7 +135,7 @@ class InputGenerator(object):
         return self._get_exit_stmt(code)
 
 
-def execute(command, quiet=False, env=None, log_output=True):
+def execute(command, quiet=False, env=None, log_output=True, stop_flag=None):
     if not quiet:
         logging.info(" ".join(command))
     if log_output:
@@ -147,7 +148,15 @@ def execute(command, quiet=False, env=None, log_output=True):
                          universal_newlines=True,
                          env=env
                          )
-    returncode = p.wait()
+    returncode = p.poll()
+    while returncode is None:
+        if stop_flag and stop_flag.is_set():
+            p.terminate()
+            returncode = p.wait()
+        else:
+            time.sleep(0.001)
+            returncode = p.poll()
+
     output = p.stdout.read()
     err_output = p.stderr.read() if p.stderr else None
 

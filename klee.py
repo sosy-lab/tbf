@@ -2,7 +2,7 @@ from utils import execute
 import utils
 import glob
 import os
-import logging
+from time import sleep
 
 include_dir = './klee/include/'
 lib_dir = './klee/lib'
@@ -14,8 +14,9 @@ error_return = 117
 
 class InputGenerator(utils.InputGenerator):
 
-    def __init__(self, timelimit=0, search_heuristic=['random-path', 'nurs:covnew']):
+    def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew']):
         self.timelimit = int(timelimit) if timelimit else 0
+        self.log_verbose = log_verbose
         if type(search_heuristic) is not list:
             self.search_heuristic = list(search_heuristic)
         else:
@@ -54,21 +55,36 @@ class InputGenerator(utils.InputGenerator):
 
         return [compile_cmd, input_generation_cmd]
 
-    @staticmethod
-    def _create_compile_harness_cmd(filename):
+    def _create_compile_harness_cmd(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['o'])
         cmd = ['gcc', '-L', lib_dir, filename, '-l', 'kleeRuntest', '-o', compiled_file]
+        if self.log_verbose:
+            cmd += ['-Xlinker', '--verbose']
         return cmd, compiled_file
 
-    def check_inputs(self, filename):
+    def check_inputs(self, filename, generator_thread=None):
         compile_cmd, output_file = self._create_compile_harness_cmd(filename)
         execute(compile_cmd, env=self.get_run_env())
 
         if not os.path.exists(tests_dir):
             raise FileNotFoundError("Directory " + tests_dir + " should have been created, but doesn't exist.")
 
+        visited_tests = set()
+        while generator_thread and generator_thread.is_alive():
+            result = self._m(output_file, visited_tests)
+            if result:
+                return True
+            sleep(0.001)  # Sleep for 1 millisecond
+
+        return self._m(output_file, visited_tests)
+
+    def _m(self, exe_file, visited_tests):
         for test_case in glob.iglob(tests_dir + '/*.ktest'):
-            test_cmd = ['./' + output_file]
+            if test_case in visited_tests:
+                continue
+            else:
+                visited_tests.add(test_case)
+            test_cmd = ['./' + exe_file]
             test_env = self.get_run_env().copy()
             test_env['KTEST_FILE'] = test_case
             result = execute(test_cmd, env=test_env)
@@ -76,7 +92,3 @@ class InputGenerator(utils.InputGenerator):
             if self.error_reached(result):
                 return True
         return False
-
-    def analyze(self, filename):
-        self.generate_input(filename)
-        return self.check_inputs(filename)

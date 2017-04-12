@@ -53,7 +53,7 @@ class InputGenerator(utils.InputGenerator):
         cmd = ['gcc', '-L', lib_dir, filename, '-l', 'kleeRuntest', '-o', compiled_file]
         return cmd, compiled_file
 
-    def check_inputs(self, filename):
+    def check_inputs(self, filename, generator_thread=None):
         compile_cmd, output_file = self._create_compile_harness_cmd(filename)
         execute(compile_cmd)
 
@@ -66,8 +66,4 @@ class InputGenerator(utils.InputGenerator):
             if InputGenerator.error_reached(result):
                 return True
         return False
-
-    def analyze(self, filename):
-        self.generate_input(filename)
-        return self.check_inputs(filename)
 
