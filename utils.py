@@ -149,16 +149,14 @@ class InputGenerator(object):
 def execute(command, quiet=False, env=None, log_output=True, stop_flag=None):
     if not quiet:
         logging.info(" ".join(command))
-    if log_output:
-        stderr_pipe = subprocess.STDOUT
-    else:
-        stderr_pipe = subprocess.PIPE
+
     p = subprocess.Popen(command,
                          stdout=subprocess.PIPE,
-                         stderr=stderr_pipe,
+                         stderr=subprocess.STDOUT if log_output else subprocess.PIPE,
                          universal_newlines=True,
                          env=env
                          )
+
     returncode = p.poll()
     while returncode is None:
         if stop_flag and stop_flag.is_set():
@@ -168,10 +166,13 @@ def execute(command, quiet=False, env=None, log_output=True, stop_flag=None):
             time.sleep(0.001)
             returncode = p.poll()
 
-    output = p.stdout.read()
-    err_output = p.stderr.read() if p.stderr else None
+    output, err_output = p.communicate()
 
     if log_output:
         logging.info(output)
 
     return ExecutionResult(returncode, output, err_output)
+
+
+def flatten(list_of_lists):
+    return [i for l in list_of_lists for i in l]

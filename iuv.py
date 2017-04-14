@@ -11,11 +11,30 @@ import crest
 import utils
 
 import threading
+import subprocess
+
+import pycparser
+from pycparser import c_generator
 
 
 logging.basicConfig(level=logging.INFO)
 
 __VERSION__ = 0.1
+
+ast = None
+def parse_file(filename):
+    with open(filename, 'r') as i:
+        content = i.readlines()
+    # Remove gcc extensions that pycparser can't handle
+    content.insert(0, '#define __attribute__(x)\n')
+    content.insert(1, '#define __extension__(x)\n')
+    content = ''.join(content)
+    preprocessed_filename = '.'.join(filename.split('.')[:-1] + ['i'])
+    preprocess_cmd = ['gcc', '-E', '-o', preprocessed_filename, '-']  # gcc reads from stdin due to last '-'
+
+    p = subprocess.run(preprocess_cmd, input=content, universal_newlines=True)
+    ast = pycparser.parse_file(preprocessed_filename)
+    return ast
 
 
 def _prepare_line(line, module):
@@ -52,19 +71,20 @@ def prepare(filename, module):
     suffix = filename.split('.')[-1]
     name_new_file = '.'.join(os.path.basename(filename).split('.')[:-1] + [module.get_name(), suffix])
 
-    with open(filename, 'r') as old_file:
-        content = old_file.readlines()
-    logging.debug("Read file %s", filename)
-    new_content = [_prepare_line(line, module) + '\n' for line in content]
+    ast = parse_file(filename)
+    r = module.AstReplacer()
+    ps, new_ast = r.visit(ast)
+    assert not ps
     logging.debug("Prepared content")
     logging.debug("Writing to file %s", name_new_file)
-    with open(name_new_file, 'w') as new_file:
-        new_file.writelines(new_content)
+    generator = c_generator.CGenerator()
+    with open(name_new_file, 'w+') as new_file:
+        new_file.write(generator.visit(new_ast))
 
     return name_new_file
 
 
-def _create_parser():
+def _create_cli_arg_parser():
     parser = argparse.ArgumentParser(description='Toolchain for test-input using verifier', add_help=False)
 
     args = parser.add_mutually_exclusive_group()
@@ -115,8 +135,8 @@ def _create_parser():
     return parser
 
 
-def _parse_args(argv):
-    parser = _create_parser()
+def _parse_cli_args(argv):
+    parser = _create_cli_arg_parser()
     return parser.parse_args(argv)
 
 
@@ -131,7 +151,7 @@ def _get_input_generator_module(args):
 
 
 def run():
-    args = _parse_args(sys.argv[1:])
+    args = _parse_cli_args(sys.argv[1:])
 
     filename = args.file
     module = _get_input_generator_module(args)
@@ -157,3 +177,4 @@ def run():
         print("IUV: UNKNOWN")
 
 run()
+

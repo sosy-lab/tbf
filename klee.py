@@ -3,6 +3,8 @@ import utils
 import glob
 import os
 from time import sleep
+from ast_visitor import NondetReplacer
+from pycparser import c_ast as a
 
 include_dir = './klee/include/'
 lib_dir = './klee/lib'
@@ -93,3 +95,21 @@ class InputGenerator(utils.InputGenerator):
             if self.error_reached(result):
                 return True
         return False
+
+
+class AstReplacer(NondetReplacer):
+
+    def _get_amper(self, var_name):
+        return a.UnaryOp('&', a.ID(var_name))
+
+    def _get_sizeof_call(self, var_name):
+        return a.UnaryOp('sizeof', a.ID(var_name))
+
+    def _get_string(self, string):
+        return a.Constant('string', '\"' + string + '\"')
+
+    # Hook
+    def _get_nondet_marker(self, var_name, var_type):
+        parameters = [self._get_amper(var_name), self._get_sizeof_call(var_name), self._get_string(var_name)]
+        return a.FuncCall(a.ID('klee_make_symbolic'), a.ExprList(parameters))
+
