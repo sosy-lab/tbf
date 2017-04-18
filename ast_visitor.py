@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABCMeta
 
 from pycparser import c_ast as a
-from utils import flatten
+from utils import flatten, ParseError
 
 import logging
 
@@ -254,6 +254,10 @@ class AstVisitor(object):
 
 class DfsVisitor(AstVisitor):
 
+    def __init__(self):
+        super().__init__()
+        self.current_method = None
+
     def visit_default(self, item):
         return list()
 
@@ -364,6 +368,8 @@ class DfsVisitor(AstVisitor):
     def visit_FuncDef(self, item):
         a = self.visit(item.decl)
         b = flatten([self.visit(p) for p in item.param_decls])
+        assert self.current_method is None
+        self.current_method = item
         c = self.visit(item.body)
         return a + b + c
 
@@ -447,7 +453,8 @@ class DfsVisitor(AstVisitor):
 
 class NondetReplacer(DfsVisitor):
 
-    searched_pattern = '__VERIFIER_nondet_'
+    nondet_call_pattern = '__VERIFIER_nondet_'
+    error_call_pattern = '__VERIFIER_error'
     var_counter = 0
 
     def visit_default(self, item):
@@ -461,46 +468,71 @@ class NondetReplacer(DfsVisitor):
     def _get_nondet_marker(self, var_name, var_type):
         return None
 
+    # Hook
+    def _get_error_stmt(self):
+        return None
+
     def __init__(self):
         super().__init__()
-        self.types = dict()
-        self.current_method = None
+        # Every item on the stack is a dict of variables of a certain scope - initialize with global scope
+        self.var_stack = list([dict()])
 
     def visit_FuncCall(self, node):
-        statements_to_prepend = []
-        nondet_var_name = '__iuv' + str(self.var_counter)
-        self.var_counter += 1
-        nondet_var_type = self.get_type(node)
-        nondet_type_decl = a.TypeDecl(nondet_var_name, list(), nondet_var_type)
-        nondet_init = self._get_nondet_init(nondet_var_name, nondet_var_type)
-        nondet_var = a.Decl(nondet_var_name, list(), list(), list(), nondet_type_decl, nondet_init, None)
-        statements_to_prepend.append(nondet_var)
-        nondet_marker = self._get_nondet_marker(nondet_var_name, nondet_var_type)
-        if nondet_marker is not None:
-            statements_to_prepend.append(nondet_marker)
-        return statements_to_prepend, a.ID(nondet_var_name)  # Replace __VERIFIER_nondet_X() with new nondet variable
+        if self.is_nondet_call(node):
+            statements_to_prepend = []
+            nondet_var_name = '__iuv' + str(self.var_counter)
+            self.var_counter += 1
+            nondet_var_type = self.get_type(node)
+            nondet_type_decl = a.TypeDecl(nondet_var_name, list(), nondet_var_type)
+            nondet_init = self._get_nondet_init(nondet_var_name, nondet_var_type)
+            nondet_var = a.Decl(nondet_var_name, list(), list(), list(), nondet_type_decl, nondet_init, None)
+            statements_to_prepend.append(nondet_var)
+            nondet_marker = self._get_nondet_marker(nondet_var_name, nondet_var_type)
+            if nondet_marker is not None:
+                statements_to_prepend.append(nondet_marker)
+            return statements_to_prepend, a.ID(nondet_var_name)  # Replace __VERIFIER_nondet_X() with new nondet var
+        elif self.is_error_call(node):
+            return list(), self._get_error_stmt()
+        else:
+            p, node.name = self.visit(node.name)
+            q, node.args = self.visit(node.args)
+            return p + q, node
 
-    def matches(self, name):
+    def name_matches(self, name, pattern):
+        if type(name) is a.FuncCall:
+            return self.name_matches(name.name, pattern)
         if type(name) is a.ID:
-            return self.matches(name.name)
+            return self.name_matches(name.name, pattern)
         elif type(name) is str:
-            return name.startswith(self.searched_pattern)
+            return name.startswith(pattern)
         else:
             raise AssertionError('Unhandled type for matching name: ' + str(type(name)))
 
+    def is_nondet_call(self, name):
+        return self.name_matches(name, self.nondet_call_pattern)
+
+    def is_error_call(self, name):
+        return self.name_matches(name, self.error_call_pattern)
+
     def get_type(self, func_call_node):
         name = self.get_name(func_call_node)
-        return self.types[name]
+        for scope in reversed(self.var_stack):  # Look at scopes innermost scope first
+            if name in scope.keys():
+                return scope[name]
+        raise ParseError("Unknown type for " + name)
 
     def get_name(self, func_call_node):
         name = func_call_node.name.name
         return name
 
+    def _in_scope(self, name):
+        return name in (n for s in self.var_stack for n in s.keys())
+
     def visit_TypeDecl(self, item):
         name = item.declname
         decl_type = item.type
-        if name not in self.types:
-            self.types[name] = decl_type
+        if not self._in_scope(name):
+            self.var_stack[-1][name] = decl_type
         else:
             logging.debug("Not adding (%s, %s) to type dict", name, decl_type)
 
@@ -509,8 +541,8 @@ class NondetReplacer(DfsVisitor):
     def visit_Typedef(self, item):
         name = item.name
         decl_type = item.type
-        if name not in self.types:
-            self.types[name] = decl_type
+        if not self._in_scope(name):
+            self.var_stack[-1][name] = decl_type
         else:
             logging.debug("Not adding (%s, %s) to type dict", name, decl_type)
 
@@ -576,12 +608,14 @@ class NondetReplacer(DfsVisitor):
         return p + q, item
 
     def visit_Compound(self, item):
+        self.var_stack.append(dict())  # New scope
         ps, ns = [], []
-        for i in item.block_items:
+        for i in item.block_items if item.block_items else list():
             p, n = self.visit(i)
             ps += p
             ns.append(n)
         item.block_items = ps + ns
+        self.var_stack.pop()  # Leave scope
         return [], item
 
     def visit_CompoundLiteral(self, item):
@@ -640,7 +674,7 @@ class NondetReplacer(DfsVisitor):
         for e in item.enumerators:
             p, n = self.visit(e)
             ps += p
-            ns += n
+            ns.append(n)
         item.enumerators = ns
         return ps, item
 
@@ -649,7 +683,7 @@ class NondetReplacer(DfsVisitor):
         for e in item.exprs:
             p, n = self.visit(e)
             ps += p
-            ns += n
+            ns.append(n)
         item.exprs = ns
         return ps, item
 
@@ -692,7 +726,7 @@ class NondetReplacer(DfsVisitor):
 
     def visit_Label(self, item):
         p, item.stmt = self.visit(item.stmt)
-        return item
+        return p, item
 
     def visit_NamedInitializer(self, item):
         ps, ns = [], []

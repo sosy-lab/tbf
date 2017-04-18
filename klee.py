@@ -96,6 +96,9 @@ class InputGenerator(utils.InputGenerator):
                 return True
         return False
 
+    def get_ast_replacer(self):
+        return AstReplacer()
+
 
 class AstReplacer(NondetReplacer):
 
@@ -112,4 +115,9 @@ class AstReplacer(NondetReplacer):
     def _get_nondet_marker(self, var_name, var_type):
         parameters = [self._get_amper(var_name), self._get_sizeof_call(var_name), self._get_string(var_name)]
         return a.FuncCall(a.ID('klee_make_symbolic'), a.ExprList(parameters))
+
+    # Hook
+    def _get_error_stmt(self):
+        parameters = [a.Constant('int', str(error_return))]
+        return a.FuncCall(a.ID('exit'), a.ExprList(parameters))
 

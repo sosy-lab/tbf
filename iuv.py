@@ -37,25 +37,6 @@ def parse_file(filename):
     return ast
 
 
-def _prepare_line(line, module):
-    logging.debug("Looking at following line: %s", line)
-    new_line = ""
-    stmt_candidates = re.split('(;|: )', line)
-    for idx, stmt in enumerate(stmt_candidates):
-        new_stmt = stmt
-        if module.is_verifier_assume(new_stmt):
-            new_stmt = module.replace_verifier_assume(new_stmt)
-        if module.is_nondet_assignment(new_stmt):
-            new_stmt = module.replace_nondet_stmt(new_stmt)
-        if module.is_nondet_assume(new_stmt):
-            new_stmt = module.replace_nondet_assume(new_stmt)
-        if module.is_error(new_stmt):
-            new_stmt = module.replace_with_exit(utils.error_return)
-
-        new_line += new_stmt
-    return new_line
-
-
 def prepare(filename, module):
     """
     Prepares the file with the given name according to the module
@@ -72,7 +53,7 @@ def prepare(filename, module):
     name_new_file = '.'.join(os.path.basename(filename).split('.')[:-1] + [module.get_name(), suffix])
 
     ast = parse_file(filename)
-    r = module.AstReplacer()
+    r = module.get_ast_replacer()
     ps, new_ast = r.visit(ast)
     assert not ps
     logging.debug("Prepared content")

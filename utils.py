@@ -5,7 +5,15 @@ import os
 import time
 from abc import abstractmethod, ABCMeta
 
+
 class InputGenerationError(Exception):
+
+    def __init__(self, msg=None, cause=None):
+        self.msg = msg
+        self.cause = cause
+
+
+class ParseError(Exception):
 
     def __init__(self, msg=None, cause=None):
         self.msg = msg
