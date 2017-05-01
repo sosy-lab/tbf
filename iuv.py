@@ -27,7 +27,7 @@ def parse_file(filename):
         content = i.readlines()
     # Remove gcc extensions that pycparser can't handle
     content.insert(0, '#define __attribute__(x)\n')
-    content.insert(1, '#define __extension__(x)\n')
+    content.insert(1, '#define __extension__\n')
     content = ''.join(content)
     preprocessed_filename = '.'.join(filename.split('.')[:-1] + ['i'])
     preprocess_cmd = ['gcc', '-E', '-o', preprocessed_filename, '-']  # gcc reads from stdin due to last '-'
@@ -157,5 +157,15 @@ def run():
     else:
         print("IUV: UNKNOWN")
 
-run()
+default_err = "Unknown error"
+try:
+    run()
 
+except utils.CompileError as e:
+    logging.error("Compile error: %s", e.msg if e.msg else default_err)
+
+except utils.InputGenerationError as e:
+    logging.error("Input generation error: %s", e.msg if e.msg else default_err)
+
+except utils.ParseError as e:
+    logging.error("Parse error: %s", e.msg if e.msg else default_err)

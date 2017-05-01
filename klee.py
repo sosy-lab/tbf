@@ -66,11 +66,14 @@ class InputGenerator(utils.InputGenerator):
         return cmd, compiled_file
 
     def check_inputs(self, filename, generator_thread=None):
-        compile_cmd, output_file = self._create_compile_harness_cmd(filename)
-        execute(compile_cmd, env=self.get_run_env())
-
         if not os.path.exists(tests_dir):
             raise FileNotFoundError("Directory " + tests_dir + " should have been created, but doesn't exist.")
+
+        compile_cmd, output_file = self._create_compile_harness_cmd(filename)
+        exec_result = execute(compile_cmd, env=self.get_run_env())
+
+        if exec_result.returncode > 0:
+            raise utils.CompileError("Failed compiling the test harness. Check stderr for more information.")
 
         visited_tests = set()
         while generator_thread and generator_thread.is_alive():

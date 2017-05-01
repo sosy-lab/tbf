@@ -549,16 +549,19 @@ class NondetReplacer(DfsVisitor):
         return list(), item  # No need to go down further in the ast
 
     def visit_FuncDef(self, item):
-        p, item.decl = self.visit(item.decl)
-        ps, ns = p, []
-        if item.param_decls:
-            for d in item.param_decls:
-                p, n = self.visit(d)
-                ps += p
-                ns += n
-            item.param_decls = ns
-        p, item.body = self.visit(item.body)
-        return [], item
+        if self.name_matches(item.decl.name, '__VERIFIER_assume'):
+            return [], self._get_assume_definition()
+        else:
+            p, item.decl = self.visit(item.decl)
+            ps, ns = p, []
+            if item.param_decls:
+                for d in item.param_decls:
+                    p, n = self.visit(d)
+                    ps += p
+                    ns += n
+                item.param_decls = ns
+            p, item.body = self.visit(item.body)
+            return [], item
 
     def visit_ArrayDecl(self, item):
         p, n = self.visit(item.type)
@@ -626,13 +629,16 @@ class NondetReplacer(DfsVisitor):
         return p + q, item
 
     def visit_Decl(self, item):
-        p, n = self.visit(item.type)
-        item.type = n
-        q, n = self.visit(item.init)
-        item.init = n
-        r, n = self.visit(item.bitsize)
-        item.bitsize = n
-        return p + q + r, item
+        if item.name and self.name_matches(item.name, '__VERIFIER_assume'):
+            return [], self._get_assume_definition()
+        else:
+            p, n = self.visit(item.type)
+            item.type = n
+            q, n = self.visit(item.init)
+            item.init = n
+            r, n = self.visit(item.bitsize)
+            item.bitsize = n
+            return p + q + r, item
 
     def visit_DeclList(self, item):
         ps, ns = [], []
@@ -686,6 +692,25 @@ class NondetReplacer(DfsVisitor):
             ns.append(n)
         item.exprs = ns
         return ps, item
+
+    def _get_assume_definition(self):
+        param_name = '__cond'
+        int_type = a.TypeDecl(param_name, [], a.IdentifierType(['int']))
+        param_list = a.ParamList([a.Decl(param_name, [], [], [], int_type, None, None)])
+        assume_type = a.TypeDecl('__VERIFIER_assume', [], a.IdentifierType(['void']))
+        assume_func_decl = a.FuncDecl(param_list, assume_type)
+        assume_decl = a.Decl('__VERIFIER_assume', list(), list(), list(), assume_func_decl, None, None)
+
+        exit_code = a.ExprList([a.Constant('int', '0')])
+        true_branch = a.Compound([a.FuncCall(a.ID('exit'), exit_code)])
+        false_branch = None
+        if_statement = a.If(a.UnaryOp('!', a.ID(param_name)), true_branch, false_branch)
+
+        return_statement = a.Return(None)
+
+        body_items = [if_statement, return_statement]
+        assume_body = a.Compound(body_items)
+        return a.FuncDef(assume_decl, None, assume_body)
 
     def visit_FileAST(self, item):
         ps, ns = [], []
