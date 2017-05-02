@@ -108,27 +108,31 @@ class InputGenerator(object):
         return self._get_exit_stmt(code)
 
 
-def execute(command, quiet=False, env=None, log_output=True, stop_flag=None):
+def execute(command, quiet=False, env=None, log_output=True, stop_flag=None, input_str=None):
     if not quiet:
         logging.info(" ".join(command))
 
     p = subprocess.Popen(command,
+                         stdin=subprocess.PIPE if input_str else None,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT if log_output else subprocess.PIPE,
                          universal_newlines=True,
                          env=env
                          )
 
-    returncode = p.poll()
-    while returncode is None:
-        if stop_flag and stop_flag.is_set():
-            p.terminate()
-            returncode = p.wait()
-        else:
-            time.sleep(0.001)
-            returncode = p.poll()
-
-    output, err_output = p.communicate()
+    if stop_flag:
+        returncode = p.poll()
+        while returncode is None:
+            if stop_flag.is_set():
+                p.terminate()
+                returncode = p.wait()
+            else:
+                time.sleep(0.001)
+                returncode = p.poll()
+        output, err_output = p.communicate()
+    else:
+        output, err_output = p.communicate(input=input_str)
+        returncode = p.poll()
 
     if log_output:
         logging.info(output)

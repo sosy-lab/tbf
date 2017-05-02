@@ -32,7 +32,7 @@ def parse_file(filename):
     preprocessed_filename = '.'.join(filename.split('.')[:-1] + ['i'])
     preprocess_cmd = ['gcc', '-E', '-o', preprocessed_filename, '-']  # gcc reads from stdin due to last '-'
 
-    p = subprocess.run(preprocess_cmd, input=content, universal_newlines=True)
+    p = utils.execute(preprocess_cmd, input_str=content)
     ast = pycparser.parse_file(preprocessed_filename)
     return ast
 
