@@ -453,7 +453,6 @@ class DfsVisitor(AstVisitor):
 
 class NondetReplacer(DfsVisitor):
 
-    nondet_call_pattern = '__VERIFIER_nondet_'
     error_call_pattern = '__VERIFIER_error'
     var_counter = 0
 
@@ -476,14 +475,29 @@ class NondetReplacer(DfsVisitor):
         super().__init__()
         # Every item on the stack is a dict of variables of a certain scope - initialize with global scope
         self.var_stack = list([dict()])
+        self.external_functions = list()
+
+    def _build_nondet_type_decl(self, var_name, var_type):
+        if type(var_type) is a.IdentifierType:
+            return var_type
+        elif type(var_type) is a.TypeDecl:
+            return a.TypeDecl(var_name, list(), self._build_nondet_type_decl(var_name, var_type.type))
+        elif type(var_type) is a.PtrDecl:
+            return a.PtrDecl([], self._build_nondet_type_decl(var_name, var_type.type))
+        else:
+            raise AssertionError("Unhandled type: " + str(type(var_type)))
 
     def visit_FuncCall(self, node):
-        if self.is_nondet_call(node):
+        # It is important that it is checked for an error call before checking for non-determinism,
+        # since __VERIFIER_error() is by default non-deterministic.
+        if self.is_error_call(node):
+            return list(), self._get_error_stmt()
+        elif self.is_nondet_call(node):
             statements_to_prepend = []
             nondet_var_name = '__iuv' + str(self.var_counter)
             self.var_counter += 1
             nondet_var_type = self.get_type(node)
-            nondet_type_decl = a.TypeDecl(nondet_var_name, list(), nondet_var_type)
+            nondet_type_decl = self._build_nondet_type_decl(nondet_var_name, nondet_var_type)
             nondet_init = self._get_nondet_init(nondet_var_name, nondet_var_type)
             nondet_var = a.Decl(nondet_var_name, list(), list(), list(), nondet_type_decl, nondet_init, None)
             statements_to_prepend.append(nondet_var)
@@ -491,38 +505,43 @@ class NondetReplacer(DfsVisitor):
             if nondet_marker is not None:
                 statements_to_prepend.append(nondet_marker)
             return statements_to_prepend, a.ID(nondet_var_name)  # Replace __VERIFIER_nondet_X() with new nondet var
-        elif self.is_error_call(node):
-            return list(), self._get_error_stmt()
+
         else:
             p, node.name = self.visit(node.name)
             q, node.args = self.visit(node.args)
             return p + q, node
 
     def name_matches(self, name, pattern):
-        if type(name) is a.FuncCall:
-            return self.name_matches(name.name, pattern)
-        if type(name) is a.ID:
-            return self.name_matches(name.name, pattern)
-        elif type(name) is str:
-            return name.startswith(pattern)
-        else:
-            raise AssertionError('Unhandled type for matching name: ' + str(type(name)))
+        return name.startswith(pattern)
 
-    def is_nondet_call(self, name):
-        return self.name_matches(name, self.nondet_call_pattern)
+    def is_nondet_call(self, call):
+        name = self.get_name(call)
+        return name in self.external_functions
 
-    def is_error_call(self, name):
+    def is_error_call(self, call):
+        name = self.get_name(call)
         return self.name_matches(name, self.error_call_pattern)
 
     def get_type(self, func_call_node):
         name = self.get_name(func_call_node)
-        for scope in reversed(self.var_stack):  # Look at scopes innermost scope first
+        for scope in reversed(self.var_stack):  # Look at innermost scope first
             if name in scope.keys():
                 return scope[name]
         raise ParseError("Unknown type for " + name)
 
-    def get_name(self, func_call_node):
-        name = func_call_node.name.name
+    def get_name(self, node):
+        if type(node) is a.FuncCall:
+            name = node.name.name
+        elif type(node) is a.FuncDecl:
+            name = self.get_name(node.type)
+        elif type(node) is a.PtrDecl:
+            name = self.get_name(node.type)
+        elif type(node) is a.TypeDecl:
+            name = node.declname
+        elif type(node) is a.Struct:
+            name = node.name
+        else:
+            raise AssertionError("Unhandled node type: " + str(type(node)))
         return name
 
     def _in_scope(self, name):
@@ -530,7 +549,7 @@ class NondetReplacer(DfsVisitor):
 
     def visit_TypeDecl(self, item):
         name = item.declname
-        decl_type = item.type
+        decl_type = item
         if not self._in_scope(name):
             self.var_stack[-1][name] = decl_type
         else:
@@ -632,6 +651,9 @@ class NondetReplacer(DfsVisitor):
         if item.name and self.name_matches(item.name, '__VERIFIER_assume'):
             return [], self._get_assume_definition()
         else:
+            if 'extern' in item.storage and type(item.type) is a.FuncDecl:
+                assert item.name not in self.external_functions
+                self.external_functions.append(item.name)
             p, n = self.visit(item.type)
             item.type = n
             q, n = self.visit(item.init)
@@ -767,6 +789,13 @@ class NondetReplacer(DfsVisitor):
         return [], item
 
     def visit_PtrDecl(self, item):
+        name = self.get_name(item)
+        decl_type = item
+        if not self._in_scope(name):
+            self.var_stack[-1][name] = decl_type
+        else:
+            logging.debug("Not adding (%s, %s) to type dict", name, decl_type)
+
         p, item.type = self.visit(item.type)
         return p, item
 
@@ -776,7 +805,7 @@ class NondetReplacer(DfsVisitor):
 
     def visit_Struct(self, item):
         ps, ns = [], []
-        for i in item.decls:
+        for i in item.decls if item.decls else []:
             p, n = self.visit(i)
             ps += p
             ns.append(n)
