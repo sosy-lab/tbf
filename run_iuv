@@ -2,5 +2,5 @@
 
 export LD_LIBRARY_PATH=./klee/lib:$LD_LIBRARY_PATH
 export KLEE_RUNTIME_LIBRARY_PATH=./klee/lib
-export PYTHON_PATH="./lib/py"
+export PYTHONPATH="./lib/py"
 python3 iuv.py $@
