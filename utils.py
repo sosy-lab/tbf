@@ -113,14 +113,15 @@ class InputGenerator(object):
         suffix = filename.split('.')[-1]
         name_new_file = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
         if os.path.exists(name_new_file):
-            logging.debug("Prepared file already exists. Not preparing again.")
+            logging.warning("Prepared file already exists. Not preparing again.")
             return name_new_file
 
         else:
             ast = self.parse_file(filename)
             r = self.get_ast_replacer()
+            # ps is list of ast pieces that must still be appended (must be empty!), new_ast is the modified ast
             ps, new_ast = r.visit(ast)
-            assert not ps
+            assert not ps  # Make sure that there are no ast pieces left that must be appended
             logging.debug("Prepared content")
             logging.debug("Writing to file %s", name_new_file)
             generator = c_generator.CGenerator()

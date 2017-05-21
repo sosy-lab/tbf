@@ -478,6 +478,10 @@ class NondetReplacer(DfsVisitor):
     def _get_error_stmt(self):
         return None
 
+    @abstractmethod
+    def _get_preamble(self):
+        return None
+
     def __init__(self):
         super().__init__()
         self.external_functions = list()
@@ -732,7 +736,7 @@ class NondetReplacer(DfsVisitor):
         return a.FuncDef(assume_decl, None, assume_body)
 
     def visit_FileAST(self, item):
-        ps, ns = [], []
+        ps, ns = self._get_preamble(), []
         for e in item.ext:
             p, n = self.visit(e)
             ps += p

@@ -249,6 +249,16 @@ class AstReplacer(NondetReplacer):
         parameters = [a.Constant('int', str(error_return))]
         return a.FuncCall(a.ID('exit'), a.ExprList(parameters))
 
+    # Hook
+    def _get_preamble(self):
+        parser = pycparser.CParser()
+        # Define dummy klee_make_symbolic
+        definitions = 'typedef unsigned long int size_t;'
+        make_symbolic_def = 'void klee_make_symbolic(void *addr, size_t type, const char *name) { }'
+        full_preamble = '\n'.join([definitions, make_symbolic_def])
+        ast = parser.parse(full_preamble)
+        return ast.ext
+
 
 class NondetIdentifierCollector(DfsVisitor):
 
