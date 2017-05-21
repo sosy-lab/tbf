@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABCMeta
 
+from pycparser import c_generator
 from pycparser import c_ast as a
 from utils import flatten, ParseError
 
@@ -278,8 +279,8 @@ class DfsVisitor(AstVisitor):
         return a + b
 
     def visit_Assignment(self, item):
-        a = self.visit(item.left)
-        b = self.visit(item.right)
+        a = self.visit(item.lvalue)
+        b = self.visit(item.rvalue)
         return a + b
 
     def visit_BinaryOp(self, item):
@@ -301,7 +302,12 @@ class DfsVisitor(AstVisitor):
         return a + b
 
     def visit_Compound(self, item):
-        return flatten([self.visit(b) for b in item.block_items])
+        if item.block_items:
+            results = [self.visit(b) for b in item.block_items]
+            return flatten(results)
+        else:
+            return []
+
 
     def visit_CompoundLiteral(self, item):
         a = self.visit(item.type)
@@ -452,6 +458,7 @@ class DfsVisitor(AstVisitor):
 
 
 class NondetReplacer(DfsVisitor):
+    __metaclass__ = ABCMeta
 
     error_call_pattern = '__VERIFIER_error'
     var_counter = 0
@@ -459,23 +466,25 @@ class NondetReplacer(DfsVisitor):
     def visit_default(self, item):
         return list(), item  # No change to AST
 
-    # Hook
+    @abstractmethod
     def _get_nondet_init(self, var_name, var_type):
         return None
 
-    # Hook
+    @abstractmethod
     def _get_nondet_marker(self, var_name, var_type):
         return None
 
-    # Hook
+    @abstractmethod
     def _get_error_stmt(self):
         return None
 
     def __init__(self):
         super().__init__()
-        # Every item on the stack is a dict of variables of a certain scope - initialize with global scope
-        self.var_stack = list([dict()])
         self.external_functions = list()
+        self.nondet_variables = dict()
+        self.c_generator = c_generator.CGenerator()
+        self.var_stack = [{'name': None, 'vars': dict()}]
+
 
     def _build_nondet_type_decl(self, var_name, var_type):
         if type(var_type) is a.IdentifierType:
@@ -493,9 +502,12 @@ class NondetReplacer(DfsVisitor):
         if self.is_error_call(node):
             return list(), self._get_error_stmt()
         elif self.is_nondet_call(node):
+            func_name = get_name(node)
             statements_to_prepend = []
-            nondet_var_name = '__iuv' + str(self.var_counter)
+            nondet_var_name = func_name.split('(')[0].strip()
+            nondet_var_name += str(self.var_counter)
             self.var_counter += 1
+
             nondet_var_type = self.get_type(node)
             nondet_type_decl = self._build_nondet_type_decl(nondet_var_name, nondet_var_type)
             nondet_init = self._get_nondet_init(nondet_var_name, nondet_var_type)
@@ -515,43 +527,28 @@ class NondetReplacer(DfsVisitor):
         return name.startswith(pattern)
 
     def is_nondet_call(self, call):
-        name = self.get_name(call)
-        return name in self.external_functions
+        name = get_name(call)
+        return name in self.external_functions or name.startswith('__VERIFIER_nondet_')
 
     def is_error_call(self, call):
-        name = self.get_name(call)
+        name = get_name(call)
         return self.name_matches(name, self.error_call_pattern)
 
     def get_type(self, func_call_node):
-        name = self.get_name(func_call_node)
-        for scope in reversed(self.var_stack):  # Look at innermost scope first
+        name = get_name(func_call_node)
+        for scope in reversed([s['vars'] for s in self.var_stack]):  # Look at innermost scope first
             if name in scope.keys():
                 return scope[name]
         raise ParseError("Unknown type for " + name)
 
-    def get_name(self, node):
-        if type(node) is a.FuncCall:
-            name = node.name.name
-        elif type(node) is a.FuncDecl:
-            name = self.get_name(node.type)
-        elif type(node) is a.PtrDecl:
-            name = self.get_name(node.type)
-        elif type(node) is a.TypeDecl:
-            name = node.declname
-        elif type(node) is a.Struct:
-            name = node.name
-        else:
-            raise AssertionError("Unhandled node type: " + str(type(node)))
-        return name
-
     def _in_scope(self, name):
-        return name in (n for s in self.var_stack for n in s.keys())
+        return name in (n for s in self.var_stack for n in s['vars'].keys())
 
     def visit_TypeDecl(self, item):
         name = item.declname
         decl_type = item
         if not self._in_scope(name):
-            self.var_stack[-1][name] = decl_type
+            self.var_stack[-1]['vars'][name] = decl_type
         else:
             logging.debug("Not adding (%s, %s) to type dict", name, decl_type)
 
@@ -561,7 +558,7 @@ class NondetReplacer(DfsVisitor):
         name = item.name
         decl_type = item.type
         if not self._in_scope(name):
-            self.var_stack[-1][name] = decl_type
+            self.var_stack[-1]['vars'][name] = decl_type
         else:
             logging.debug("Not adding (%s, %s) to type dict", name, decl_type)
 
@@ -579,7 +576,9 @@ class NondetReplacer(DfsVisitor):
                     ps += p
                     ns += n
                 item.param_decls = ns
+            self.var_stack.append({'name': get_name(item.decl), 'vars': dict()})  # New scope
             p, item.body = self.visit(item.body)
+            self.var_stack.pop()  # Leave scope
             return [], item
 
     def visit_ArrayDecl(self, item):
@@ -630,14 +629,12 @@ class NondetReplacer(DfsVisitor):
         return p + q, item
 
     def visit_Compound(self, item):
-        self.var_stack.append(dict())  # New scope
         ps, ns = [], []
         for i in item.block_items if item.block_items else list():
             p, n = self.visit(i)
             ps += p
             ns.append(n)
         item.block_items = ps + ns
-        self.var_stack.pop()  # Leave scope
         return [], item
 
     def visit_CompoundLiteral(self, item):
@@ -789,10 +786,10 @@ class NondetReplacer(DfsVisitor):
         return [], item
 
     def visit_PtrDecl(self, item):
-        name = self.get_name(item)
+        name = get_name(item)
         decl_type = item
         if not self._in_scope(name):
-            self.var_stack[-1][name] = decl_type
+            self.var_stack[-1]['vars'][name] = decl_type
         else:
             logging.debug("Not adding (%s, %s) to type dict", name, decl_type)
 
@@ -850,3 +847,20 @@ class NondetReplacer(DfsVisitor):
         p, item.cond = self.visit(item.cond)
         q, item.stmt = self.visit(item.stmt)
         return p + q, item
+
+def get_name(node):
+    if type(node) is a.FuncCall:
+        name = node.name.name
+    elif type(node) is a.FuncDecl:
+        name = get_name(node.type)
+    elif type(node) is a.PtrDecl:
+        name = get_name(node.type)
+    elif type(node) is a.Decl:
+        name = get_name(node.type)
+    elif type(node) is a.TypeDecl:
+        name = node.declname
+    elif type(node) is a.Struct:
+        name = node.name
+    else:
+        raise AssertionError("Unhandled node type: " + str(type(node)))
+    return name
