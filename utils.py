@@ -3,10 +3,10 @@ import subprocess
 import os
 import time
 import hashlib
+import tempfile
 import pycparser
 from pycparser import c_generator
 from abc import abstractmethod, ABCMeta
-
 
 class InputGenerationError(Exception):
 
@@ -52,6 +52,7 @@ class ExecutionResult(object):
 
 error_return = 117
 
+
 class InputGenerator(object):
     __metaclass__ = ABCMeta
 
@@ -78,10 +79,6 @@ class InputGenerator(object):
         return None
 
     @abstractmethod
-    def check_inputs(self, filename, generator_thread=None):
-        pass
-
-    @abstractmethod
     def get_run_env(self):
         return os.environ
 
@@ -97,6 +94,10 @@ class InputGenerator(object):
         self._nondet_var_map = None
         self.machine_model = machine_model
         self.timelimit = int(timelimit) if timelimit else 0
+        self.tmp = tempfile.mkdtemp()
+
+    def _create_file_path(self, filename):
+        return os.path.join(self.tmp, filename)
 
     def prepare(self, filename):
         """
@@ -112,6 +113,7 @@ class InputGenerator(object):
         """
         suffix = filename.split('.')[-1]
         name_new_file = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
+        name_new_file = self._create_file_path(name_new_file)
         if os.path.exists(name_new_file):
             logging.warning("Prepared file already exists. Not preparing again.")
             return name_new_file
@@ -138,6 +140,7 @@ class InputGenerator(object):
         content.insert(1, '#define __extension__\n')
         content = ''.join(content)
         preprocessed_filename = '.'.join(filename.split('.')[:-1] + ['i'])
+        preprocessed_filename = self._create_file_path(preprocessed_filename)
         if preprocessed_filename == filename:
             logging.info("File already preprocessed")
         else:
@@ -164,26 +167,17 @@ class InputGenerator(object):
             if InputGenerator.failed(result):
                 raise InputGenerationError('Generating input failed at command ' + ' '.join(cmd))
 
-    def replace_verifier_assume(self, stmt):
-        # __VERIFIER_assume(x) assumes that x is true. To model this, we replace it by 'if(!x) exit(0);'
-        condition = '!' + stmt[stmt.find('('):stmt.rfind(')')+1]
-        return self.get_conditional_exit_stmt(0, condition)
+    def check_inputs(self, filename, generator_thread=None):
+        prepared_file = self.prepare(filename)
+        produced_witnesses = self.create_all_witnesses(prepared_file)
 
-    def get_conditional_exit_stmt(self, return_code, condition):
-        return "if(" + condition + ") exit(" + str(return_code) + ")"
+        for witness in produced_witnesses:
+            with open(witness['name'], 'w+') as outp:
+                outp.write(witness['content'])
 
-    def _get_var_type(self, nondet_statement):
-        return nondet_statement.split('_')[-1][:-2]  # split __VERIFIER_nondet_int() to int() and then to int
-
-    def error_reached(self, result):
-        return result.returncode == error_return
-
-    def _get_exit_stmt(self, return_code):
-        return "exit(" + str(return_code) + ")"
-
-    def replace_with_exit(self, code):
-        return self._get_exit_stmt(code)
-
+def execute_in_container(command):
+    cmd = ['runexec'] + command
+    return execute(cmd)
 
 def execute(command, quiet=False, env=None, log_output=True, stop_flag=None, input_str=None):
     if not quiet:
@@ -232,3 +226,7 @@ def get_hash(filename):
             data = inp.read(buf_size)
 
     return sha1.hexdigest()
+
+
+def error_reached(result):
+    return result.returncode == error_return

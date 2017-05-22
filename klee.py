@@ -185,23 +185,15 @@ class InputGenerator(utils.InputGenerator):
 
         xml_string = ET.tostring(witness, 'utf-8')
         minidom_parsed_xml = minidom.parseString(xml_string)
-        with open(witness_file, 'w+') as outp:
-            outp.write(minidom_parsed_xml.toprettyxml(indent=(4 * ' ')))
 
-        return witness_file
+        return {'name': witness_file, 'content': minidom_parsed_xml.toprettyxml(indent=(4 * ' '))}
 
     def create_all_witnesses(self, filename):
         witnesses = []
         for test in glob.iglob('klee-last/*.ktest'):
-            witness_file = self.create_witness(filename, test)
-            witnesses.append(witness_file)
+            witness = self.create_witness(filename, test)
+            witnesses.append(witness)
         return witnesses
-
-    def check_inputs(self, filename, generator_thread=None):
-        prepared_file = self.prepare(filename)
-        witnesses = self.create_all_witnesses(prepared_file)
-
-        pass  # TODO
 
     def _m(self, exe_file, visited_tests):
         for test_case in glob.iglob(tests_dir + '/*.ktest'):
@@ -214,7 +206,7 @@ class InputGenerator(utils.InputGenerator):
             test_env['KTEST_FILE'] = test_case
             result = execute(test_cmd, env=test_env)
 
-            if self.error_reached(result):
+            if utils.error_reached(result):
                 return True
         return False
 
