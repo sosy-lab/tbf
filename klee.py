@@ -15,7 +15,6 @@ bin_dir = os.path.abspath('./klee/bin')
 tests_output = utils.tmp
 tests_dir = os.path.join(tests_output, 'klee-tests')
 klee_make_symbolic = 'klee_make_symbolic'
-error_return = 117
 
 
 class InputGenerator(utils.InputGenerator):
@@ -159,7 +158,7 @@ class InputGenerator(utils.InputGenerator):
 
     def get_test_vector(self, test):
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool'), '--write-ints']
-        exec_output = utils.execute(ktest_tool + [test], log_output=False)
+        exec_output = utils.execute(ktest_tool + [test], log_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')
         objects = dict()
         for line in [l for l in test_info if l.startswith('object')]:
@@ -226,7 +225,7 @@ class AstReplacer(NondetReplacer):
 
     # Hook
     def _get_error_stmt(self):
-        parameters = [a.Constant('int', str(error_return))]
+        parameters = [a.Constant('int', str(utils.error_return))]
         return a.FuncCall(a.ID('exit'), a.ExprList(parameters))
 
     # Hook

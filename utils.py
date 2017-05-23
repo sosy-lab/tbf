@@ -51,7 +51,7 @@ class ExecutionResult(object):
         return self._stderr
 
 
-error_return = 117
+error_return = 107
 sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
 spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
 output_dir = os.path.abspath('./output')
@@ -218,7 +218,7 @@ class Validator(object):
         self.executable = self.tool.executable()
 
     def validate(self, program_file, witness_file):
-        cmd_result = execute(self._get_cmd(program_file, witness_file), quiet=True)
+        cmd_result = execute(self._get_cmd(program_file, witness_file), quiet=True, log_output=False)
 
         returncode = cmd_result.returncode
         # Execute returns a negative returncode -N if the process was killed by signal N
@@ -367,10 +367,6 @@ def get_hash(filename):
             data = inp.read(buf_size)
 
     return sha1.hexdigest()
-
-
-def error_reached(result):
-    return result.returncode == error_return
 
 
 def get_machine_model(witness_file):
