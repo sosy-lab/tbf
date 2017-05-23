@@ -57,6 +57,8 @@ spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
 output_dir = os.path.abspath('./output')
 tmp = tempfile.mkdtemp()
 
+if not os.path.exists(output_dir):
+    os.mkdir(output_dir)
 
 class InputGenerator(object):
     __metaclass__ = ABCMeta
