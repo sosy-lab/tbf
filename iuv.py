@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import sys
+import os
+import tempfile
 import logging
 import argparse
 
@@ -88,9 +90,12 @@ def _get_input_generator_module(args):
 def run():
     args = _parse_cli_args(sys.argv[1:])
 
-    filename = args.file
+    filename = os.path.abspath(args.file)
     module = _get_input_generator_module(args)
 
+    tmp = tempfile.mkdtemp()
+    old_dir = os.path.abspath('.')
+    os.chdir(tmp)  # Run in temporary directory
     if args.run_parallel:
         stop_event = threading.Event()
         generator_thread = threading.Thread(target=module.generate_input, args=(filename, stop_event))

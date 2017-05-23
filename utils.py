@@ -51,7 +51,8 @@ class ExecutionResult(object):
 
 
 error_return = 117
-
+sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
+spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
 
 class InputGenerator(object):
     __metaclass__ = ABCMeta
@@ -86,6 +87,10 @@ class InputGenerator(object):
     def create_nondet_var_map(self, filename):
         pass
 
+    @abstractmethod
+    def create_all_witnesses(self, filename):
+        return None
+
     @staticmethod
     def failed(result):
         return result.returncode < 0
@@ -94,10 +99,9 @@ class InputGenerator(object):
         self._nondet_var_map = None
         self.machine_model = machine_model
         self.timelimit = int(timelimit) if timelimit else 0
-        self.tmp = tempfile.mkdtemp()
 
     def _create_file_path(self, filename):
-        return os.path.join(self.tmp, filename)
+        return filename
 
     def prepare(self, filename):
         """
@@ -133,19 +137,21 @@ class InputGenerator(object):
             return name_new_file
 
     def parse_file(self, filename):
-        with open(filename, 'r') as i:
-            content = i.readlines()
-        # Remove gcc extensions that pycparser can't handle
-        content.insert(0, '#define __attribute__(x)\n')
-        content.insert(1, '#define __extension__\n')
-        content = ''.join(content)
-        preprocessed_filename = '.'.join(filename.split('.')[:-1] + ['i'])
+        preprocessed_filename = '.'.join(filename.split('/')[-1].split('.')[:-1] + ['i'])
         preprocessed_filename = self._create_file_path(preprocessed_filename)
         if preprocessed_filename == filename:
             logging.info("File already preprocessed")
         else:
-            preprocess_cmd = ['gcc', '-E', '-D', '__attribute__(x)=', '-D', '__extension=', '-o', preprocessed_filename, filename]
-            p = execute(preprocess_cmd, input_str=content)
+            # The defines (-D) remove gcc extensions that pycparser can't handle
+            # -E : only preprocess
+            # -o : output file name
+            preprocess_cmd = ['gcc',
+                              '-E',
+                              '-D', '__attribute__(x)=',
+                              '-D', '__extension=',
+                              '-o', preprocessed_filename,
+                              filename]
+            p = execute(preprocess_cmd)
 
         ast = pycparser.parse_file(preprocessed_filename)
         return ast
@@ -172,7 +178,8 @@ class InputGenerator(object):
         produced_witnesses = self.create_all_witnesses(prepared_file)
 
         for witness in produced_witnesses:
-            with open(witness['name'], 'w+') as outp:
+            witness_name = self._create_file_path(witness['name'])
+            with open(witness_name, 'w+') as outp:
                 outp.write(witness['content'])
 
 def execute_in_container(command):

@@ -9,10 +9,10 @@ import pycparser
 from xml.etree import ElementTree as ET
 import xml.dom.minidom as minidom
 
-include_dir = './klee/include/'
-lib_dir = './klee/lib'
-bin_dir = './klee/bin'
-tests_dir = './klee-last'
+include_dir = os.path.abspath('./klee/include/')
+lib_dir = os.path.abspath('./klee/lib')
+bin_dir = os.path.abspath('./klee/bin')
+tests_dir = os.path.abspath('./klee-last')
 klee_make_symbolic = 'klee_make_symbolic'
 error_return = 117
 
