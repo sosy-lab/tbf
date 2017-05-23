@@ -218,9 +218,24 @@ class Validator(object):
         self.executable = self.tool.executable()
 
     def validate(self, program_file, witness_file):
-        cmd_result = execute(self._get_cmd(program_file, witness_file))
+        cmd_result = execute(self._get_cmd(program_file, witness_file), quiet=True)
 
-        validation_result = self.tool.determine_result(cmd_result.returncode, None, cmd_result.stdout, isTimeout=False)
+        returncode = cmd_result.returncode
+        # Execute returns a negative returncode -N if the process was killed by signal N
+        if returncode < 0:
+            returnsignal = - returncode
+        else:
+            returnsignal = 0
+
+        if cmd_result.stderr:
+            tool_output = cmd_result.stderr.split('\n')
+        else:
+            tool_output = list()
+        tool_output += cmd_result.stdout.split('\n')
+        # Remove last line if empty. FShell expects no empty line at the end.
+        if len(tool_output) >= 1 and not tool_output[-1]:
+            tool_output = tool_output[:-1]
+        validation_result = self.tool.determine_result(returncode, returnsignal, tool_output, isTimeout=False)
         return validation_result
 
     @abstractmethod
