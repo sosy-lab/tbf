@@ -8,6 +8,7 @@ import pycparser
 from pycparser import c_generator
 from abc import abstractmethod, ABCMeta
 
+
 class InputGenerationError(Exception):
 
     def __init__(self, msg=None, cause=None):
@@ -177,14 +178,119 @@ class InputGenerator(object):
         prepared_file = self.prepare(filename)
         produced_witnesses = self.create_all_witnesses(prepared_file)
 
+        validator = ValidationRunner()
+
         for witness in produced_witnesses:
             witness_name = self._create_file_path(witness['name'])
             with open(witness_name, 'w+') as outp:
                 outp.write(witness['content'])
 
-def execute_in_container(command):
-    cmd = ['runexec'] + command
-    return execute(cmd)
+            results = validator.run(filename, witness_name)
+
+            logging.info('Results for %s: %s', witness_name, str(results))
+            if [s for s in results if 'false' in s]:
+                return True
+        return False
+
+
+class ValidationRunner(object):
+
+    def __init__(self):
+        self.validators = [FShellW2t()]
+
+    def run(self, program_file, witness_file):
+        results = []
+        for validator in self.validators:
+            result = validator.validate(program_file, witness_file)
+            results.append(result)
+
+        return results
+
+
+class Validator(object):
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, tool_name):
+        self.tool = import_tool(tool_name)
+        self.executable = self.tool.executable()
+
+    def validate(self, program_file, witness_file):
+        cmd_result = execute(self._get_cmd(program_file, witness_file))
+
+        validation_result = self.tool.determine_result(cmd_result.returncode, None, cmd_result.stdout, isTimeout=False)
+        return validation_result
+
+    @abstractmethod
+    def _get_cmd(self, program_file, witness_file):
+        pass
+
+
+class CPAcheckerValidator(object):
+
+    def __init__(self):
+        self.tool = import_tool('cpachecker')
+        self.executable = self.tool.executable()
+
+    def _get_cmd(self, program_file, witness_file):
+        return [self.executable] +\
+               get_cpachecker_options(witness_file) +\
+               ['-witnessValidation', program_file]
+
+
+class UAutomizerValidator(Validator):
+
+    def __init__(self):
+        super().__init__('ultimateautomizer')
+
+    def _get_cmd(self, program_file, witness_file):
+        machine_model = get_machine_model(witness_file)
+        if '32' in machine_model:
+            machine_model = '32bit'
+        elif '64' in machine_model:
+            machine_model = '64bit'
+        else:
+            raise AssertionError("Unhandled machine model: " + machine_model)
+
+        cmd = [self.executable,
+               '--spec', spec_file,
+               '--validate', witness_file,
+               '--file', program_file,
+               machine_model]
+        return cmd
+
+
+class CpaW2t(Validator):
+
+    def __init__(self):
+        super().__init__('cpa-witness2test')
+
+    def _get_cmd(self, program_file, witness_file):
+        return [self.executable] +\
+               get_cpachecker_options(witness_file) +\
+               ['-witness2test', program_file]
+
+
+class FShellW2t(Validator):
+
+    def __init__(self):
+        super().__init__('witness2test')
+
+    def _get_cmd(self, program_file, witness_file):
+        machine_model = get_machine_model(witness_file)
+        if '32' in machine_model:
+            machine_model = '-m32'
+        elif '64' in machine_model:
+            machine_model = '-m64'
+        else:
+            raise AssertionError('Unhandled machine model: ' + machine_model)
+
+        return [self.executable,
+                '--propertyfile', spec_file,
+                '--graphml-witness', witness_file,
+                machine_model,
+                program_file]
+
 
 def execute(command, quiet=False, env=None, log_output=True, stop_flag=None, input_str=None):
     if not quiet:
@@ -237,3 +343,50 @@ def get_hash(filename):
 
 def error_reached(result):
     return result.returncode == error_return
+
+
+def get_machine_model(witness_file):
+    with open(witness_file, 'r') as inp:
+        for line in inp.readlines():
+            if 'architecture' in line:
+                if '32' in line:
+                    return '32bit'
+                elif '64' in line:
+                    return '64bit'
+                else:
+                    raise AssertionError('Unknown architecture in witness line: ' + line)
+
+
+def import_tool(tool_name):
+    if '.' in tool_name:
+        tool_module = tool_name
+    else:
+        tool_module = 'benchexec.tools.' + tool_name
+    return __import__(tool_module, fromlist=['Tool']).Tool()
+
+def get_cpachecker_options(witness_file):
+    machine_model = get_machine_model(witness_file)
+    if '32' in machine_model:
+        machine_model = '-32'
+    elif '64' in machine_model:
+        machine_model = '-64'
+    else:
+        raise AssertionError('Unknown machine model: ' + machine_model)
+
+    return [
+    '-setprop', 'witness.checkProgramHash=false',
+    '-disable-java-assertions',
+    '-heap', '4000M',
+    '-setprop', 'cfa.simplifyCfa=false',
+    '-setprop', 'cfa.allowBranchSwapping=false',
+    '-setprop', 'cpa.predicate.ignoreIrrelevantVariables=false',
+    '-setprop', 'cpa.predicate.refinement.performINitialStaticRefinement=false',
+    '-setprop', 'counterexample.export.compressWitness=false',
+    '-setprop', 'counterexample.export.assumptions.includeConstantsForPointers=false',
+    '-setprop', 'analysis.summaryEdge=true',
+    '-setprop', 'cpa.callstack.skipVoidRecursion=true',
+    '-setprop', 'cpa.callstack.skipFunctionPointerRecursion=true',
+    '-setprop', 'cpa.predicate.memoryAllocationsAlwaysSucceed=true',
+    '-witness', witness_file,
+    machine_model,
+    '-spec', spec_file]
