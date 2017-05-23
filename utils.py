@@ -187,7 +187,7 @@ class InputGenerator(object):
             with open(witness_name, 'w+') as outp:
                 outp.write(witness['content'])
 
-            results = validator.run(filename, witness_name)
+            results = validator.run(prepared_file, witness_name)
 
             logging.info('Results for %s: %s', witness_name, str(results))
             if [s for s in results if 'false' in s]:
