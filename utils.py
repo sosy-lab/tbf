@@ -292,6 +292,7 @@ class FShellW2t(Validator):
 
     def __init__(self):
         super().__init__('witness2test')
+        self.repo = os.path.dirname(os.path.abspath(self.executable))
 
     def _get_cmd(self, program_file, witness_file):
         machine_model = get_machine_model(witness_file)
@@ -307,6 +308,16 @@ class FShellW2t(Validator):
                 '--graphml-witness', witness_file,
                 machine_model,
                 program_file]
+
+    def validate(self, program_file, witness_file):
+        """Overwrites Validator.validate(...)."""
+        # FShell-w2t only works if it is run from its repository. Because of this,
+        # we always have to change directories, first.
+        old_dir = os.path.abspath('.')
+        os.chdir(self.repo)
+        result = super().validate(program_file, witness_file)
+        os.chdir(old_dir)  # And we change directories back to the original one
+        return result
 
 
 def execute(command, quiet=False, env=None, log_output=True, stop_flag=None, input_str=None):
