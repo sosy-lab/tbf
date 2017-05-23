@@ -2,13 +2,15 @@ from utils import execute
 import utils
 import os
 from time import sleep
+import iuv
 
 bin_dir = '../crest/bin'
 lib_dir = '../crest/lib'
 include_dir = '../crest/include'
 test_file = 'tests.crest'
 
-class InputGenerator(utils.InputGenerator):
+
+class InputGenerator(iuv.BaseInputGenerator):
 
     def __init__(self, timelimit=0, log_verbose=False):
         self.timelimit = int(timelimit) if timelimit else 0

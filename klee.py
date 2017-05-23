@@ -1,4 +1,4 @@
-from utils import execute
+import iuv
 import utils
 import glob
 import os
@@ -17,7 +17,7 @@ tests_dir = os.path.join(tests_output, 'klee-tests')
 klee_make_symbolic = 'klee_make_symbolic'
 
 
-class InputGenerator(utils.InputGenerator):
+class InputGenerator(iuv.BaseInputGenerator):
 
     def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew'], machine_model='32bit'):
         super().__init__(timelimit, machine_model)
