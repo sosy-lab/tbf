@@ -182,10 +182,9 @@ class InputGenerator(utils.InputGenerator):
         graph = self._get_graph(filename, test_file)
         witness.append(graph)
 
-        test_dir = os.path.dirname(test_file)
-        test_name = os.path.basename(test_file).split('.')[0]
-        witness_file = os.path.join(test_dir, test_name + ".witness.graphml")
-        witness_file = utils.create_file_path(witness_file, temp_dir=False)
+        test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
+        witness_file = test_name + ".witness.graphml"
+        witness_file = utils.create_file_path(witness_file, temp_dir=True)
 
         xml_string = ET.tostring(witness, 'utf-8')
         minidom_parsed_xml = minidom.parseString(xml_string)
