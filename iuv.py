@@ -93,9 +93,6 @@ def run():
     filename = os.path.abspath(args.file)
     module = _get_input_generator_module(args)
 
-    tmp = tempfile.mkdtemp()
-    old_dir = os.path.abspath('.')
-    os.chdir(tmp)  # Run in temporary directory
     if args.run_parallel:
         stop_event = threading.Event()
         generator_thread = threading.Thread(target=module.generate_input, args=(filename, stop_event))

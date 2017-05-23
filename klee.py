@@ -12,7 +12,8 @@ import xml.dom.minidom as minidom
 include_dir = os.path.abspath('./klee/include/')
 lib_dir = os.path.abspath('./klee/lib')
 bin_dir = os.path.abspath('./klee/bin')
-tests_dir = os.path.abspath('./klee-last')
+tests_output = utils.tmp
+tests_dir = os.path.join(tests_output, 'klee-tests')
 klee_make_symbolic = 'klee_make_symbolic'
 error_return = 117
 
@@ -52,12 +53,14 @@ class InputGenerator(utils.InputGenerator):
 
     def _create_input_generation_cmds(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
+        compiled_file = utils.create_file_path(compiled_file, temp_dir=True)
         compile_cmd = ['clang', '-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file, filename]
         input_generation_cmd = ['klee']
         if self.timelimit > 0:
             input_generation_cmd += ['-max-time', str(self.timelimit)]
         input_generation_cmd.append('-only-output-states-covering-new')
         input_generation_cmd += ['-search=' + h for h in self.search_heuristic]
+        input_generation_cmd += ['-output-dir=' + tests_dir]
         input_generation_cmd += [compiled_file]
 
         return [compile_cmd, input_generation_cmd]
@@ -182,6 +185,7 @@ class InputGenerator(utils.InputGenerator):
         test_dir = os.path.dirname(test_file)
         test_name = os.path.basename(test_file).split('.')[0]
         witness_file = os.path.join(test_dir, test_name + ".witness.graphml")
+        witness_file = utils.create_file_path(witness_file, temp_dir=False)
 
         xml_string = ET.tostring(witness, 'utf-8')
         minidom_parsed_xml = minidom.parseString(xml_string)
@@ -190,7 +194,7 @@ class InputGenerator(utils.InputGenerator):
 
     def create_all_witnesses(self, filename):
         witnesses = []
-        for test in glob.iglob('klee-last/*.ktest'):
+        for test in glob.iglob(tests_dir + '/*.ktest'):
             witness = self.create_witness(filename, test)
             witnesses.append(witness)
         return witnesses

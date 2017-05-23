@@ -54,6 +54,9 @@ class ExecutionResult(object):
 error_return = 117
 sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
 spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
+output_dir = os.path.abspath('./output')
+tmp = tempfile.mkdtemp()
+
 
 class InputGenerator(object):
     __metaclass__ = ABCMeta
@@ -101,9 +104,6 @@ class InputGenerator(object):
         self.machine_model = machine_model
         self.timelimit = int(timelimit) if timelimit else 0
 
-    def _create_file_path(self, filename):
-        return filename
-
     def prepare(self, filename):
         """
         Prepares the file with the given name according to the module
@@ -118,7 +118,7 @@ class InputGenerator(object):
         """
         suffix = filename.split('.')[-1]
         name_new_file = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
-        name_new_file = self._create_file_path(name_new_file)
+        name_new_file = create_file_path(name_new_file, temp_dir=True)
         if os.path.exists(name_new_file):
             logging.warning("Prepared file already exists. Not preparing again.")
             return name_new_file
@@ -139,7 +139,7 @@ class InputGenerator(object):
 
     def parse_file(self, filename):
         preprocessed_filename = '.'.join(filename.split('/')[-1].split('.')[:-1] + ['i'])
-        preprocessed_filename = self._create_file_path(preprocessed_filename)
+        preprocessed_filename = create_file_path(preprocessed_filename, temp_dir=True)
         if preprocessed_filename == filename:
             logging.info("File already preprocessed")
         else:
@@ -181,7 +181,7 @@ class InputGenerator(object):
         validator = ValidationRunner()
 
         for witness in produced_witnesses:
-            witness_name = self._create_file_path(witness['name'])
+            witness_name = witness['name']
             with open(witness_name, 'w+') as outp:
                 outp.write(witness['content'])
 
@@ -390,3 +390,11 @@ def get_cpachecker_options(witness_file):
     '-witness', witness_file,
     machine_model,
     '-spec', spec_file]
+
+
+def create_file_path(filename, temp_dir=True):
+    if temp_dir:
+        prefix = tmp
+    else:
+        prefix = output_dir
+    return os.path.join(prefix, filename)
