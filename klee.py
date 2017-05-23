@@ -195,21 +195,6 @@ class InputGenerator(utils.InputGenerator):
             witnesses.append(witness)
         return witnesses
 
-    def _m(self, exe_file, visited_tests):
-        for test_case in glob.iglob(tests_dir + '/*.ktest'):
-            if test_case in visited_tests:
-                continue
-            else:
-                visited_tests.add(test_case)
-            test_cmd = ['./' + exe_file]
-            test_env = self.get_run_env().copy()
-            test_env['KTEST_FILE'] = test_case
-            result = execute(test_cmd, env=test_env)
-
-            if utils.error_reached(result):
-                return True
-        return False
-
     def get_ast_replacer(self):
         return AstReplacer()
 
