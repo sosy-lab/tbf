@@ -262,10 +262,10 @@ class BaseInputGenerator(object):
             result = utils.execute(cmd, env=self.get_run_env())
             if BaseInputGenerator.failed(result):
                 raise utils.InputGenerationError('Generating input failed at command ' + ' '.join(cmd))
+        return file_for_analysis
 
     def check_inputs(self, filename, generator_thread=None):
-        prepared_file = self.prepare(filename)
-        produced_witnesses = self.create_all_witnesses(prepared_file)
+        produced_witnesses = self.create_all_witnesses(filename)
 
         validator = ValidationRunner()
 
@@ -274,7 +274,7 @@ class BaseInputGenerator(object):
             with open(witness_name, 'w+') as outp:
                 outp.write(witness['content'])
 
-            results = validator.run(prepared_file, witness_name)
+            results = validator.run(filename, witness_name)
 
             logging.info('Results for %s: %s', witness_name, str(results))
             if [s for s in results if 'false' in s]:
@@ -361,9 +361,9 @@ def run():
     else:
         stop_event = None
         generator_thread = None
-        module.generate_input(filename)
+        file_for_analysis = module.generate_input(filename)
 
-    error_reached = module.check_inputs(filename, generator_thread)
+    error_reached = module.check_inputs(file_for_analysis, generator_thread)
 
     if stop_event:
         stop_event.set()
