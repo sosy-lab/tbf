@@ -1,4 +1,5 @@
-import iuv
+from input_generation import BaseInputGenerator
+from test_validation import TestValidator
 import utils
 import glob
 import os
@@ -14,9 +15,10 @@ bin_dir = os.path.abspath('./klee/bin')
 tests_output = utils.tmp
 tests_dir = os.path.join(tests_output, 'klee-tests')
 klee_make_symbolic = 'klee_make_symbolic'
+name = 'klee'
 
 
-class InputGenerator(iuv.BaseInputGenerator):
+class InputGenerator(BaseInputGenerator):
 
     def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew'], machine_model='32bit'):
         super().__init__(timelimit, machine_model)
@@ -28,11 +30,11 @@ class InputGenerator(iuv.BaseInputGenerator):
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
 
-    def get_name(self):
-        return 'klee'
-
     def get_run_env(self):
         return self._run_env
+
+    def get_name(self):
+        return name
 
     def create_input_generation_cmds(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
@@ -48,60 +50,9 @@ class InputGenerator(iuv.BaseInputGenerator):
 
         return [compile_cmd, input_generation_cmd]
 
-    def _get_var_number(self, test_info_line):
-        assert 'object' in test_info_line
-        return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
-
-    def get_test_vector(self, test):
-        ktest_tool = [os.path.join(bin_dir, 'ktest-tool'), '--write-ints']
-        exec_output = utils.execute(ktest_tool + [test], log_output=False, quiet=True)
-        test_info = exec_output.stdout.split('\n')
-        objects = dict()
-        for line in [l for l in test_info if l.startswith('object')]:
-            if 'name:' in line:
-                assert len(line.split(':')) == 3
-                var_number = self._get_var_number(line)
-                var_name = line.split(':')[2][2:-1]  # [1:-1] to cut the surrounding ''
-                if var_number not in objects.keys():
-                    objects[var_number] = dict()
-                objects[var_number]['name'] = var_name
-
-            elif 'data:' in line:
-                assert len(line.split(':')) == 3
-                var_number = self._get_var_number(line)
-                value = line.split(':')[-1].strip()
-                objects[var_number]['value'] = value
-
-        return objects
-
-    def create_witness(self, filename, test_file):
-        witness = wit_gen.create_witness(producer=self.get_name(),
-                                         filename=filename,
-                                         test_vector=self.get_test_vector(test_file),
-                                         nondet_var_map=self.get_nondet_var_map(filename),
-                                         machine_model=self.machine_model)
-
-        test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
-        witness_file = test_name + ".witness.graphml"
-        witness_file = utils.create_file_path(witness_file, temp_dir=True)
-
-        return {'name': witness_file, 'content': witness}
-
-    def create_all_witnesses(self, filename):
-        witnesses = []
-        for test in glob.iglob(tests_dir + '/*.ktest'):
-            witness = self.create_witness(filename, test)
-            witnesses.append(witness)
-        return witnesses
-
     def get_ast_replacer(self):
         return AstReplacer()
 
-    def create_nondet_var_map(self, filename):
-        visitor = NondetIdentifierCollector()
-        ast = pycparser.parse_file(filename)
-        visitor.visit(ast)
-        return visitor.nondet_identifiers
 
 
 class AstReplacer(NondetReplacer):
@@ -162,3 +113,60 @@ class NondetIdentifierCollector(DfsVisitor):
 
         return []
 
+
+class KleeTestValidator(TestValidator):
+
+    def get_name(self):
+        return name
+
+    def _get_var_number(self, test_info_line):
+        assert 'object' in test_info_line
+        return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
+
+    def get_test_vector(self, test):
+        ktest_tool = [os.path.join(bin_dir, 'ktest-tool'), '--write-ints']
+        exec_output = utils.execute(ktest_tool + [test], log_output=False, quiet=True)
+        test_info = exec_output.stdout.split('\n')
+        objects = dict()
+        for line in [l for l in test_info if l.startswith('object')]:
+            if 'name:' in line:
+                assert len(line.split(':')) == 3
+                var_number = self._get_var_number(line)
+                var_name = line.split(':')[2][2:-1]  # [1:-1] to cut the surrounding ''
+                if var_number not in objects.keys():
+                    objects[var_number] = dict()
+                objects[var_number]['name'] = var_name
+
+            elif 'data:' in line:
+                assert len(line.split(':')) == 3
+                var_number = self._get_var_number(line)
+                value = line.split(':')[-1].strip()
+                objects[var_number]['value'] = value
+
+        return objects
+
+    def create_witness(self, filename, test_file):
+        witness = wit_gen.create_witness(producer=self.get_name(),
+                                         filename=filename,
+                                         test_vector=self.get_test_vector(test_file),
+                                         nondet_var_map=self.get_nondet_var_map(filename),
+                                         machine_model=self.machine_model)
+
+        test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
+        witness_file = test_name + ".witness.graphml"
+        witness_file = utils.create_file_path(witness_file, temp_dir=True)
+
+        return {'name': witness_file, 'content': witness}
+
+    def create_all_witnesses(self, filename):
+        witnesses = []
+        for test in glob.iglob(tests_dir + '/*.ktest'):
+            witness = self.create_witness(filename, test)
+            witnesses.append(witness)
+        return witnesses
+
+    def create_nondet_var_map(self, filename):
+        visitor = NondetIdentifierCollector()
+        ast = pycparser.parse_file(filename)
+        visitor.visit(ast)
+        return visitor.nondet_identifiers
