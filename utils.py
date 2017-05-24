@@ -4,9 +4,6 @@ import os
 import time
 import hashlib
 import tempfile
-import pycparser
-from pycparser import c_generator
-from abc import abstractmethod, ABCMeta
 
 
 class InputGenerationError(Exception):
@@ -139,22 +136,22 @@ def get_cpachecker_options(witness_file):
         raise AssertionError('Unknown machine model: ' + machine_model)
 
     return [
-    '-setprop', 'witness.checkProgramHash=false',
-    '-disable-java-assertions',
-    '-heap', '4000M',
-    '-setprop', 'cfa.simplifyCfa=false',
-    '-setprop', 'cfa.allowBranchSwapping=false',
-    '-setprop', 'cpa.predicate.ignoreIrrelevantVariables=false',
-    '-setprop', 'cpa.predicate.refinement.performINitialStaticRefinement=false',
-    '-setprop', 'counterexample.export.compressWitness=false',
-    '-setprop', 'counterexample.export.assumptions.includeConstantsForPointers=false',
-    '-setprop', 'analysis.summaryEdge=true',
-    '-setprop', 'cpa.callstack.skipVoidRecursion=true',
-    '-setprop', 'cpa.callstack.skipFunctionPointerRecursion=true',
-    '-setprop', 'cpa.predicate.memoryAllocationsAlwaysSucceed=true',
-    '-witness', witness_file,
-    machine_model,
-    '-spec', spec_file]
+        '-setprop', 'witness.checkProgramHash=false',
+        '-disable-java-assertions',
+        '-heap', '4000M',
+        '-setprop', 'cfa.simplifyCfa=false',
+        '-setprop', 'cfa.allowBranchSwapping=false',
+        '-setprop', 'cpa.predicate.ignoreIrrelevantVariables=false',
+        '-setprop', 'cpa.predicate.refinement.performINitialStaticRefinement=false',
+        '-setprop', 'counterexample.export.compressWitness=false',
+        '-setprop', 'counterexample.export.assumptions.includeConstantsForPointers=false',
+        '-setprop', 'analysis.summaryEdge=true',
+        '-setprop', 'cpa.callstack.skipVoidRecursion=true',
+        '-setprop', 'cpa.callstack.skipFunctionPointerRecursion=true',
+        '-setprop', 'cpa.predicate.memoryAllocationsAlwaysSucceed=true',
+        '-witness', witness_file,
+        machine_model,
+        '-spec', spec_file]
 
 
 def create_file_path(filename, temp_dir=True):
