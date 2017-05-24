@@ -27,9 +27,7 @@ class InputGenerator(iuv.BaseInputGenerator):
         else:
             self.search_heuristic = search_heuristic
 
-        self._run_env = os.environ.copy()
-        self._run_env['PATH'] = bin_dir + os.pathsep + self._run_env['PATH']
-
+        self._run_env = utils.get_env_with_path_added(bin_dir)
         self._node_id_counter = -1
 
     def get_name(self):

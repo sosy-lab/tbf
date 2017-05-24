@@ -163,3 +163,9 @@ def create_file_path(filename, temp_dir=True):
     else:
         prefix = output_dir
     return os.path.join(prefix, filename)
+
+
+def get_env_with_path_added(path_addition):
+    env = os.environ.copy()
+    env['PATH'] = path_addition + os.pathsep + env['PATH']
+    return env
