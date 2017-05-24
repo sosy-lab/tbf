@@ -116,17 +116,17 @@ class AstReplacer(NondetReplacer):
         return a.Constant('string', '\"' + string + '\"')
 
     # Hook
-    def _get_nondet_marker(self, var_name, var_type):
+    def get_nondet_marker(self, var_name, var_type):
         parameters = [self._get_amper(var_name), self._get_sizeof_call(var_name), self._get_string(var_name)]
         return a.FuncCall(a.ID(klee_make_symbolic), a.ExprList(parameters))
 
     # Hook
-    def _get_error_stmt(self):
+    def get_error_stmt(self):
         parameters = [a.Constant('int', str(utils.error_return))]
         return a.FuncCall(a.ID('exit'), a.ExprList(parameters))
 
     # Hook
-    def _get_preamble(self):
+    def get_preamble(self):
         parser = pycparser.CParser()
         # Define dummy klee_make_symbolic
         definitions = 'typedef unsigned long int size_t;'

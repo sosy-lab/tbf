@@ -471,15 +471,15 @@ class NondetReplacer(DfsVisitor):
         return None
 
     @abstractmethod
-    def _get_nondet_marker(self, var_name, var_type):
+    def get_nondet_marker(self, var_name, var_type):
         return None
 
     @abstractmethod
-    def _get_error_stmt(self):
+    def get_error_stmt(self):
         return None
 
     @abstractmethod
-    def _get_preamble(self):
+    def get_preamble(self):
         return None
 
     def __init__(self):
@@ -504,7 +504,7 @@ class NondetReplacer(DfsVisitor):
         # It is important that it is checked for an error call before checking for non-determinism,
         # since __VERIFIER_error() is by default non-deterministic.
         if self.is_error_call(node):
-            return list(), self._get_error_stmt()
+            return list(), self.get_error_stmt()
         elif self.is_nondet_call(node):
             func_name = get_name(node)
             statements_to_prepend = []
@@ -517,7 +517,7 @@ class NondetReplacer(DfsVisitor):
             nondet_init = self._get_nondet_init(nondet_var_name, nondet_var_type)
             nondet_var = a.Decl(nondet_var_name, list(), list(), list(), nondet_type_decl, nondet_init, None)
             statements_to_prepend.append(nondet_var)
-            nondet_marker = self._get_nondet_marker(nondet_var_name, nondet_var_type)
+            nondet_marker = self.get_nondet_marker(nondet_var_name, nondet_var_type)
             if nondet_marker is not None:
                 statements_to_prepend.append(nondet_marker)
             return statements_to_prepend, a.ID(nondet_var_name)  # Replace __VERIFIER_nondet_X() with new nondet var
@@ -736,7 +736,7 @@ class NondetReplacer(DfsVisitor):
         return a.FuncDef(assume_decl, None, assume_body)
 
     def visit_FileAST(self, item):
-        ps, ns = self._get_preamble(), []
+        ps, ns = self.get_preamble(), []
         for e in item.ext:
             p, n = self.visit(e)
             ps += p
