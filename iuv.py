@@ -153,15 +153,7 @@ class BaseInputGenerator(object):
     var_counter = 0
 
     @abstractmethod
-    def _create_input_generation_cmds(self, filename):
-        pass
-
-    @abstractmethod
-    def _get_sym_stmt(self, varname):
-        pass
-
-    @abstractmethod
-    def replace_with_assume(self, assumption):
+    def create_input_generation_cmds(self, filename):
         pass
 
     @abstractmethod
@@ -257,7 +249,7 @@ class BaseInputGenerator(object):
 
     def generate_input(self, filename, stop_flag=None):
         file_for_analysis = self.prepare(filename)
-        cmds = self._create_input_generation_cmds(file_for_analysis)
+        cmds = self.create_input_generation_cmds(file_for_analysis)
         for cmd in cmds:
             result = utils.execute(cmd, env=self.get_run_env())
             if BaseInputGenerator.failed(result):

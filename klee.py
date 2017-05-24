@@ -6,8 +6,7 @@ import ast_visitor
 from ast_visitor import NondetReplacer,DfsVisitor
 from pycparser import c_ast as a
 import pycparser
-from xml.etree import ElementTree as ET
-import xml.dom.minidom as minidom
+import witness_generation as wit_gen
 
 include_dir = os.path.abspath('./klee/include/')
 lib_dir = os.path.abspath('./klee/lib')
@@ -28,7 +27,6 @@ class InputGenerator(iuv.BaseInputGenerator):
             self.search_heuristic = search_heuristic
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
-        self._node_id_counter = -1
 
     def get_name(self):
         return 'klee'
@@ -36,19 +34,7 @@ class InputGenerator(iuv.BaseInputGenerator):
     def get_run_env(self):
         return self._run_env
 
-    def _get_sym_stmt(self, varname):
-        statement = ["klee_make_symbolic(&", varname, ", sizeof(", varname, "), \"", varname, "\")"]
-        return "".join(statement)
-
-    def replace_with_assume(self, assumption):
-        c_assumption = assumption
-        if c_assumption == False:
-            c_assumption = "1==0"
-        elif c_assumption == True:
-            c_assumption = "1==1"
-        return "klee_assume(" + c_assumption + ")"
-
-    def _create_input_generation_cmds(self, filename):
+    def create_input_generation_cmds(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
         compiled_file = utils.create_file_path(compiled_file, temp_dir=True)
         compile_cmd = ['clang', '-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file, filename]
@@ -61,94 +47,6 @@ class InputGenerator(iuv.BaseInputGenerator):
         input_generation_cmd += [compiled_file]
 
         return [compile_cmd, input_generation_cmd]
-
-    def _get_witness_header(self, filename, test_file):
-        graphml = ET.Element('graphml')
-        graphml.set('xmlns', 'http://graphml.graphdrawing.org/xmlns')
-        graphml.set('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-
-        key = ET.SubElement(graphml, 'key')
-        key.set('attr.name', 'originFileName')
-        key.set('attr.type', 'string')
-        key.set('for', 'edge')
-        key.set('id', 'originfile')
-        default_key = ET.SubElement(key, 'default')
-        default_key.text = filename
-
-        return graphml
-
-    def _create_data_element(self, keyname, text):
-        data_el =  ET.Element('data')
-        data_el.text = str(text)
-        data_el.set('key', str(keyname))
-        return data_el
-
-    def _next_node_id(self):
-        self._node_id_counter += 1
-        return 'A' + str(self._node_id_counter)
-
-    def _create_node(self, entry=False, violation=False):
-        node = ET.Element('node')
-        node.set('id', self._next_node_id())
-        if entry:
-            node.append(self._create_data_element('entry', 'true'))
-        if violation:
-            node.append(self._create_data_element('violation', 'true'))
-        return node
-
-    def _create_edge(self, source, target, assumption=None, startline=None, assumption_scope=None):
-        edge = ET.Element('edge')
-        edge.set('source', source)
-        edge.set('target', target)
-        if startline:
-            edge.append(self._create_data_element('startline', startline))
-        if assumption:
-            edge.append(self._create_data_element('assumption', assumption))
-        if assumption_scope:
-            edge.append(self._create_data_element('assumption.scope', assumption_scope))
-
-        return edge
-
-    def _get_graph(self, filename, test_file):
-        graph = ET.Element('graph')
-        graph.set('edgedefault', 'directed')
-
-        # Create data elements that describe witness
-        graph.append(self._create_data_element('witness-type', 'violation_witness'))
-        graph.append(self._create_data_element('sourcecodelang', 'C'))
-        graph.append(self._create_data_element('producer', self.get_name()))
-        graph.append(self._create_data_element('specification', 'CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )'))
-        #graph.append(self._create_data_element('testfile', test_file))
-        #timestamp = utils.get_time()
-        #graph.append(self._create_data_element('creationtime', timestamp))
-        graph.append(self._create_data_element('programfile', filename))
-        filehash = utils.get_hash(filename)
-        graph.append(self._create_data_element('programhash', filehash))
-        graph.append(self._create_data_element('architecture', self.machine_model))
-
-        # Create entry node
-        previous_node = self._create_node(entry=True)
-        graph.append(previous_node)
-
-        var_map = self.get_nondet_var_map(filename)
-        test_vector = self.get_test_vector(test_file)
-        for num, instantiation in test_vector.items():
-            target_node = self._create_node()
-            graph.append(target_node)
-            var_name = instantiation['name']
-            line = var_map[var_name]['line']
-            scope = var_map[var_name]['scope']
-            assumption = var_name + ' == ' + instantiation['value'] + ';'
-            new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), assumption, line, scope)
-            graph.append(new_edge)
-            previous_node = target_node
-
-        target_node = self._create_node(violation=True)
-        graph.append(target_node)
-        new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'))
-        graph.append(new_edge)
-
-        return graph
 
     def _get_var_number(self, test_info_line):
         assert 'object' in test_info_line
@@ -167,26 +65,27 @@ class InputGenerator(iuv.BaseInputGenerator):
                 if var_number not in objects.keys():
                     objects[var_number] = dict()
                 objects[var_number]['name'] = var_name
+
             elif 'data:' in line:
                 assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
                 value = line.split(':')[-1].strip()
                 objects[var_number]['value'] = value
+
         return objects
 
     def create_witness(self, filename, test_file):
-        witness = self._get_witness_header(filename, test_file)
-        graph = self._get_graph(filename, test_file)
-        witness.append(graph)
+        witness = wit_gen.create_witness(producer=self.get_name(),
+                                         filename=filename,
+                                         test_vector=self.get_test_vector(test_file),
+                                         nondet_var_map=self.get_nondet_var_map(filename),
+                                         machine_model=self.machine_model)
 
         test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
         witness_file = test_name + ".witness.graphml"
         witness_file = utils.create_file_path(witness_file, temp_dir=True)
 
-        xml_string = ET.tostring(witness, 'utf-8')
-        minidom_parsed_xml = minidom.parseString(xml_string)
-
-        return {'name': witness_file, 'content': minidom_parsed_xml.toprettyxml(indent=(4 * ' '))}
+        return {'name': witness_file, 'content': witness}
 
     def create_all_witnesses(self, filename):
         witnesses = []
