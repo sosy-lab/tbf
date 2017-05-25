@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <key attr.name="originFileName" attr.type="string" for="edge" id="originfile">
+        <default>/home/leostrakosch/Documents/SV/inputusingverifier/output/crest_1.crest.i</default>
+    </key>
+    <graph edgedefault="directed">
+        <data key="witness-type">violation_witness</data>
+        <data key="sourcecodelang">C</data>
+        <data key="producer">crest</data>
+        <data key="specification">CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )</data>
+        <data key="programfile">/home/leostrakosch/Documents/SV/inputusingverifier/output/crest_1.crest.i</data>
+        <data key="programhash">fec1ca98615f4e2f06afff111a8b3cd02dbf573c</data>
+        <data key="architecture">32bit</data>
+        <node id="A0">
+            <data key="entry">true</data>
+        </node>
+        <node id="A1"/>
+        <edge source="A0" target="A1">
+            <data key="startline">6</data>
+            <data key="assumption">__VERIFIER_nondet_int0 == 1319658415;</data>
+            <data key="assumption.scope">main</data>
+        </edge>
+        <edge source="A0" target="A1">
+            <data key="startline">8</data>
+            <data key="assumption">__VERIFIER_nondet_int1 == 1319658415;</data>
+            <data key="assumption.scope">main</data>
+        </edge>
+        <node id="A2"/>
+        <edge source="A1" target="A2">
+            <data key="startline">6</data>
+            <data key="assumption">__VERIFIER_nondet_int0 == 1;</data>
+            <data key="assumption.scope">main</data>
+        </edge>
+        <edge source="A1" target="A2">
+            <data key="startline">8</data>
+            <data key="assumption">__VERIFIER_nondet_int1 == 1;</data>
+            <data key="assumption.scope">main</data>
+        </edge>
+        <node id="A3">
+            <data key="violation">true</data>
+        </node>
+        <edge source="A2" target="A3"/>
+    </graph>
+</graphml>
