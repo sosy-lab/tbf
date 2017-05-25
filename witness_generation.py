@@ -2,10 +2,11 @@ from xml.etree import ElementTree as ET
 import xml.dom.minidom as minidom
 import utils
 
-_node_id_counter = -1
-
 
 class WitnessCreator(object):
+
+    def __init__(self):
+        self._node_id_counter = -1
 
     def _create_witness_header(self, filename):
         graphml = ET.Element('graphml')
@@ -29,9 +30,8 @@ class WitnessCreator(object):
         return data_el
 
     def _next_node_id(self):
-        global _node_id_counter
-        _node_id_counter += 1
-        return 'A' + str(_node_id_counter)
+        self._node_id_counter += 1
+        return 'A' + str(self._node_id_counter)
 
     def _create_node(self, entry=False, violation=False):
         node = ET.Element('node')
@@ -41,6 +41,9 @@ class WitnessCreator(object):
         if violation:
             node.append(self._create_data_element('violation', 'true'))
         return node
+
+    def _reset_node_id(self):
+        self._node_id_counter = -1
 
     def _create_edge(self, source, target, assumption=None, startline=None, assumption_scope=None):
         edge = ET.Element('edge')
@@ -108,6 +111,7 @@ class WitnessCreator(object):
         return self._create_automaton(graph, producer, filename, test_vector, var_map, machine_model)
 
     def create_witness(self, producer, filename, test_vector, nondet_var_map, machine_model):
+        self._reset_node_id()
         witness = self._create_witness_header(filename)
         graph = self._create_graph(producer, filename, test_vector, nondet_var_map, machine_model)
         witness.append(graph)
