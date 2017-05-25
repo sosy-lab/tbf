@@ -4,6 +4,9 @@
 *.o
 *.bc
 
+# Crest output files
+input[0-9]*
+
 # klee output directories
 klee-*/
 
