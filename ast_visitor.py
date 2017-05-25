@@ -4,6 +4,8 @@ from pycparser import c_generator
 from pycparser import c_ast as a
 from utils import flatten, ParseError
 
+import re
+
 import logging
 
 
@@ -852,6 +854,40 @@ class NondetReplacer(DfsVisitor):
         q, item.stmt = self.visit(item.stmt)
         return p + q, item
 
+
+class NondetIdentifierCollector(DfsVisitor):
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, pattern):
+        super().__init__()
+        self.nondet_identifiers = dict()
+        self.scope = list()
+        self.pattern = re.compile(pattern)
+
+    @abstractmethod
+    def get_var_name_from_function(self, item):
+        pass
+
+    def visit_FuncCall(self, item):
+        func_name = get_name(item)
+        if self.pattern.match(func_name):
+            relevant_var = self.get_var_name_from_function(item)
+
+            self.nondet_identifiers[relevant_var] = {'line': item.coord.line,
+                                                     'origin file': item.coord.file,
+                                                     'scope': self.scope[-1]}
+        # no need to visit item.args, we don't do nested klee_make_symbolic calls
+        return []
+
+    def visit_FuncDef(self, item):
+        self.scope.append(get_name(item.decl))
+        self.visit(item.body)
+        self.scope = self.scope[:-1]
+
+        return []
+
+
 def get_name(node):
     if type(node) is a.FuncCall:
         name = node.name.name
@@ -868,3 +904,4 @@ def get_name(node):
     else:
         raise AssertionError("Unhandled node type: " + str(type(node)))
     return name
+

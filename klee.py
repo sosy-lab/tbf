@@ -7,7 +7,7 @@ import ast_visitor
 from ast_visitor import NondetReplacer,DfsVisitor
 from pycparser import c_ast as a
 import pycparser
-import witness_generation as wit_gen
+import re
 
 include_dir = os.path.abspath('./klee/include/')
 lib_dir = os.path.abspath('./klee/lib')
@@ -38,7 +38,7 @@ class InputGenerator(BaseInputGenerator):
 
     def create_input_generation_cmds(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
-        compiled_file = utils.create_file_path(compiled_file, temp_dir=True)
+        compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
         compile_cmd = ['clang', '-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file, filename]
         input_generation_cmd = ['klee']
         if self.timelimit > 0:
@@ -87,33 +87,6 @@ class AstReplacer(NondetReplacer):
         return ast.ext
 
 
-class NondetIdentifierCollector(DfsVisitor):
-
-    def __init__(self):
-        super().__init__()
-        self.nondet_identifiers = dict()
-        self.scope = list()
-
-    def visit_FuncCall(self, item):
-        func_name = ast_visitor.get_name(item)
-        if func_name != klee_make_symbolic:
-            return []
-        relevant_var = item.args.exprs[2].value[1:-1]  # cut surrounding ""
-
-        self.nondet_identifiers[relevant_var] = {'line': item.coord.line,
-                                                 'origin file': item.coord.file,
-                                                 'scope': self.scope[-1]}
-        # no need to visit item.args, we don't do nested klee_make_symbolic calls
-        return []
-
-    def visit_FuncDef(self, item):
-        self.scope.append(ast_visitor.get_name(item.decl))
-        self.visit(item.body)
-        self.scope = self.scope[:-1]
-
-        return []
-
-
 class KleeTestValidator(TestValidator):
 
     def get_name(self):
@@ -125,7 +98,7 @@ class KleeTestValidator(TestValidator):
 
     def get_test_vector(self, test):
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool'), '--write-ints']
-        exec_output = utils.execute(ktest_tool + [test], log_output=False, quiet=True)
+        exec_output = utils.execute(ktest_tool + [test], err_to_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')
         objects = dict()
         for line in [l for l in test_info if l.startswith('object')]:
@@ -146,15 +119,15 @@ class KleeTestValidator(TestValidator):
         return objects
 
     def create_witness(self, filename, test_file):
-        witness = wit_gen.create_witness(producer=self.get_name(),
-                                         filename=filename,
-                                         test_vector=self.get_test_vector(test_file),
-                                         nondet_var_map=self.get_nondet_var_map(filename),
-                                         machine_model=self.machine_model)
+        witness = self.witness_creator.create_witness(producer=self.get_name(),
+                                                      filename=filename,
+                                                      test_vector=self.get_test_vector(test_file),
+                                                      nondet_var_map=self.get_nondet_var_map(filename),
+                                                      machine_model=self.machine_model)
 
         test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
         witness_file = test_name + ".witness.graphml"
-        witness_file = utils.create_file_path(witness_file, temp_dir=True)
+        witness_file = utils.get_file_path(witness_file, temp_dir=True)
 
         return {'name': witness_file, 'content': witness}
 
@@ -166,7 +139,16 @@ class KleeTestValidator(TestValidator):
         return witnesses
 
     def create_nondet_var_map(self, filename):
-        visitor = NondetIdentifierCollector()
+        visitor = VarMapBuilder()
         ast = pycparser.parse_file(filename)
         visitor.visit(ast)
         return visitor.nondet_identifiers
+
+
+class VarMapBuilder(ast_visitor.NondetIdentifierCollector):
+
+    def __init__(self):
+        super().__init__(klee_make_symbolic)
+
+    def get_var_name_from_function(self, item):
+        return item.args.exprs[2].value[1:-1]  # cut surrounding ""

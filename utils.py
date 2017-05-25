@@ -4,6 +4,7 @@ import os
 import time
 import hashlib
 import tempfile
+import pycparser
 
 
 class InputGenerationError(Exception):
@@ -58,14 +59,42 @@ if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 
 
-def execute(command, quiet=False, env=None, log_output=True, stop_flag=None, input_str=None):
-    if not quiet:
-        logging.info(" ".join(command))
+def parse_file_with_preprocessing(filename, includes=[]):
+    preprocessed_filename = preprocess(filename, includes)
+    ast = pycparser.parse_file(preprocessed_filename)
+    return ast
+
+
+def preprocess(filename, includes=[]):
+    preprocessed_filename = '.'.join(filename.split('/')[-1].split('.')[:-1] + ['i'])
+    preprocessed_filename = get_file_path(preprocessed_filename, temp_dir=True)
+    if preprocessed_filename == filename:
+        logging.warning("Overwriting existing file " + preprocessed_filename)
+
+    # The defines (-D) remove gcc extensions that pycparser can't handle
+    # -E : only preprocess
+    # -o : output file name
+    preprocess_cmd = ['gcc',
+                      '-E',
+                      '-D', '__attribute__(x)=',
+                      '-D', '__extension=']
+    for inc in includes:
+        preprocess_cmd += ['-I', inc]
+    preprocess_cmd += ['-o', preprocessed_filename,
+                       filename]
+    p = execute(preprocess_cmd)
+    return preprocessed_filename
+
+
+def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, input_str=None):
+    log_method = logging.debug if quiet else logging.info
+
+    log_method(" ".join(command))
 
     p = subprocess.Popen(command,
                          stdin=subprocess.PIPE if input_str else None,
                          stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT if log_output else subprocess.PIPE,
+                         stderr=subprocess.STDOUT if err_to_output else subprocess.PIPE,
                          universal_newlines=True,
                          env=env
                          )
@@ -84,8 +113,7 @@ def execute(command, quiet=False, env=None, log_output=True, stop_flag=None, inp
         output, err_output = p.communicate(input=input_str)
         returncode = p.poll()
 
-    if log_output:
-        logging.info(output)
+    log_method(output)
 
     return ExecutionResult(returncode, output, err_output)
 
@@ -126,6 +154,7 @@ def import_tool(tool_name):
         tool_module = 'benchexec.tools.' + tool_name
     return __import__(tool_module, fromlist=['Tool']).Tool()
 
+
 def get_cpachecker_options(witness_file):
     machine_model = get_machine_model(witness_file)
     if '32' in machine_model:
@@ -154,7 +183,7 @@ def get_cpachecker_options(witness_file):
         '-spec', spec_file]
 
 
-def create_file_path(filename, temp_dir=True):
+def get_file_path(filename, temp_dir=True):
     if temp_dir:
         prefix = tmp
     else:

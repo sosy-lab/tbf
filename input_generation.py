@@ -48,7 +48,7 @@ class BaseInputGenerator(object):
         :param module: The module to use for preparation
         :return: The name of the file containing the prepared content
         """
-        ast = self.parse_file(filename)
+        ast = utils.parse_file_with_preprocessing(filename)
         r = self.get_ast_replacer()
         # ps is list of ast pieces that must still be appended (must be empty!), new_ast is the modified ast
         ps, new_ast = r.visit(ast)
@@ -58,30 +58,10 @@ class BaseInputGenerator(object):
         generator = c_generator.CGenerator()
         return generator.visit(new_ast)
 
-    def parse_file(self, filename):
-        preprocessed_filename = '.'.join(filename.split('/')[-1].split('.')[:-1] + ['i'])
-        preprocessed_filename = utils.create_file_path(preprocessed_filename, temp_dir=True)
-        if preprocessed_filename == filename:
-            logging.info("File already preprocessed")
-        else:
-            # The defines (-D) remove gcc extensions that pycparser can't handle
-            # -E : only preprocess
-            # -o : output file name
-            preprocess_cmd = ['gcc',
-                              '-E',
-                              '-D', '__attribute__(x)=',
-                              '-D', '__extension=',
-                              '-o', preprocessed_filename,
-                              filename]
-            p = utils.execute(preprocess_cmd)
-
-        ast = pycparser.parse_file(preprocessed_filename)
-        return ast
-
     def generate_input(self, filename, stop_flag=None):
         suffix = filename.split('.')[-1]
         file_to_analyze = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
-        file_to_analyze = utils.create_file_path(file_to_analyze, temp_dir=True)
+        file_to_analyze = utils.get_file_path(file_to_analyze, temp_dir=True)
 
         if os.path.exists(file_to_analyze):
             logging.warning("Prepared file already exists. Not preparing again.")
@@ -93,7 +73,7 @@ class BaseInputGenerator(object):
 
         cmds = self.create_input_generation_cmds(file_to_analyze)
         for cmd in cmds:
-            result = utils.execute(cmd, env=self.get_run_env())
+            result = utils.execute(cmd, env=self.get_run_env(), quiet=True, err_to_output=True)
             if BaseInputGenerator.failed(result):
                 raise utils.InputGenerationError('Generating input failed at command ' + ' '.join(cmd))
         return file_to_analyze

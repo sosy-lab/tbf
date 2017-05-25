@@ -2,7 +2,8 @@
 
 project_dir=`realpath run_iuv | rev | cut -d'/' -f 2- | rev`
 klee_lib=${project_dir}/klee/lib
-export LD_LIBRARY_PATH=$klee_lib:$LD_LIBRARY_PATH
+crest_lib=${project_dir}/crest/lib
+export LD_LIBRARY_PATH=$klee_lib:$crest_lib:$LD_LIBRARY_PATH
 export KLEE_RUNTIME_LIBRARY_PATH=$klee_lib
 export PYTHONPATH="./lib/py"
 python3 iuv.py $@

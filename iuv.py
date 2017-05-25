@@ -86,13 +86,12 @@ def _get_input_generator_module(args):
 
 def _get_validator_module(args):
     validator = args.input_generator.lower()
-    if input_generator == 'klee':
+    if validator == 'klee':
         return klee.KleeTestValidator()
-    elif input_generator == 'crest':
-        return crest.InputGenerator(args.ig_timelimit, args.log_verbose)
+    elif validator == 'crest':
+        return crest.CrestTestValidator()
     else:
-        raise AssertionError('Unhandled input generator: ' + input_generator)
-
+        raise AssertionError('Unhandled validator: ' + validator)
 
 
 def run():
@@ -101,6 +100,8 @@ def run():
     filename = os.path.abspath(args.file)
     inp_module = _get_input_generator_module(args)
 
+    old_dir = os.path.abspath('.')
+    os.chdir(utils.tmp)
     if args.run_parallel:
         stop_event = threading.Event()
         generator_thread = threading.Thread(target=inp_module.generate_input, args=(filename, stop_event))
@@ -116,6 +117,7 @@ def run():
     if stop_event:
         stop_event.set()
 
+    os.chdir(old_dir)
     if error_reached:
         print("IUV: FALSE")
     else:
