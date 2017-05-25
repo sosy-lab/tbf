@@ -77,7 +77,7 @@ class WitnessCreator(object):
 
         return graph
 
-    def _create_automaton(self, graph, producer, filename, test_vector, var_map, machine_model):
+    def _create_automaton(self, graph, producer, filename, test_vector, nondet_methods, machine_model):
         # Create entry node
         previous_node = self._create_node(entry=True)
 
@@ -87,15 +87,14 @@ class WitnessCreator(object):
             target_node = self._create_node()
             graph.append(target_node)
             if instantiation['name']:
-                possible_vars = [instantiation['name']]
+                possible_methods = [instantiation['name']]
             else:
-                possible_vars = sorted(var_map.keys()) # Sort just so the witness always looks the same
+                possible_methods = sorted(nondet_methods) # Sort just so the witness always looks the same
 
-            for var_name in possible_vars:
-                line = var_map[var_name]['line']
-                scope = var_map[var_name]['scope']
-                assumption = var_name + ' == ' + instantiation['value'] + ';'
-                new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), assumption, line, scope)
+            for nondet_method in possible_methods:
+                assumption = '\\result == ' + instantiation['value'] + ';'
+                new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), assumption)
+                new_edge.append(self._create_data_element('assumption.resultfunction', nondet_method))
                 graph.append(new_edge)
             previous_node = target_node
 
@@ -106,14 +105,14 @@ class WitnessCreator(object):
 
         return graph
 
-    def _create_graph(self, producer, filename, test_vector, var_map, machine_model):
+    def _create_graph(self, producer, filename, test_vector, nondet_methods, machine_model):
         graph = self._create_graph_head(producer, filename, machine_model)
-        return self._create_automaton(graph, producer, filename, test_vector, var_map, machine_model)
+        return self._create_automaton(graph, producer, filename, test_vector, nondet_methods, machine_model)
 
-    def create_witness(self, producer, filename, test_vector, nondet_var_map, machine_model):
+    def create_witness(self, producer, filename, test_vector, nondet_methods, machine_model):
         self._reset_node_id()
         witness = self._create_witness_header(filename)
-        graph = self._create_graph(producer, filename, test_vector, nondet_var_map, machine_model)
+        graph = self._create_graph(producer, filename, test_vector, nondet_methods, machine_model)
         witness.append(graph)
 
         xml_string = ET.tostring(witness, 'utf-8')

@@ -4,10 +4,9 @@ import utils
 import glob
 import os
 import ast_visitor
-from ast_visitor import NondetReplacer,DfsVisitor
+from ast_visitor import NondetReplacer
 from pycparser import c_ast as a
 import pycparser
-import re
 
 include_dir = os.path.abspath('./klee/include/')
 lib_dir = os.path.abspath('./klee/lib')
@@ -16,6 +15,7 @@ tests_output = utils.tmp
 tests_dir = os.path.join(tests_output, 'klee-tests')
 klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
+sym_var_prefix = '__sym_'
 
 
 class InputGenerator(BaseInputGenerator):
@@ -36,6 +36,29 @@ class InputGenerator(BaseInputGenerator):
     def get_name(self):
         return name
 
+    def prepare(self, filecontent):
+        content = filecontent
+        content += '\n'
+        nondet_methods_used = utils.get_nondet_methods(filecontent)
+        for method in nondet_methods_used:  # append method definition at end of file content
+            nondet_method_definition = self._get_nondet_method(method[:-2])
+            content += nondet_method_definition
+        return content
+
+    def _get_nondet_method(self, method_name):
+        assert method_name.startswith('__VERIFIER_nondet_')
+        m_type = method_name[len('__VERIFIER_nondet_'):]
+        if m_type[0] == 'u' and m_type != 'unsigned':  # resolve uint to unsigned int (e.g.)
+            m_type = 'unsigned ' + m_type[1:]
+        elif m_type == 'pointer':
+            m_type = 'void *'
+        return self._create_nondet_method(method_name, m_type)
+
+    def _create_nondet_method(self, method_name, method_type):
+        var_name = sym_var_prefix + method_name[len('__VERIFIER_nondet_'):]
+        return '{0} {1}() {{\n    {0} {2};\n    klee_make_symbolic(&{2}, sizeof({2}), \"{2}\");\n    return {2};\n}}\n'.\
+            format(method_type, method_name, var_name)
+
     def create_input_generation_cmds(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
         compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
@@ -51,7 +74,7 @@ class InputGenerator(BaseInputGenerator):
         return [compile_cmd, input_generation_cmd]
 
     def get_ast_replacer(self):
-        return AstReplacer()
+        return None
 
 
 
@@ -98,7 +121,7 @@ class KleeTestValidator(TestValidator):
 
     def get_test_vector(self, test):
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool'), '--write-ints']
-        exec_output = utils.execute(ktest_tool + [test], err_to_output=False, quiet=True)
+        exec_output = utils.execute(ktest_tool + [test], err_to_output=False, quiet=False)
         test_info = exec_output.stdout.split('\n')
         objects = dict()
         for line in [l for l in test_info if l.startswith('object')]:
@@ -108,7 +131,8 @@ class KleeTestValidator(TestValidator):
                 var_name = line.split(':')[2][2:-1]  # [1:-1] to cut the surrounding ''
                 if var_number not in objects.keys():
                     objects[var_number] = dict()
-                objects[var_number]['name'] = var_name
+                nondet_method_name = self._get_nondet_method_name(var_name)
+                objects[var_number]['name'] = nondet_method_name
 
             elif 'data:' in line:
                 assert len(line.split(':')) == 3
@@ -118,16 +142,19 @@ class KleeTestValidator(TestValidator):
 
         return objects
 
+    def _get_nondet_method_name(self, nondet_var_name):
+        return '__VERIFIER_nondet_' + nondet_var_name[len(sym_var_prefix):]
+
     def create_witness(self, filename, test_file):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=self.get_test_vector(test_file),
-                                                      nondet_var_map=self.get_nondet_var_map(filename),
+                                                      nondet_methods=utils.get_nondet_methods(filename),
                                                       machine_model=self.machine_model)
 
         test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
         witness_file = test_name + ".witness.graphml"
-        witness_file = utils.get_file_path(witness_file, temp_dir=True)
+        witness_file = utils.get_file_path(witness_file, temp_dir=False)
 
         return {'name': witness_file, 'content': witness}
 
@@ -137,18 +164,3 @@ class KleeTestValidator(TestValidator):
             witness = self.create_witness(filename, test)
             witnesses.append(witness)
         return witnesses
-
-    def create_nondet_var_map(self, filename):
-        visitor = VarMapBuilder()
-        ast = pycparser.parse_file(filename)
-        visitor.visit(ast)
-        return visitor.nondet_identifiers
-
-
-class VarMapBuilder(ast_visitor.NondetIdentifierCollector):
-
-    def __init__(self):
-        super().__init__(klee_make_symbolic)
-
-    def get_var_name_from_function(self, item):
-        return item.args.exprs[2].value[1:-1]  # cut surrounding ""

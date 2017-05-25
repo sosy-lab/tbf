@@ -36,6 +36,7 @@ class TestValidator(object):
         pass
 
     def check_inputs(self, filename, generator_thread=None):
+        logging.debug('Checking inputs for file %s', filename)
         produced_witnesses = self.create_all_witnesses(filename)
 
         validator = ValidationRunner()
@@ -56,7 +57,7 @@ class TestValidator(object):
 class ValidationRunner(object):
 
     def __init__(self):
-        self.validators = [FShellW2t()]
+        self.validators = [CPAcheckerValidator()]
 
     def run(self, program_file, witness_file):
         results = []
@@ -102,10 +103,10 @@ class Validator(object):
         pass
 
 
-class CPAcheckerValidator(object):
+class CPAcheckerValidator(Validator):
 
     def __init__(self):
-        self.tool = utils.import_tool('cpachecker')
+        super().__init__('cpachecker')
         self.executable = None  # executable will compile CPAchecker when called, so only do this if we really validate
 
     def _get_cmd(self, program_file, witness_file):

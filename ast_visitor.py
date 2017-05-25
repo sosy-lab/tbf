@@ -491,7 +491,6 @@ class NondetReplacer(DfsVisitor):
         self.c_generator = c_generator.CGenerator()
         self.var_stack = [{'name': None, 'vars': dict()}]
 
-
     def _build_nondet_type_decl(self, var_name, var_type):
         if type(var_type) is a.IdentifierType:
             return var_type

@@ -11,7 +11,7 @@ import utils
 
 import threading
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 __VERSION__ = 0.1
 
@@ -112,7 +112,7 @@ def run():
         file_for_analysis = inp_module.generate_input(filename)
 
     validator_module = _get_validator_module(args)
-    error_reached = validator_module.check_inputs(file_for_analysis, generator_thread)
+    error_reached = validator_module.check_inputs(filename, generator_thread)
 
     if stop_event:
         stop_event.set()

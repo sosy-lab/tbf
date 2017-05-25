@@ -5,6 +5,7 @@ import time
 import hashlib
 import tempfile
 import pycparser
+import re
 
 
 class InputGenerationError(Exception):
@@ -54,6 +55,7 @@ sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
 spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
 output_dir = os.path.abspath('./output')
 tmp = tempfile.mkdtemp()
+nondet_pattern = re.compile('__VERIFIER_nondet_.+\(\)')
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
@@ -195,3 +197,12 @@ def get_env_with_path_added(path_addition):
     env = os.environ.copy()
     env['PATH'] = path_addition + os.pathsep + env['PATH']
     return env
+
+
+def get_nondet_methods(file_content):
+    if os.path.exists(file_content):
+        with open(file_content, 'r') as inp:
+            content = inp.read()
+    else:
+        content = file_content
+    return set(nondet_pattern.findall(content))

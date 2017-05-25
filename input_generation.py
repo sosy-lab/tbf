@@ -1,8 +1,7 @@
 import utils
 import os
 import logging
-import pycparser
-from pycparser import c_generator
+import re
 from abc import ABCMeta, abstractmethod
 
 
@@ -14,10 +13,6 @@ class BaseInputGenerator(object):
     @abstractmethod
     def create_input_generation_cmds(self, filename):
         pass
-
-    @abstractmethod
-    def get_ast_replacer(self):
-        return None
 
     @abstractmethod
     def get_name(self):
@@ -32,31 +27,22 @@ class BaseInputGenerator(object):
         return result.returncode < 0
 
     def __init__(self, timelimit, machine_model):
-        self._nondet_var_map = None
         self.machine_model = machine_model
         self.timelimit = int(timelimit) if timelimit else 0
 
-    def prepare(self, filename):
-        """
-        Prepares the file with the given name according to the module
-        provided. E.g., if the module provided is intended to prepare for klee,
-        the file provided will be prepared to run klee on it.
-        The prepared file is written to a new file. The name of this file is
-        returned by this function.
+    @abstractmethod
+    def prepare(self, filecontent):
+        pass
 
-        :param filename: The name of the file to prepare
-        :param module: The module to use for preparation
-        :return: The name of the file containing the prepared content
-        """
-        ast = utils.parse_file_with_preprocessing(filename)
-        r = self.get_ast_replacer()
-        # ps is list of ast pieces that must still be appended (must be empty!), new_ast is the modified ast
-        ps, new_ast = r.visit(ast)
-        assert not ps  # Make sure that there are no ast pieces left that must be appended
+    def prepare0(self, filename):
+        with open(filename, 'r') as outp:
+            content = outp.read()
+        content += '\n'
+        content += self._get_error_dummy()
+        return self.prepare(content)
 
-        logging.debug("Prepared content")
-        generator = c_generator.CGenerator()
-        return generator.visit(new_ast)
+    def _get_error_dummy(self):
+        return 'void __VERIFIER_error() { exit(107); }\n'
 
     def generate_input(self, filename, stop_flag=None):
         suffix = filename.split('.')[-1]
@@ -67,7 +53,7 @@ class BaseInputGenerator(object):
             logging.warning("Prepared file already exists. Not preparing again.")
             return file_to_analyze
 
-        prepared_content = self.prepare(filename)
+        prepared_content = self.prepare0(filename)
         with open(file_to_analyze, 'w+') as new_file:
             new_file.write(prepared_content)
 

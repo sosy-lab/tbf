@@ -18,7 +18,7 @@ name = 'crest'
 class InputGenerator(BaseInputGenerator):
 
     def get_ast_replacer(self):
-        return AstReplacer()
+        return None
 
     def __init__(self, timelimit=0, log_verbose=False, search_heuristic='cfg', machine_model='32bit'):
         super().__init__(timelimit, machine_model)
@@ -35,11 +35,35 @@ class InputGenerator(BaseInputGenerator):
     def get_run_env(self):
         return self._run_env
 
-    def prepare(self, filename):
-        content = super().prepare(filename)
-        content = '#include <crest.h>\n' + content
-
+    def prepare(self, filecontent):
+        content = '#include<crest.h>\n'
+        content += filecontent
+        content += '\n'
+        nondet_methods_used = utils.get_nondet_methods(filecontent)
+        for method in nondet_methods_used:  # append method definition at end of file content
+            nondet_method_definition = self._get_nondet_method(method[:-2])
+            content += nondet_method_definition
         return content
+
+    def _get_nondet_method(self, method_name):
+        assert method_name.startswith('__VERIFIER_nondet_')
+        m_type = method_name[len('__VERIFIER_nondet_'):]
+        if m_type[0] == 'u' and m_type != 'unsigned':  # resolve uint to unsigned int (e.g.)
+            m_type = 'unsigned ' + m_type[1:]
+        elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
+            self._get_nondet_method('__VERIFIER_nondet_uint')
+        if not self.is_supported_type(m_type):
+            raise utils.InputGenerationError('Crest can\'t handle symbolic values of type ' + m_type)
+        return self._create_nondet_method(method_name, m_type)
+
+    def is_supported_type(self, method_type):
+        return method_type in ['int', 'short', 'char', 'unsigned int', 'unsigned short', 'unsigned char']
+
+    def _create_nondet_method(self, method_name, method_type):
+        var_name = '__sym_' + method_name[len('__VERIFIER_nondet_'):]
+        marker_method_call = 'CREST_' + '_'.join(method_type.split())
+        return '{0} {1}() {{\n    {0} {2};\n ;\n    {3}({2});\n    return {2};\n}}\n'. \
+            format(method_type, method_name, var_name, marker_method_call)
 
     def create_input_generation_cmds(self, filename):
         compile_cmd = [os.path.join(bin_dir, 'crestc'),
@@ -102,21 +126,6 @@ class CrestTestValidator(TestValidator):
     def get_name(self):
         return name
 
-    def _dummy_crest_methods(self):
-        methods = ['void CREST_int(int x) { }',
-                   'void CREST_unsigned_int(int x) { }',
-                   'void CREST_short(short int x) { }',
-                   'void CREST_unsigned_short(unsigned short int x) { }',
-                   'void CREST_char(char x) { }',
-                   'void CREST_unsigned_char(unsigned char x) { }']
-        return methods
-
-    def create_nondet_var_map(self, filename):
-        visitor = VarMapBuilder()
-        ast = pycparser.parse_file(filename)
-        visitor.visit(ast)
-        return visitor.nondet_identifiers
-
     def get_test_vector(self, test):
         test_vector = dict()
         with open(test, 'r') as inp:
@@ -151,7 +160,7 @@ class CrestTestValidator(TestValidator):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_var_map=self.get_nondet_var_map(filename),
+                                                      nondet_methods=utils.get_nondet_methods(filename),
                                                       machine_model=self.machine_model)
 
         test_name = os.path.basename(test_file)
@@ -168,37 +177,3 @@ class CrestTestValidator(TestValidator):
             if new_witness:  # It's possible that no witness is created due to a missing test vector
                 witnesses.append(new_witness)
         return witnesses
-
-    def prepare_for_validation(self, filename):
-        with open(filename, 'r') as inp:
-            file_content = inp.readlines()
-        file_lines_without_directives = []
-        for line in file_content:
-            if line.startswith('#include'):
-                file_lines_without_directives.append('')  # Empty line to keep line numbers correct
-            else:
-                file_lines_without_directives.append(line.strip())  # Let's keep newlines away everywhere for now
-        # Add dummy methods at end so they don't influence the existing line numbers
-        file_lines_without_directives += self._dummy_crest_methods()
-        file_content_without_directives = '\n'.join(file_lines_without_directives)
-
-        new_file_name = '.'.join(os.path.basename(filename).split('.')[:-1] + ['i'])
-        new_file_name = utils.get_file_path(new_file_name, temp_dir=False)
-        with open(new_file_name, 'w+') as outp:
-            outp.write(file_content_without_directives)
-        logging.info("Prepared file " + filename + " as " + new_file_name)
-        return new_file_name
-
-    # Override
-    def check_inputs(self, filename, generator_thread=None):
-        prepared_file = self.prepare_for_validation(filename)
-        return super().check_inputs(prepared_file, generator_thread)
-
-
-class VarMapBuilder(NondetIdentifierCollector):
-
-    def __init__(self):
-        super().__init__('CREST_[a-zA-Z]*')
-
-    def get_var_name_from_function(self, item):
-        return item.args.exprs[0].name  # here, the argument is a program variable identifier
