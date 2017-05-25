@@ -177,7 +177,7 @@ class CrestTestValidator(TestValidator):
             if line.startswith('#include'):
                 file_lines_without_directives.append('')  # Empty line to keep line numbers correct
             else:
-                file_lines_without_directives.append(line)
+                file_lines_without_directives.append(line.strip())  # Let's keep newlines away everywhere for now
         # Add dummy methods at end so they don't influence the existing line numbers
         file_lines_without_directives += self._dummy_crest_methods()
         file_content_without_directives = '\n'.join(file_lines_without_directives)
