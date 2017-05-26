@@ -11,7 +11,7 @@ import utils
 
 import threading
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 __VERSION__ = 0.1
 
