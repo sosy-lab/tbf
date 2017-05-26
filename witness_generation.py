@@ -77,7 +77,7 @@ class WitnessCreator(object):
 
         return graph
 
-    def _create_automaton(self, graph, producer, filename, test_vector, nondet_methods, machine_model):
+    def _create_automaton(self, graph, test_vector, nondet_methods, error_line):
         # Create entry node
         previous_node = self._create_node(entry=True)
 
@@ -100,19 +100,19 @@ class WitnessCreator(object):
 
         target_node = self._create_node(violation=True)
         graph.append(target_node)
-        new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'))
+        new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), startline=error_line)
         graph.append(new_edge)
 
         return graph
 
-    def _create_graph(self, producer, filename, test_vector, nondet_methods, machine_model):
+    def _create_graph(self, producer, filename, test_vector, nondet_methods, machine_model, error_line):
         graph = self._create_graph_head(producer, filename, machine_model)
-        return self._create_automaton(graph, producer, filename, test_vector, nondet_methods, machine_model)
+        return self._create_automaton(graph, test_vector, nondet_methods, error_line)
 
-    def create_witness(self, producer, filename, test_vector, nondet_methods, machine_model):
+    def create_witness(self, producer, filename, test_vector, nondet_methods, machine_model, error_line):
         self._reset_node_id()
         witness = self._create_witness_header(filename)
-        graph = self._create_graph(producer, filename, test_vector, nondet_methods, machine_model)
+        graph = self._create_graph(producer, filename, test_vector, nondet_methods, machine_model, error_line)
         witness.append(graph)
 
         xml_string = ET.tostring(witness, 'utf-8')

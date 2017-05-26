@@ -14,14 +14,17 @@ class TestValidator(object):
         self.machine_model = machine_model
         self.witness_creator = wit_gen.WitnessCreator()
 
-    def get_nondet_var_map(self, filename):
-        """
-        Returns data structure with information about all non-deterministic variables.
-        Expected structure: var_map[variable_name] = {'line': line_number, 'origin file': source file,}
-        """
-        if not self._nondet_var_map:
-            self._nondet_var_map = self.create_nondet_var_map(filename)
-        return self._nondet_var_map
+    def get_error_line(self, filename):
+        with open(filename, 'r') as inp:
+            content = inp.readlines()
+        error_line = -1
+        for line_num, line in enumerate(content, start=1):
+            # Try to differentiate definition from call through the 'void' condition
+            if '__VERIFIER_error' in line and 'void' not in line:
+                assert error_line == -1  # Assert that there's only one call to __VERIFIER_error()
+                error_line = line_num
+        assert error_line > 0  # Assert that there's a call to __VERIFIER_error
+        return error_line
 
     @abstractmethod
     def create_nondet_var_map(self, filename):

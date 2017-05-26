@@ -121,7 +121,7 @@ class KleeTestValidator(TestValidator):
 
     def get_test_vector(self, test):
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool'), '--write-ints']
-        exec_output = utils.execute(ktest_tool + [test], err_to_output=False, quiet=False)
+        exec_output = utils.execute(ktest_tool + [test], err_to_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')
         objects = dict()
         for line in [l for l in test_info if l.startswith('object')]:
@@ -150,7 +150,8 @@ class KleeTestValidator(TestValidator):
                                                       filename=filename,
                                                       test_vector=self.get_test_vector(test_file),
                                                       nondet_methods=utils.get_nondet_methods(filename),
-                                                      machine_model=self.machine_model)
+                                                      machine_model=self.machine_model,
+                                                      error_line=self.get_error_line(filename))
 
         test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
         witness_file = test_name + ".witness.graphml"

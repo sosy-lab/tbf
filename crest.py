@@ -161,7 +161,8 @@ class CrestTestValidator(TestValidator):
                                                       filename=filename,
                                                       test_vector=test_vector,
                                                       nondet_methods=utils.get_nondet_methods(filename),
-                                                      machine_model=self.machine_model)
+                                                      machine_model=self.machine_model,
+                                                      error_line=self.get_error_line(filename))
 
         test_name = os.path.basename(test_file)
         witness_file = test_name + ".witness.graphml"
