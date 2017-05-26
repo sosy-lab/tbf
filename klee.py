@@ -41,7 +41,7 @@ class InputGenerator(BaseInputGenerator):
         content += '\n'
         nondet_methods_used = utils.get_nondet_methods(filecontent)
         for method in nondet_methods_used:  # append method definition at end of file content
-            nondet_method_definition = self._get_nondet_method(method[:-2])
+            nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
         return content
 
@@ -145,10 +145,10 @@ class KleeTestValidator(TestValidator):
     def _get_nondet_method_name(self, nondet_var_name):
         return '__VERIFIER_nondet_' + nondet_var_name[len(sym_var_prefix):]
 
-    def create_witness(self, filename, test_file):
+    def create_witness(self, filename, test_file, test_vector):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
-                                                      test_vector=self.get_test_vector(test_file),
+                                                      test_vector=test_vector,
                                                       nondet_methods=utils.get_nondet_methods(filename),
                                                       machine_model=self.machine_model,
                                                       error_line=self.get_error_line(filename))
@@ -159,9 +159,28 @@ class KleeTestValidator(TestValidator):
 
         return {'name': witness_file, 'content': witness}
 
-    def create_all_witnesses(self, filename):
-        witnesses = []
+    def create_harness(self, filename, test_file, test_vector):
+        harness = self.harness_creator.create_harness(producer=self.get_name(),
+                                                      filename=filename,
+                                                      test_vector=test_vector,
+                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      error_method=utils.error_method)
+        test_name = os.path.basename(test_file)
+        harness_file = test_name + '.harness.c'
+        harness_file = utils.get_file_path(harness_file, temp_dir=False)
+
+        return {'name': harness_file, 'content': harness}
+
+    def _create_all_x(self, filename, creator_method):
+        created_content = []
         for test in glob.iglob(tests_dir + '/*.ktest'):
-            witness = self.create_witness(filename, test)
-            witnesses.append(witness)
-        return witnesses
+            test_vector = self.get_test_vector(test)
+            new_content = creator_method(filename, test, test_vector)
+            created_content.append(new_content)
+        return created_content
+
+    def create_all_witnesses(self, filename):
+        return self._create_all_x(filename, self.create_witness)
+
+    def create_all_harnesses(self, filename):
+        return self._create_all_x(filename, self.create_harness)

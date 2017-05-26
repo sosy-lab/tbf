@@ -46,8 +46,7 @@ class InputGenerator(BaseInputGenerator):
         return content
 
     def _get_nondet_method(self, method_name):
-        assert method_name.startswith('__VERIFIER_nondet_')
-        m_type = method_name[len('__VERIFIER_nondet_'):]
+        m_type = utils.get_return_type(method_name)
         if m_type[0] == 'u' and m_type != 'unsigned':  # resolve uint to unsigned int (e.g.)
             m_type = 'unsigned ' + m_type[1:]
         elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
@@ -140,7 +139,7 @@ class CrestTestValidator(TestValidator):
         else:
             return test_vector
 
-    def create_witness(self, filename, test_file):
+    def create_witness(self, filename, test_file, test_vector):
         """
         Creates a witness for the test file produced by crest.
         Test files produced by our version of crest specify one test value per line, without
@@ -152,7 +151,6 @@ class CrestTestValidator(TestValidator):
         that the variable specified in the corresponding CREST_x(..) function has the current
         test value.
         """
-        test_vector = self.get_test_vector(test_file)
         # If no inputs are defined don't create a witness
         if not test_vector:
             logging.debug("Test case empty, no witness is created")
@@ -170,11 +168,34 @@ class CrestTestValidator(TestValidator):
 
         return {'name': witness_file, 'content': witness}
 
-    def create_all_witnesses(self, filename):
-        witnesses = []
+    def create_harness(self, filename, test_file, test_vector):
+        # If no inputs are defined don't create a witness
+        if not test_vector:
+            logging.debug("Test case empty, no harness is created")
+            return None
+        harness = self.harness_creator.create_harness(producer=self.get_name(),
+                                                      filename=filename,
+                                                      test_vector=test_vector,
+                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      error_method=utils.error_method)
+        test_name = os.path.basename(test_file)
+        harness_file = test_name + '.harness.c'
+        harness_file = utils.get_file_path(harness_file, temp_dir=False)
+
+        return {'name': harness_file, 'content': harness}
+
+    def _create_all_x(self, filename, creation_method):
+        created_content = []
         test_name_pattern = re.compile('input[0-9]+')
         for test_file in [f for f in os.listdir('.') if test_name_pattern.match(f)]:
-            new_witness = self.create_witness(filename, test_file)
-            if new_witness:  # It's possible that no witness is created due to a missing test vector
-                witnesses.append(new_witness)
-        return witnesses
+            test_vector = self.get_test_vector(test_file)
+            new_content = creation_method(filename, test_file, test_vector)
+            if new_content:  # It's possible that no witness is created due to a missing test vector
+                created_content.append(new_content)
+        return created_content
+
+    def create_all_witnesses(self, filename):
+        return self._create_all_x(filename, self.create_witness)
+
+    def create_all_harnesses(self, filename):
+        return self._create_all_x(filename, self.create_harness)

@@ -10,6 +10,7 @@ import crest
 import utils
 
 import threading
+from test_validation import ValidationConfig
 
 logging.basicConfig(level=logging.INFO)
 
@@ -40,6 +41,40 @@ def _create_cli_arg_parser():
                                            + " stops and analysis is performed\nwith the inputs generated up"
                                            + " to this point."
                                       )
+    validation_args = run_args.add_argument_group('Validation')
+    witness_validation_args = validation_args.add_argument_group('Witness validation')
+    witness_validation_args.add_argument('--witness-validation',
+                                         dest="witness_validation",
+                                         action='store_true',
+                                         default=False,
+                                         help="use witness validation to find successful test vector"
+                                         )
+
+    witness_validation_args.add_argument('--validators',
+                                         dest="validators",
+                                         nargs="+",
+                                         help="witness validators to use for witness validation."
+                                              " Requires parameter --witness-validation to be specified to be effective.")
+
+    validation_args.add_argument('--execution',
+                                 dest="execution_validation",
+                                 action="store_true",
+                                 default=False,
+                                 help="use test execution to find successful test vector"
+                                 )
+
+    machine_model_args = run_args.add_mutually_exclusive_group()
+    machine_model_args.add_argument('-32',
+                                    dest="machine_model",
+                                    action="store_const",
+                                    const="32bit",
+                                    help="Use 32 bit machine model"
+                                    )
+    machine_model_args.add_argument('-64',
+                                    dest="machine_model",
+                                    action="store_const",
+                                    const="64bit",
+                                    help="Use 64 bit machine model")
 
     run_args.add_argument('--verbose', '-v',
                           dest="log_verbose",
@@ -86,10 +121,11 @@ def _get_input_generator_module(args):
 
 def _get_validator_module(args):
     validator = args.input_generator.lower()
+    validation_config = ValidationConfig(args)
     if validator == 'klee':
-        return klee.KleeTestValidator()
+        return klee.KleeTestValidator(validation_config)
     elif validator == 'crest':
-        return crest.CrestTestValidator()
+        return crest.CrestTestValidator(validation_config)
     else:
         raise AssertionError('Unhandled validator: ' + validator)
 

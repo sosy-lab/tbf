@@ -42,7 +42,7 @@ class BaseInputGenerator(object):
         return self.prepare(content)
 
     def _get_error_dummy(self):
-        return 'void __VERIFIER_error() { exit(107); }\n'
+        return 'void ' + utils.error_method + '() { exit(107); }\n'
 
     def generate_input(self, filename, stop_flag=None):
         suffix = filename.split('.')[-1]

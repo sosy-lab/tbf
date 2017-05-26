@@ -89,7 +89,7 @@ class WitnessCreator(object):
             if instantiation['name']:
                 possible_methods = [instantiation['name']]
             else:
-                possible_methods = sorted(nondet_methods) # Sort just so the witness always looks the same
+                possible_methods = sorted(nondet_methods)  # Sort just so the witness always looks the same
 
             for nondet_method in possible_methods:
                 assumption = '\\result == ' + instantiation['value'] + ';'

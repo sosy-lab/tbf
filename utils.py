@@ -8,6 +8,13 @@ import pycparser
 import re
 
 
+class ConfigError(Exception):
+
+    def __init__(self, msg=None, cause=None):
+        self.msg = msg
+        self.cause = cause
+
+
 class InputGenerationError(Exception):
 
     def __init__(self, msg=None, cause=None):
@@ -51,6 +58,7 @@ class ExecutionResult(object):
 
 
 error_return = 107
+error_method = '__VERIFIER_error'
 sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
 spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
 output_dir = os.path.abspath('./output')
@@ -205,4 +213,10 @@ def get_nondet_methods(file_content):
             content = inp.read()
     else:
         content = file_content
-    return set(nondet_pattern.findall(content))
+    return set([s[:-2] for s in nondet_pattern.findall(content)])
+
+
+def get_return_type(method):
+    assert method.startswith('__VERIFIER_nondet_')
+    assert method[-2:] != '()'
+    return method[len('__VERIFIER_nondet_'):]
