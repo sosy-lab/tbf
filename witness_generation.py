@@ -98,10 +98,20 @@ class WitnessCreator(object):
                 graph.append(new_edge)
             previous_node = target_node
 
+        # Add transition to violation node if line representing error location is reached
         target_node = self._create_node(violation=True)
         graph.append(target_node)
         new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), startline=error_line)
         graph.append(new_edge)
+
+        # Add transition to sink node if an additional nondet call is performed
+        sink_node = self._create_node()
+        sink_node.set('id', 'sink')
+        for nondet_method in possible_methods:
+            assumption = '\\result == 0;'  # dummy assumption
+            new_edge = self._create_edge(previous_node.get('id'), sink_node.get('id'), assumption)
+            new_edge.append(self._create_data_element('assumption.resultfunction', nondet_method))
+            graph.append(new_edge)
 
         return graph
 
