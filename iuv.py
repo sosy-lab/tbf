@@ -148,16 +148,16 @@ def run():
         file_for_analysis = inp_module.generate_input(filename)
 
     validator_module = _get_validator_module(args)
-    error_reached = validator_module.check_inputs(filename, generator_thread)
+    validation_result = validator_module.check_inputs(filename, generator_thread)
 
     if stop_event:
         stop_event.set()
 
     os.chdir(old_dir)
-    if error_reached:
-        print("IUV: FALSE")
-    else:
+    if validation_result:
         print("IUV: UNKNOWN")
+    else:
+        print("IUV: FALSE")
 
 if __name__ == '__main__':
     default_err = "Unknown error"
