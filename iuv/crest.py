@@ -41,7 +41,7 @@ class InputGenerator(BaseInputGenerator):
         content += '\n'
         nondet_methods_used = utils.get_nondet_methods(filecontent)
         for method in nondet_methods_used:  # append method definition at end of file content
-            nondet_method_definition = self._get_nondet_method(method[:-2])
+            nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
         return content
 
