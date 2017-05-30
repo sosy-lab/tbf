@@ -6,6 +6,10 @@ class HarnessCreator(object):
     def __init__(self):
         pass
 
+    def _get_preamble(self):
+        preamble = 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        exit(0);\n    }\n    }\n'
+        return preamble
+
     def _get_error_definition(self, method_name):
         definition = 'void {0}() {{\n    exit({1});\n}}\n'.format(method_name, utils.error_return)
         return definition
@@ -30,6 +34,7 @@ class HarnessCreator(object):
 
     def create_harness(self, producer, filename, test_vector, nondet_methods, error_method):
         harness = '#include <stdlib.h>\n\n'
+        harness += self._get_preamble()
         harness += self._get_error_definition(error_method)
         harness += self._get_nondet_method_definitions(test_vector, nondet_methods)
 
