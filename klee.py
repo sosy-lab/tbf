@@ -171,16 +171,21 @@ class KleeTestValidator(TestValidator):
 
         return {'name': harness_file, 'content': harness}
 
-    def _create_all_x(self, filename, creator_method):
+    def _create_all_x(self, filename, creator_method, visited_tests):
         created_content = []
         for test in glob.iglob(tests_dir + '/*.ktest'):
+            test_name = test.split('/')[-1]
+            if test_name in visited_tests:
+                continue
+            else:
+                visited_tests.add(test_name)
             test_vector = self.get_test_vector(test)
             new_content = creator_method(filename, test, test_vector)
             created_content.append(new_content)
         return created_content
 
-    def create_all_witnesses(self, filename):
-        return self._create_all_x(filename, self.create_witness)
+    def create_all_witnesses(self, filename, visited_tests):
+        return self._create_all_x(filename, self.create_witness, visited_tests)
 
-    def create_all_harnesses(self, filename):
-        return self._create_all_x(filename, self.create_harness)
+    def create_all_harnesses(self, filename, visited_tests):
+        return self._create_all_x(filename, self.create_harness, visited_tests)

@@ -184,18 +184,23 @@ class CrestTestValidator(TestValidator):
 
         return {'name': harness_file, 'content': harness}
 
-    def _create_all_x(self, filename, creation_method):
+    def _create_all_x(self, filename, creation_method, visited_tests):
         created_content = []
         test_name_pattern = re.compile('input[0-9]+')
         for test_file in [f for f in os.listdir('.') if test_name_pattern.match(f)]:
+            test_name = test_file.split('/')[-1]
+            if test_name in visited_tests:
+                continue
+            else:
+                visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_file)
             new_content = creation_method(filename, test_file, test_vector)
             if new_content:  # It's possible that no witness is created due to a missing test vector
                 created_content.append(new_content)
         return created_content
 
-    def create_all_witnesses(self, filename):
-        return self._create_all_x(filename, self.create_witness)
+    def create_all_witnesses(self, filename, visited_tests):
+        return self._create_all_x(filename, self.create_witness, visited_tests)
 
-    def create_all_harnesses(self, filename):
-        return self._create_all_x(filename, self.create_harness)
+    def create_all_harnesses(self, filename, visited_tests):
+        return self._create_all_x(filename, self.create_harness, visited_tests)
