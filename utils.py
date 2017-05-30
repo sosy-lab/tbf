@@ -65,6 +65,10 @@ output_dir = os.path.abspath('./output')
 tmp = tempfile.mkdtemp()
 nondet_pattern = re.compile('__VERIFIER_nondet_.+\(\)')
 
+FALSE = 'false'
+UNKNOWN = 'unknown'
+TRUE = 'true'
+
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 

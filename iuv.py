@@ -8,6 +8,7 @@ import argparse
 import klee
 import crest
 import utils
+from utils import FALSE
 
 import threading
 from test_validation import ValidationConfig
@@ -154,10 +155,10 @@ def run():
         stop_event.set()
 
     os.chdir(old_dir)
-    if validation_result:
-        print("IUV: UNKNOWN")
-    else:
+    if validation_result == FALSE:
         print("IUV: FALSE")
+    else:
+        print("IUV: UNKNOWN")
 
 if __name__ == '__main__':
     default_err = "Unknown error"

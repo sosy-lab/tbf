@@ -4,6 +4,8 @@ import harness_generation as harness_gen
 import logging
 import utils
 import os
+from time import sleep
+from utils import FALSE, TRUE
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 
@@ -62,13 +64,23 @@ class TestValidator(object):
         pass
 
     @abstractmethod
-    def create_all_witnesses(self, filename):
+    def create_all_witnesses(self, filename, visited_tests):
         pass
 
     def perform_witness_validation(self, filename, generator_thread):
-        produced_witnesses = self.create_all_witnesses(filename)
-
         validator = ValidationRunner()
+
+        visited_tests = set()
+        while generator_thread and generator_thread.is_alive():
+            result = self._m(filename, validator, visited_tests)
+            if result == FALSE:
+                return FALSE
+            sleep(0.001)  # Sleep for 1 millisecond
+
+        return self._m(filename, validator, visited_tests)
+
+    def _m(self, filename, validator, visited_tests):
+        produced_witnesses = self.create_all_witnesses(filename, visited_tests)
 
         for witness in produced_witnesses:
             witness_name = witness['name']
@@ -78,18 +90,28 @@ class TestValidator(object):
             results = validator.run(filename, witness_name)
 
             logging.info('Results for %s: %s', witness_name, str(results))
-            if [s for s in results if 'false' in s]:
-                return True
+            if [s for s in results if FALSE in s]:
+                return FALSE
         return False
 
     @abstractmethod
-    def create_all_harnesses(self, filename):
+    def create_all_harnesses(self, filename, visited_tests):
         pass
 
     def perform_execution_validation(self, filename, generator_thread):
-        produced_harnesses = self.create_all_harnesses(filename)
-
         validator = ExecutionRunner(self.config.machine_model)
+
+        visited_tests = set()
+        while generator_thread and generator_thread.is_alive():
+            result = self._h(filename, validator, visited_tests)
+            if result == FALSE:
+                return result
+            sleep(0.001)  # Sleep for 1 millisecond
+
+        return self._h(filename, validator, visited_tests)
+
+    def _h(self, filename, validator, visited_tests):
+        produced_harnesses = self.create_all_harnesses(filename, visited_tests)
 
         for harness in produced_harnesses:
             harness_name = harness['name']
@@ -99,9 +121,9 @@ class TestValidator(object):
             result = validator.run(filename, harness_name)
 
             logging.info('Results for %s: %s', harness_name, str(result))
-            if [s for s in result if 'false' in s]:
-                return False
-        return True
+            if [s for s in result if FALSE in s]:
+                return FALSE
+        return TRUE
 
     def check_inputs(self, filename, generator_thread=None):
         logging.debug('Checking inputs for file %s', filename)
@@ -113,6 +135,7 @@ class TestValidator(object):
         if not result and self.config.use_witness_validation:
             result = self.perform_witness_validation(filename, generator_thread)
             logging.info("Witness validation says: " + str(result))
+        return result
 
 
 class ExecutionRunner(object):
@@ -160,9 +183,9 @@ class ExecutionRunner(object):
         run_result = utils.execute(run_cmd, quiet=True)
 
         if utils.error_return == run_result.returncode:
-            return ['false']
+            return [FALSE]
         else:
-            return ['true']
+            return [TRUE]
 
 
 class ValidationRunner(object):
