@@ -5,7 +5,7 @@ import logging
 import utils
 import os
 from time import sleep
-from utils import FALSE, TRUE
+from utils import FALSE, UNKNOWN
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 
@@ -68,7 +68,7 @@ class TestValidator(object):
         pass
 
     def perform_witness_validation(self, filename, generator_thread):
-        validator = ValidationRunner()
+        validator = ValidationRunner(self.config.validators)
 
         visited_tests = set()
         while generator_thread and generator_thread.is_alive():
@@ -123,7 +123,7 @@ class TestValidator(object):
             logging.info('Results for %s: %s', harness_name, str(result))
             if [s for s in result if FALSE in s]:
                 return FALSE
-        return TRUE
+        return UNKNOWN
 
     def check_inputs(self, filename, generator_thread=None):
         logging.debug('Checking inputs for file %s', filename)
@@ -185,13 +185,29 @@ class ExecutionRunner(object):
         if utils.error_return == run_result.returncode:
             return [FALSE]
         else:
-            return [TRUE]
+            return [UNKNOWN]
 
 
 class ValidationRunner(object):
 
-    def __init__(self):
-        self.validators = [FShellW2t()]
+    def __init__(self, validators):
+        self.validators = list()
+        validators_used = set()
+        for val in [v.lowercase() for v in validators]:
+            if val == 'cpachecker' and 'cpachecker' not in validators_used:
+                self.validators.append(CPAcheckerValidator())
+                validators_used.add('cpachecker')
+            elif val == 'uautomizer' and 'uautomizer' not in validators_used:
+                self.validators.append(UAutomizerValidator())
+                validators_used.add('uautomizer')
+            elif val == 'cpa-w2t' and 'cpa-w2t' not in validators_used:
+                self.validators.append(CpaW2t())
+                validators_used.add('cpa-w2t')
+            elif val == 'fshell-w2t' and 'fshell-w2t' not in validators_used:
+                self.validators.append(FShellW2t())
+                validators_used.add('fshell-w2t')
+            else:
+                raise utils.ConfigError('Invalid validator list: ' + validators)
 
     def run(self, program_file, witness_file):
         results = []
