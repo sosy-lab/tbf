@@ -155,10 +155,7 @@ def run():
         stop_event.set()
 
     os.chdir(old_dir)
-    if validation_result == FALSE:
-        print("IUV: FALSE")
-    else:
-        print("IUV: UNKNOWN")
+    print("IUV: ", validation_result)
 
 if __name__ == '__main__':
     default_err = "Unknown error"
