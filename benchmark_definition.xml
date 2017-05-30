@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<!DOCTYPE benchmark PUBLIC "+/IDN sosy-lab.org/DTD BenchExec benchmark 1.0/EN" "http:/www.sosy-lab.org/benchexec/benchmark-1.0.dtd">
+<benchmark tool="iuv" >
+
+  <rundefinition name='klee_ex'>
+    <option name='-i'>klee</option>
+    <option name="--execution" />
+  </rundefinition>
+  <rundefinition name='klee_ex_no-parallel'>
+    <option name='-i'>klee</option>
+    <option name="--execution" />
+    <option name="--no-parallel" />
+  </rundefinition>
+  <rundefinition name='klee_ex_ig-timelimit600'>
+    <option name="-i">klee</option>
+    <option name="--execution" />
+    <option name="--ig-timelimit">600</option>
+  </rundefinition>
+  <rundefinition name='crest_ex'>
+    <option name='-i'>crest</option>
+    <option name="--execution" />
+  </rundefinition>
+  <rundefinition name='crest_ex_no-parallel'>
+    <option name='-i'>crest</option>
+    <option name="--execution" />
+    <option name="--no-parallel" />
+  </rundefinition>
+  <rundefinition name='crest_ex_iterations500'>
+    <option name="-i">crest</option>
+    <option name="--execution" />
+    <option name="--ig-timelimit">500</option>
+  </rundefinition>
+  <rundefinition name='klee_cpachecker'>
+    <option name='-i'>klee</option>
+    <option name="--witness-validation" />
+    <option name="--validators">cpachecker</option>
+  </rundefinition>
+  <rundefinition name='klee_uautomizer'>
+    <option name='-i'>klee</option>
+    <option name="--witness-validation" />
+    <option name="--validators">uautomizer</option>
+  </rundefinition>
+  <rundefinition name='klee_fshell'>
+    <option name='-i'>klee</option>
+    <option name="--witness-validation" />
+    <option name="--validators">fshell-w2t</option>
+  </rundefinition>
+  <rundefinition name='klee_cpa-w2t'>
+    <option name='-i'>klee</option>
+    <option name="--witness-validation" />
+    <option name="--validators">cpa-w2t</option>
+  </rundefinition>
+  <rundefinition name='crest_cpachecker'>
+    <option name='-i'>crest</option>
+    <option name="--witness-validation" />
+    <option name="--validators">cpachecker</option>
+  </rundefinition>
+  <rundefinition name='crest_uautomizer'>
+    <option name='-i'>crest</option>
+    <option name="--witness-validation" />
+    <option name="--validators">uautomizer</option>
+  </rundefinition>
+  <rundefinition name='crest_fshell'>
+    <option name='-i'>crest</option>
+    <option name="--witness-validation" />
+    <option name="--validators">fshell-w2t</option>
+  </rundefinition>
+  <rundefinition name='crest_cpa-w2t'>
+    <option name='-i'>crest</option>
+    <option name="--witness-validation" />
+    <option name="--validators">cpa-w2t</option>
+  </rundefinition>
+
+  <tasks name="ReachSafety-ArraysReach">
+    <includesfile>../sv-benchmarks/c/ReachSafety-Arrays.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-BitVectorsReach">
+    <includesfile>../sv-benchmarks/c/ReachSafety-BitVectors.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-HeapReach">
+    <includesfile>../sv-benchmarks/c/ReachSafety-Heap.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-Floats">
+    <includesfile>../sv-benchmarks/c/ReachSafety-Floats.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-ControlFlow">
+    <includesfile>../sv-benchmarks/c/ReachSafety-ControlFlow.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-ECA">
+    <includesfile>../sv-benchmarks/c/ReachSafety-ECA.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-Loops">
+    <includesfile>../sv-benchmarks/c/ReachSafety-Loops.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-Recursive">
+    <includesfile>../sv-benchmarks/c/ReachSafety-Recursive.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-ProductLines">
+    <includesfile>../sv-benchmarks/c/ReachSafety-ProductLines.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="ReachSafety-Sequentialized">
+    <includesfile>../sv-benchmarks/c/ReachSafety-Sequentialized.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+  <tasks name="Systems_DeviceDriversLinux64_ReachSafety">
+    <includesfile>../sv-benchmarks/c/Systems_DeviceDriversLinux64_ReachSafety.set</includesfile>
+    <propertyfile>../sv-benchmarks/c/PropertyUnreachCall.prp</propertyfile>
+  </tasks>
+
+</benchmark>
