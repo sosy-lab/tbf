@@ -20,14 +20,14 @@ class InputGenerator(BaseInputGenerator):
     def get_ast_replacer(self):
         return None
 
-    def __init__(self, timelimit=0, log_verbose=False, search_heuristic='cfg', machine_model='32bit'):
+    def __init__(self, timelimit=1500, log_verbose=False, search_heuristic='cfg', machine_model='32bit'):
         super().__init__(timelimit, machine_model)
         self.log_verbose = log_verbose
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
 
         self.search_heuristic = search_heuristic
-        self.num_iterations = 100
+        self.num_iterations = timelimit
 
     def get_name(self):
         return name
