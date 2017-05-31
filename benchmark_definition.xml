@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE benchmark PUBLIC "+/IDN sosy-lab.org/DTD BenchExec benchmark 1.0/EN" "http:/www.sosy-lab.org/benchexec/benchmark-1.0.dtd">
-<benchmark tool="iuv" >
+<benchmark tool="iuv" timelimit="180s" hardtimelimit="250s" cpuCores="8" memlimit="15GB">
 
   <rundefinition name='klee_ex'>
     <option name='-i'>klee</option>
@@ -14,6 +14,7 @@
   <rundefinition name='klee_ex_ig-timelimit600'>
     <option name="-i">klee</option>
     <option name="--execution" />
+    <option name="--no-parallel" />
     <option name="--ig-timelimit">600</option>
   </rundefinition>
   <rundefinition name='crest_ex'>
@@ -28,6 +29,7 @@
   <rundefinition name='crest_ex_iterations500'>
     <option name="-i">crest</option>
     <option name="--execution" />
+    <option name="--no-parallel" />
     <option name="--ig-timelimit">500</option>
   </rundefinition>
   <rundefinition name='klee_cpachecker'>
