@@ -32,6 +32,8 @@ class ValidationConfig(object):
                 if validator.lower() not in valid_validators:
                     raise utils.ConfigError("Validator not in list of known validators:"
                                             "{0} not in {1}".format(validator, valid_validators))
+        elif not self.use_witness_validation and not self.use_execution:
+            raise utils.ConfigError("No validation technique specified. Specify --execution or --witness-validation .")
 
 
 class TestValidator(object):
@@ -127,7 +129,7 @@ class TestValidator(object):
 
     def check_inputs(self, filename, generator_thread=None):
         logging.debug('Checking inputs for file %s', filename)
-        result = False
+        result = 'unknown'
         if self.config.use_execution:
             result = self.perform_execution_validation(filename, generator_thread)
             logging.info("Execution validation says: " + str(result))
