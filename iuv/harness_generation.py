@@ -7,7 +7,7 @@ class HarnessCreator(object):
         pass
 
     def _get_preamble(self):
-        preamble = 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        exit(0);\n    }\n    }\n'
+        preamble = 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        exit(0);\n    }\n}\n'
         return preamble
 
     def _get_error_definition(self, method_name):
@@ -25,11 +25,11 @@ class HarnessCreator(object):
             definitions += method_type + ' ' + method + '() {\n'
             if concrete_values:
                 definitions += '    static unsigned int ' + counter + '= 0;\n'
-                definitions += '    ' + counter + '++;\n'
-                definitions += '    switch(' + counter + ') {\n'
-                for num, instantiation in sorted(test_vector.items(), key=lambda x: x[0]):
-                    definitions += ' ' * 8 + 'case ' + num + ': return ' + instantiation['value'] + ';\n'
-                definitions += '    }\n}\n'
+            definitions += '    ' + counter + '++;\n'
+            definitions += '    switch(' + counter + ') {\n'
+            for num, instantiation in sorted(test_vector.items(), key=lambda x: x[0]):
+                definitions += ' ' * 8 + 'case ' + num + ': return ' + instantiation['value'] + ';\n'
+            definitions += '    }\n}\n'
         return definitions
 
     def create_harness(self, producer, filename, test_vector, nondet_methods, error_method):

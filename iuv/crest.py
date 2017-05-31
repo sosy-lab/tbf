@@ -130,7 +130,7 @@ class CrestTestValidator(TestValidator):
         with open(test, 'r') as inp:
             for line in inp.readlines():
                 try:
-                    test_vector[self.counter] = {'name': None, 'value': line.strip()}
+                    test_vector[str(self.counter)] = {'name': None, 'value': line.strip()}
                     self.counter += 1
                 except ValueError as e:
                     raise AssertionError(e)
