@@ -114,7 +114,7 @@ class KleeTestValidator(TestValidator):
         return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
 
     def get_test_vector(self, test):
-        ktest_tool = [os.path.join(bin_dir, 'ktest-tool'), '--write-ints']
+        ktest_tool = [os.path.join(bin_dir, 'ktest-tool')]
         exec_output = utils.execute(ktest_tool + [test], err_to_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')
         objects = dict()
@@ -127,11 +127,10 @@ class KleeTestValidator(TestValidator):
                     objects[var_number] = dict()
                 nondet_method_name = self._get_nondet_method_name(var_name)
                 objects[var_number]['name'] = nondet_method_name
-
             elif 'data:' in line:
                 assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
-                value = line.split(':')[-1].strip()
+                value = line.split(':')[-1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
                 objects[var_number]['value'] = value
 
         return objects
