@@ -120,7 +120,7 @@ class KleeTestValidator(TestValidator):
         objects = dict()
         for line in [l for l in test_info if l.startswith('object')]:
             if 'name:' in line:
-                assert len(line.split(':')) == 3
+                #assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
                 var_name = line.split(':')[2][2:-1]  # [1:-1] to cut the surrounding ''
                 if var_number not in objects.keys():
@@ -128,7 +128,7 @@ class KleeTestValidator(TestValidator):
                 nondet_method_name = self._get_nondet_method_name(var_name)
                 objects[var_number]['name'] = nondet_method_name
             elif 'data:' in line:
-                assert len(line.split(':')) == 3
+                #assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
                 value = line.split(':')[-1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
                 objects[var_number]['value'] = value
