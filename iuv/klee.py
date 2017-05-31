@@ -46,12 +46,7 @@ class InputGenerator(BaseInputGenerator):
         return content
 
     def _get_nondet_method(self, method_name):
-        assert method_name.startswith('__VERIFIER_nondet_')
-        m_type = method_name[len('__VERIFIER_nondet_'):]
-        if m_type[0] == 'u' and m_type != 'unsigned':  # resolve uint to unsigned int (e.g.)
-            m_type = 'unsigned ' + m_type[1:]
-        elif m_type == 'pointer':
-            m_type = 'void *'
+        m_type = utils.get_return_type(method_name)
         return self._create_nondet_method(method_name, m_type)
 
     def _create_nondet_method(self, method_name, method_type):
@@ -75,7 +70,6 @@ class InputGenerator(BaseInputGenerator):
 
     def get_ast_replacer(self):
         return None
-
 
 
 class AstReplacer(NondetReplacer):

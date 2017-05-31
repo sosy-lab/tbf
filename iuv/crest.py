@@ -47,12 +47,10 @@ class InputGenerator(BaseInputGenerator):
 
     def _get_nondet_method(self, method_name):
         m_type = utils.get_return_type(method_name)
-        if m_type[0] == 'u' and m_type != 'unsigned':  # resolve uint to unsigned int (e.g.)
-            m_type = 'unsigned ' + m_type[1:]
-        elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
-            self._get_nondet_method('__VERIFIER_nondet_uint')
         if not self.is_supported_type(m_type):
-            raise utils.InputGenerationError('Crest can\'t handle symbolic values of type ' + m_type)
+            logging.error('Crest can\'t handle symbolic values of type ' + m_type)
+            m_type = 'unsigned int'
+            logging.warning('Continuing with type %s for method %s', m_type, method_name)
         return self._create_nondet_method(method_name, m_type)
 
     def is_supported_type(self, method_type):

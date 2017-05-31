@@ -223,4 +223,11 @@ def get_nondet_methods(file_content):
 def get_return_type(method):
     assert method.startswith('__VERIFIER_nondet_')
     assert method[-2:] != '()'
-    return method[len('__VERIFIER_nondet_'):]
+    m_type = method[len('__VERIFIER_nondet_'):]
+    if m_type[0] == 'u' and m_type != 'unsigned':  # resolve uint to unsigned int (e.g.)
+        m_type = 'unsigned ' + m_type[1:]
+    elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
+        m_type = 'unsigned int'
+    elif m_type == 'pointer':
+        m_type = 'void *'
+    return m_type
