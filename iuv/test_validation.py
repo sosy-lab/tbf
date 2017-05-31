@@ -5,7 +5,7 @@ import logging
 import utils
 import os
 from time import sleep
-from utils import FALSE, UNKNOWN
+from utils import FALSE, UNKNOWN, ERROR
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 
@@ -174,18 +174,22 @@ class ExecutionRunner(object):
 
             if compile_result.returncode != 0:
                 logging.warning("Compilation failed for harness {}".format(harness_file))
+                return None
 
         return output_file
 
     def run(self, program_file, harness_file):
         executable = self.compile(program_file, harness_file)
-        run_cmd = self._get_run_cmd(executable)
-        run_result = utils.execute(run_cmd, quiet=True)
+        if executable:
+            run_cmd = self._get_run_cmd(executable)
+            run_result = utils.execute(run_cmd, quiet=True)
 
-        if utils.error_return == run_result.returncode:
-            return [FALSE]
+            if utils.error_return == run_result.returncode:
+                return [FALSE]
+            else:
+                return [UNKNOWN]
         else:
-            return [UNKNOWN]
+            return [ERROR]
 
 
 class ValidationRunner(object):

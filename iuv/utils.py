@@ -68,6 +68,7 @@ nondet_pattern = re.compile('__VERIFIER_nondet_.+\(\)')
 FALSE = 'false'
 UNKNOWN = 'unknown'
 TRUE = 'true'
+ERROR = 'error'
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
