@@ -3,7 +3,7 @@ from test_validation import TestValidator
 import utils
 import glob
 import os
-import ast_visitor
+import logging
 from ast_visitor import NondetReplacer
 from pycparser import c_ast as a
 import pycparser
@@ -168,6 +168,7 @@ class KleeTestValidator(TestValidator):
     def _create_all_x(self, filename, creator_method, visited_tests):
         created_content = []
         for test in glob.iglob(tests_dir + '/*.ktest'):
+            logging.debug('Looking at test case %s', test)
             test_name = test.split('/')[-1]
             if test_name in visited_tests:
                 continue
