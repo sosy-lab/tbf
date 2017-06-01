@@ -85,8 +85,8 @@ class BaseInputGenerator(object):
             cmds = self.create_input_generation_cmds(file_to_analyze)
             for cmd in cmds:
                 result = utils.execute(cmd, env=self.get_run_env(), quiet=True, err_to_output=True, stop_flag=stop_flag)
-                if not (stop_flag and stop_flag.is_set()) and BaseInputGenerator.failed(result):
-                    raise utils.InputGenerationError('Generating input failed at command ' + ' '.join(cmd))
+                if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
+                    logging.error("Generating input failed at command %s", ' '.join(cmd))
 
             return file_to_analyze
 
