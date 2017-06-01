@@ -57,23 +57,6 @@ class ExecutionResult(object):
         return self._stderr
 
 
-error_return = 107
-error_method = '__VERIFIER_error'
-sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
-spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
-output_dir = os.path.abspath('./output')
-tmp = tempfile.mkdtemp()
-nondet_pattern = re.compile('__VERIFIER_nondet_.+\(\)')
-
-FALSE = 'false'
-UNKNOWN = 'unknown'
-TRUE = 'true'
-ERROR = 'error'
-
-if not os.path.exists(output_dir):
-    os.mkdir(output_dir)
-
-
 def parse_file_with_preprocessing(filename, includes=[]):
     preprocessed_filename = preprocess(filename, includes)
     ast = pycparser.parse_file(preprocessed_filename)
@@ -238,3 +221,98 @@ def get_return_type(method):
     elif m_type == 'pchar':
         m_type = 'char *'
     return m_type
+
+
+class Stopwatch(object):
+
+    def __init__(self):
+        self._intervals = list()
+        self._current_start = None
+
+    def start(self):
+        assert not self._current_start
+        self._current_start = time.process_time()
+
+    def stop(self):
+        end_time = time.process_time()
+        assert self._current_start
+        time_elapsed = end_time - self._current_start
+        self._current_start = None
+        self._intervals.append(time_elapsed)
+
+    def sum(self):
+        return sum(self._intervals)
+
+    def avg(self):
+        return sum(self._intervals) / len(self._intervals)
+
+    def min(self):
+        return min(self._intervals)
+
+    def max(self):
+        return max(self._intervals)
+
+    def __str__(self):
+        str_rep = "{0} (Avg.: {1}, Min.: {2}, Max.: {3})".format(self.sum(), self.avg(), self.min(), self.max())
+        return str_rep
+
+class Statistics(object):
+
+    def __init__(self, title):
+        self._title = title
+        self._stats = list()
+
+    @property
+    def title(self):
+        return self._title
+
+    def add_value(self, property, value):
+        assert property not in [p for (p, v) in self._stats]
+        self._stats.append((property, value))
+
+    @property
+    def stats(self):
+        return self._stats
+
+    def __str__(self):
+        str_rep = '---- ' + self._title + ' ----\n'
+        str_rep += '\n'.join([p + ': ' + str(v) for (p, v) in self._stats])
+        return str_rep
+
+
+class StatisticsPool(object):
+
+    def __init__(self):
+        self._stat_objects = list()
+
+    @property
+    def stats(self):
+        return self._stat_objects
+
+    def new_statistics(self, title):
+        stat = Statistics(title)
+        self._stat_objects.append(stat)
+        return stat
+
+    def __str__(self):
+        return '\n\n'.join([str(s) for s in self._stat_objects])
+
+
+error_return = 107
+error_method = '__VERIFIER_error'
+sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
+spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
+output_dir = os.path.abspath('./output')
+tmp = tempfile.mkdtemp()
+nondet_pattern = re.compile('__VERIFIER_nondet_.+\(\)')
+
+FALSE = 'false'
+UNKNOWN = 'unknown'
+TRUE = 'true'
+ERROR = 'error'
+
+statistics = StatisticsPool()
+
+if not os.path.exists(output_dir):
+    os.mkdir(output_dir)
+
