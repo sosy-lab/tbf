@@ -120,10 +120,6 @@ class CrestTestValidator(TestValidator):
         that the variable specified in the corresponding CREST_x(..) function has the current
         test value.
         """
-        # If no inputs are defined don't create a witness
-        if not test_vector:
-            logging.debug("Test case empty, no witness is created")
-            return None
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
@@ -139,9 +135,6 @@ class CrestTestValidator(TestValidator):
 
     def create_harness(self, filename, test_file, test_vector):
         # If no inputs are defined don't create a witness
-        if not test_vector:
-            logging.debug("Test case empty, no harness is created")
-            return None
         harness = self.harness_creator.create_harness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
@@ -157,7 +150,7 @@ class CrestTestValidator(TestValidator):
         created_content = []
         new_test_files = get_test_files(visited_tests)
         if len(new_test_files) > 0:
-            logging.info("Looking at %s test files", len(new_test_files))
+            logging.info("Looking at %s test file(s)", len(new_test_files))
         empty_case_handled = False
         for test_file in new_test_files:
             logging.debug("Looking at test case %s", test_file)
