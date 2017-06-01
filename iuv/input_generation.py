@@ -34,9 +34,8 @@ class BaseInputGenerator(object):
     def prepare(self, filecontent):
         pass
 
-    def prepare0(self, filename):
-        with open(filename, 'r') as outp:
-            content = outp.read()
+    def prepare0(self, filecontent):
+        content = filecontent
         content += '\n'
         content += self._get_error_dummy()
         return self.prepare(content)
@@ -49,11 +48,14 @@ class BaseInputGenerator(object):
         file_to_analyze = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
         file_to_analyze = utils.get_file_path(file_to_analyze, temp_dir=True)
 
+        with open(filename, 'r') as outp:
+            filecontent = outp.read()
+
         if os.path.exists(file_to_analyze):
             logging.warning("Prepared file already exists. Not preparing again.")
             return file_to_analyze
 
-        prepared_content = self.prepare0(filename)
+        prepared_content = self.prepare0(filecontent)
         with open(file_to_analyze, 'w+') as new_file:
             new_file.write(prepared_content)
 
