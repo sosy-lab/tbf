@@ -57,6 +57,9 @@ class TestValidator(object):
         self.timer_execution_validation = utils.Stopwatch()
         self.statistics.add_value('Time for execution validation', self.timer_execution_validation)
 
+        self.counter_handled_test_cases = utils.Counter()
+        self.statistics.add_value('Number of looked-at test cases', self.counter_handled_test_cases)
+
     def get_error_line(self, filename):
         with open(filename, 'r') as inp:
             content = inp.readlines()
@@ -103,6 +106,7 @@ class TestValidator(object):
                 outp.write(witness['content'])
 
             results = validator.run(filename, witness_name)
+            self.counter_handled_test_cases.inc()
 
             logging.info('Results for %s: %s', witness_name, str(results))
             if [s for s in results if FALSE in s]:
@@ -138,6 +142,7 @@ class TestValidator(object):
                 outp.write(harness['content'])
 
             result = validator.run(filename, harness_name)
+            self.counter_handled_test_cases.inc()
 
             logging.info('Results for %s: %s', harness_name, str(result))
             if [s for s in result if FALSE in s]:
