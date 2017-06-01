@@ -18,6 +18,11 @@ name = 'klee'
 sym_var_prefix = '__sym_'
 
 
+def get_test_files(exclude=[]):
+    all_tests = [t.split('/')[-1] for t in glob.glob(tests_dir + '/*.ktest')]
+    return [t for t in all_tests if t not in exclude]
+
+
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew'], machine_model='32bit'):
@@ -68,40 +73,8 @@ class InputGenerator(BaseInputGenerator):
 
         return [compile_cmd, input_generation_cmd]
 
-    def get_ast_replacer(self):
-        return None
-
-
-class AstReplacer(NondetReplacer):
-
-    def _get_amper(self, var_name):
-        return a.UnaryOp('&', a.ID(var_name))
-
-    def _get_sizeof_call(self, var_name):
-        return a.UnaryOp('sizeof', a.ID(var_name))
-
-    def _get_string(self, string):
-        return a.Constant('string', '\"' + string + '\"')
-
-    # Hook
-    def get_nondet_marker(self, var_name, var_type):
-        parameters = [self._get_amper(var_name), self._get_sizeof_call(var_name), self._get_string(var_name)]
-        return a.FuncCall(a.ID(klee_make_symbolic), a.ExprList(parameters))
-
-    # Hook
-    def get_error_stmt(self):
-        parameters = [a.Constant('int', str(utils.error_return))]
-        return a.FuncCall(a.ID('exit'), a.ExprList(parameters))
-
-    # Hook
-    def get_preamble(self):
-        parser = pycparser.CParser()
-        # Define dummy klee_make_symbolic
-        definitions = 'typedef unsigned long int size_t;'
-        make_symbolic_def = 'void klee_make_symbolic(void *addr, size_t type, const char *name) { }'
-        full_preamble = '\n'.join([definitions, make_symbolic_def])
-        ast = parser.parse(full_preamble)
-        return ast.ext
+    def get_test_count(self):
+        return len(get_test_files())
 
 
 class KleeTestValidator(TestValidator):
@@ -166,13 +139,13 @@ class KleeTestValidator(TestValidator):
 
     def _create_all_x(self, filename, creator_method, visited_tests):
         created_content = []
-        for test in glob.iglob(tests_dir + '/*.ktest'):
+        new_test_files = get_test_files(visited_tests)
+        logging.info("Looking at %s test files", len(new_test_files))
+        for test in new_test_files:
+            assert test not in visited_tests
             logging.debug('Looking at test case %s', test)
             test_name = test.split('/')[-1]
-            if test_name in visited_tests:
-                continue
-            else:
-                visited_tests.add(test_name)
+            visited_tests.add(test_name)
             test_vector = self.get_test_vector(test)
             new_content = creator_method(filename, test, test_vector)
             created_content.append(new_content)

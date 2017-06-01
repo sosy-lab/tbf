@@ -231,30 +231,63 @@ class Stopwatch(object):
 
     def start(self):
         assert not self._current_start
-        self._current_start = time.process_time()
+        self._current_start = time.perf_counter()  # We have to count sleep time because of other processes we wait on!
 
     def stop(self):
-        end_time = time.process_time()
+        end_time = time.perf_counter()
         assert self._current_start
-        time_elapsed = end_time - self._current_start
+        time_elapsed = self._process(end_time - self._current_start)
         self._current_start = None
         self._intervals.append(time_elapsed)
 
+    def _process(self, value):
+        return round(value, 3)
+
     def sum(self):
-        return sum(self._intervals)
+        val = sum(self._intervals) if self._intervals else 0
+        return self._process(val)
 
     def avg(self):
-        return sum(self._intervals) / len(self._intervals)
+        val = sum(self._intervals) / len(self._intervals) if len(self._intervals) else 0
+        return self._process(val)
 
     def min(self):
-        return min(self._intervals)
+        val = min(self._intervals) if self._intervals else 0
+        return self._process(val)
 
     def max(self):
-        return max(self._intervals)
+        val = max(self._intervals) if self._intervals else 0
+        return self._process(val)
 
     def __str__(self):
-        str_rep = "{0} (Avg.: {1}, Min.: {2}, Max.: {3})".format(self.sum(), self.avg(), self.min(), self.max())
+        str_rep = "{0} (s) (Avg.: {1} s, Min.: {2} s, Max.: {3} s)".format(self.sum(), self.avg(), self.min(), self.max())
         return str_rep
+
+
+class Counter(object):
+
+    def __init__(self):
+        self._count = 0
+
+    @property
+    def count(self):
+        return self._count
+
+    def inc(self):
+        self._count += 1
+
+    def __str__(self):
+        return str(self.count)
+
+
+class Constant(object):
+
+    def __init__(self, value=None):
+        self.value = value
+
+    def __str__(self):
+        return str(self.value)
+
 
 class Statistics(object):
 
@@ -289,7 +322,7 @@ class StatisticsPool(object):
     def stats(self):
         return self._stat_objects
 
-    def new_statistics(self, title):
+    def new(self, title):
         stat = Statistics(title)
         self._stat_objects.append(stat)
         return stat

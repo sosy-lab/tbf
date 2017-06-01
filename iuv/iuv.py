@@ -155,6 +155,7 @@ def run():
         stop_event.set()
 
     os.chdir(old_dir)
+    print(utils.statistics)
     print("IUV: " + validation_result.upper())
 
 if __name__ == '__main__':

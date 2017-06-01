@@ -22,6 +22,10 @@ class BaseInputGenerator(object):
     def get_run_env(self):
         return os.environ
 
+    @abstractmethod
+    def get_test_count(self):
+        pass
+
     @staticmethod
     def failed(result):
         return result.returncode < 0
@@ -29,6 +33,18 @@ class BaseInputGenerator(object):
     def __init__(self, timelimit, machine_model):
         self.machine_model = machine_model
         self.timelimit = int(timelimit) if timelimit else 0
+        self.statistics = utils.statistics.new('Input Generator ' + self.get_name())
+
+        self.timer_file_access = utils.Stopwatch()
+        self.timer_prepare = utils.Stopwatch()
+        self.timer_input_gen = utils.Stopwatch()
+
+        self.number_generated_tests = utils.Constant()
+
+        self.statistics.add_value('Time for input generation', self.timer_input_gen)
+        self.statistics.add_value('Time for controlled file accesses', self.timer_file_access)
+        self.statistics.add_value('Time for file preparation', self.timer_prepare)
+        self.statistics.add_value('Number of generated test cases', self.number_generated_tests)
 
     @abstractmethod
     def prepare(self, filecontent):
@@ -44,23 +60,36 @@ class BaseInputGenerator(object):
         return 'void ' + utils.error_method + '() { exit(107); }\n'
 
     def generate_input(self, filename, stop_flag=None):
-        suffix = 'c'
-        file_to_analyze = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
-        file_to_analyze = utils.get_file_path(file_to_analyze, temp_dir=True)
+        self.timer_input_gen.start()
+        try:
+            suffix = 'c'
+            file_to_analyze = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
+            file_to_analyze = utils.get_file_path(file_to_analyze, temp_dir=True)
 
-        with open(filename, 'r') as outp:
-            filecontent = outp.read()
+            self.timer_file_access.start()
+            with open(filename, 'r') as outp:
+                filecontent = outp.read()
+            self.timer_file_access.stop()
 
-        if os.path.exists(file_to_analyze):
-            logging.warning("Prepared file already exists. Not preparing again.")
-        else:
-            prepared_content = self.prepare0(filecontent)
-            with open(file_to_analyze, 'w+') as new_file:
-                new_file.write(prepared_content)
+            if os.path.exists(file_to_analyze):
+                logging.warning("Prepared file already exists. Not preparing again.")
+            else:
+                self.timer_prepare.start()
+                prepared_content = self.prepare0(filecontent)
+                self.timer_file_access.start()
+                with open(file_to_analyze, 'w+') as new_file:
+                    new_file.write(prepared_content)
+                self.timer_file_access.stop()
+                self.timer_prepare.stop()
 
-        cmds = self.create_input_generation_cmds(file_to_analyze)
-        for cmd in cmds:
-            result = utils.execute(cmd, env=self.get_run_env(), quiet=True, err_to_output=True)
-            if BaseInputGenerator.failed(result):
-                raise utils.InputGenerationError('Generating input failed at command ' + ' '.join(cmd))
-        return file_to_analyze
+            cmds = self.create_input_generation_cmds(file_to_analyze)
+            for cmd in cmds:
+                result = utils.execute(cmd, env=self.get_run_env(), quiet=True, err_to_output=True)
+                if BaseInputGenerator.failed(result):
+                    raise utils.InputGenerationError('Generating input failed at command ' + ' '.join(cmd))
+
+            return file_to_analyze
+
+        finally:
+            self.timer_input_gen.stop()
+            self.number_generated_tests.value = self.get_test_count()

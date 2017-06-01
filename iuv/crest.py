@@ -2,23 +2,22 @@ from input_generation import BaseInputGenerator
 from test_validation import TestValidator
 import utils
 import os
-import glob
 import logging
-from ast_visitor import NondetReplacer, NondetIdentifierCollector
-from pycparser import c_ast as a
-import pycparser
 import re
 
 bin_dir = os.path.abspath('./crest/bin')
 lib_dir = os.path.abspath('./crest/lib')
 include_dir = os.path.abspath('./crest/include')
 name = 'crest'
+test_name_pattern = re.compile('input[0-9]+')
+
+
+def get_test_files(exclude=[]):
+    all_tests = [t.split('/')[-1] for t in os.listdir('.') if test_name_pattern.match(t)]
+    return [t for t in all_tests if t not in exclude]
 
 
 class InputGenerator(BaseInputGenerator):
-
-    def get_ast_replacer(self):
-        return None
 
     def __init__(self, timelimit=None, log_verbose=False, search_heuristic='cfg', machine_model='32bit'):
         super().__init__(timelimit, machine_model)
@@ -34,6 +33,9 @@ class InputGenerator(BaseInputGenerator):
 
     def get_run_env(self):
         return self._run_env
+
+    def get_test_count(self):
+        return len(get_test_files())
 
     def prepare(self, filecontent):
         content = '#include<crest.h>\n'
@@ -81,46 +83,6 @@ class InputGenerator(BaseInputGenerator):
                          str(self.num_iterations),
                          '-' + self.search_heuristic]
         return [compile_cmd, input_gen_cmd]
-
-
-class AstReplacer(NondetReplacer):
-
-    def __init__(self):
-        super().__init__()
-        self.parser = pycparser.CParser()
-
-    def get_marker_function(self, var_type):
-        type_name = var_type.type.names[0]
-        if type_name == 'int':
-            return 'CREST_int'
-        elif type_name == 'short':
-            return 'CREST_short'
-        elif type_name == 'char':
-            return 'CREST_char'
-        elif type_name == 'unsigned int':
-            return 'CREST_unsigned_int'
-        elif type_name == 'unsigned short':
-            return 'CREST_unsigned_short'
-        elif type_name == 'unsigned_char':
-            return 'CREST_unsigned_char'
-        else:
-            # raise AssertionError("Unhandled var type: ", var_type)
-            return 'CREST_int'
-
-    # Hook
-    def get_nondet_marker(self, var_name, var_type):
-        function_name = self.get_marker_function(var_type)
-        parameters = [a.ID(var_name)]
-        return a.FuncCall(a.ID(function_name), a.ExprList(parameters))
-
-    # Hook
-    def get_error_stmt(self):
-        parameters = [a.Constant('int', str(utils.error_return))]
-        return a.FuncCall(a.ID('exit'), a.ExprList(parameters))
-
-    # Hook
-    def get_preamble(self):
-        return []
 
 
 class CrestTestValidator(TestValidator):
@@ -193,13 +155,12 @@ class CrestTestValidator(TestValidator):
 
     def _create_all_x(self, filename, creation_method, visited_tests):
         created_content = []
-        test_name_pattern = re.compile('input[0-9]+')
-        for test_file in [f for f in os.listdir('.') if test_name_pattern.match(f)]:
+        new_test_files = get_test_files(visited_tests)
+        logging.info("Looking at %s test files", len(new_test_files))
+        for test_file in new_test_files:
+            assert test_file not in visited_tests
             test_name = test_file.split('/')[-1]
-            if test_name in visited_tests:
-                continue
-            else:
-                visited_tests.add(test_name)
+            visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_file)
             new_content = creation_method(filename, test_file, test_vector)
             if new_content:  # It's possible that no witness is created due to a missing test vector

@@ -49,6 +49,14 @@ class TestValidator(object):
         if self.config.use_execution:
             self.harness_creator = harness_gen.HarnessCreator()
 
+        self.statistics = utils.statistics.new('Test Validator ' + self.get_name())
+        self.timer_validation = utils.Stopwatch()
+        self.statistics.add_value('Time for validation', self.timer_validation)
+        self.timer_witness_validation = utils.Stopwatch()
+        self.statistics.add_value('Time for witness validation', self.timer_witness_validation)
+        self.timer_execution_validation = utils.Stopwatch()
+        self.statistics.add_value('Time for execution validation', self.timer_execution_validation)
+
     def get_error_line(self, filename):
         with open(filename, 'r') as inp:
             content = inp.readlines()
@@ -70,16 +78,20 @@ class TestValidator(object):
         pass
 
     def perform_witness_validation(self, filename, generator_thread):
-        validator = ValidationRunner(self.config.witness_validators)
+        self.timer_witness_validation.start()
+        try:
+            validator = ValidationRunner(self.config.witness_validators)
 
-        visited_tests = set()
-        while generator_thread and generator_thread.is_alive():
-            result = self._m(filename, validator, visited_tests)
-            if result == FALSE:
-                return FALSE
-            sleep(0.001)  # Sleep for 1 millisecond
+            visited_tests = set()
+            while generator_thread and generator_thread.is_alive():
+                result = self._m(filename, validator, visited_tests)
+                if result == FALSE:
+                    return FALSE
+                sleep(0.001)  # Sleep for 1 millisecond
 
-        return self._m(filename, validator, visited_tests)
+            return self._m(filename, validator, visited_tests)
+        finally:
+            self.timer_witness_validation.stop()
 
     def _m(self, filename, validator, visited_tests):
         produced_witnesses = self.create_all_witnesses(filename, visited_tests)
@@ -102,16 +114,20 @@ class TestValidator(object):
         pass
 
     def perform_execution_validation(self, filename, generator_thread):
-        validator = ExecutionRunner(self.config.machine_model)
+        self.timer_execution_validation.start()
+        try:
+            validator = ExecutionRunner(self.config.machine_model)
 
-        visited_tests = set()
-        while generator_thread and generator_thread.is_alive():
-            result = self._h(filename, validator, visited_tests)
-            if result == FALSE:
-                return result
-            sleep(0.001)  # Sleep for 1 millisecond
+            visited_tests = set()
+            while generator_thread and generator_thread.is_alive():
+                result = self._h(filename, validator, visited_tests)
+                if result == FALSE:
+                    return result
+                sleep(0.001)  # Sleep for 1 millisecond
 
-        return self._h(filename, validator, visited_tests)
+            return self._h(filename, validator, visited_tests)
+        finally:
+            self.timer_execution_validation.stop()
 
     def _h(self, filename, validator, visited_tests):
         produced_harnesses = self.create_all_harnesses(filename, visited_tests)
@@ -129,17 +145,20 @@ class TestValidator(object):
         return UNKNOWN
 
     def check_inputs(self, filename, generator_thread=None):
-        logging.debug('Checking inputs for file %s', filename)
-        result = 'unknown'
-        if self.config.use_execution:
-            result = self.perform_execution_validation(filename, generator_thread)
-            logging.info("Execution validation says: " + str(result))
+        self.timer_validation.start()
+        try:
+            logging.debug('Checking inputs for file %s', filename)
+            result = 'unknown'
+            if self.config.use_execution:
+                result = self.perform_execution_validation(filename, generator_thread)
+                logging.info("Execution validation says: " + str(result))
 
-        if result != 'false' and self.config.use_witness_validation:
-            result = self.perform_witness_validation(filename, generator_thread)
-            logging.info("Witness validation says: " + str(result))
-        return result
-
+            if result != 'false' and self.config.use_witness_validation:
+                result = self.perform_witness_validation(filename, generator_thread)
+                logging.info("Witness validation says: " + str(result))
+            return result
+        finally:
+            self.timer_validation.stop()
 
 class ExecutionRunner(object):
 
@@ -176,7 +195,7 @@ class ExecutionRunner(object):
             compile_result = utils.execute(compile_cmd, quiet=True)
 
             if compile_result.returncode != 0:
-                logging.warning("Compilation failed for harness {}".format(harness_file))
+                raise utils.CompileError("Compilation failed for harness {}".format(harness_file))
                 return None
 
         return output_file
