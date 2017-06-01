@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<!DOCTYPE benchmark PUBLIC "+//IDN sosy-lab.org//DTD BenchExec table 1.10//EN" "https://www.sosy-lab.org/benchexec/table-1.10.dtd">
+<table>
+  <column title="status" />
+  <column title="cputime" displayTitle="CPU time" />
+  <column title="memUsage" displayTitle="Memory consumed" />
+  <column title="testsGenerated" displayTitle="Tests generated">Number of generated tests</column>
+  <column title="inputGenerationTime" displayTitle="CPU time input generation">Time for input generation</column>
+  <column title="validationTime" displayTitle="CPU time for test case validation">Time for validation</column>
+
+</table>
