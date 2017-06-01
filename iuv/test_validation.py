@@ -21,12 +21,12 @@ class ValidationConfig(object):
 
         self.use_execution = args.execution_validation
         self.use_witness_validation = args.witness_validation
-        self.witness_validators = args.validators
+        self.witness_validators = args.validators if args.validators else []
 
         if self.witness_validators and not self.use_witness_validation:
             raise utils.ConfigError("Validators specified but no witness validation used (--witness-validation).")
-        elif self.use_witness_validation and not self.witness_validators:
-            raise utils.ConfigError("Witness validation used but not validators specified (--validators VAL).")
+        elif self.use_witness_validation and self.witness_validators:
+            logging.warning("Witness validation used and no validator specified. Only generating witnesses.")
         elif self.witness_validators:
             for validator in self.witness_validators:
                 if validator.lower() not in valid_validators:
@@ -70,7 +70,7 @@ class TestValidator(object):
         pass
 
     def perform_witness_validation(self, filename, generator_thread):
-        validator = ValidationRunner(self.config.validators)
+        validator = ValidationRunner(self.config.witness_validators)
 
         visited_tests = set()
         while generator_thread and generator_thread.is_alive():
@@ -85,6 +85,7 @@ class TestValidator(object):
         produced_witnesses = self.create_all_witnesses(filename, visited_tests)
 
         for witness in produced_witnesses:
+            logging.debug('Looking at witness %s', witness['name'])
             witness_name = witness['name']
             with open(witness_name, 'w+') as outp:
                 outp.write(witness['content'])
@@ -94,7 +95,7 @@ class TestValidator(object):
             logging.info('Results for %s: %s', witness_name, str(results))
             if [s for s in results if FALSE in s]:
                 return FALSE
-        return False
+        return UNKNOWN
 
     @abstractmethod
     def create_all_harnesses(self, filename, visited_tests):
@@ -134,7 +135,7 @@ class TestValidator(object):
             result = self.perform_execution_validation(filename, generator_thread)
             logging.info("Execution validation says: " + str(result))
 
-        if not result and self.config.use_witness_validation:
+        if result != 'false' and self.config.use_witness_validation:
             result = self.perform_witness_validation(filename, generator_thread)
             logging.info("Witness validation says: " + str(result))
         return result
