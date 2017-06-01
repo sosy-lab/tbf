@@ -45,7 +45,7 @@ class BaseInputGenerator(object):
         return 'void ' + utils.error_method + '() { exit(107); }\n'
 
     def generate_input(self, filename, stop_flag=None):
-        suffix = filename.split('.')[-1]
+        suffix = '.c'
         file_to_analyze = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
         file_to_analyze = utils.get_file_path(file_to_analyze, temp_dir=True)
 
