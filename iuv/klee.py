@@ -140,7 +140,9 @@ class KleeTestValidator(TestValidator):
     def _create_all_x(self, filename, creator_method, visited_tests):
         created_content = []
         new_test_files = get_test_files(visited_tests)
-        logging.info("Looking at %s test files", len(new_test_files))
+        if len(new_test_files) > 0:
+            logging.info("Looking at %s test files", len(new_test_files))
+        empty_case_handled = False
         for test_file in new_test_files:
             logging.debug('Looking at test case %s', test_file)
             test_name = utils.get_file_name(test_file)
@@ -148,7 +150,9 @@ class KleeTestValidator(TestValidator):
             assert os.path.exists(test_file)
             visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_file)
-            if test_vector:
+            if test_vector or not empty_case_handled:
+                if not test_vector:
+                    test_vector = dict()
                 new_content = creator_method(filename, test_file, test_vector)
                 created_content.append(new_content)
             else:

@@ -144,7 +144,7 @@ class TestValidator(object):
             result = validator.run(filename, harness_name)
             self.counter_handled_test_cases.inc()
 
-            logging.info('Results for %s: %s', harness_name, str(result))
+            logging.debug('Results for %s: %s', harness_name, str(result))
             if [s for s in result if FALSE in s]:
                 return FALSE
         return UNKNOWN
@@ -164,6 +164,7 @@ class TestValidator(object):
             return result
         finally:
             self.timer_validation.stop()
+
 
 class ExecutionRunner(object):
 

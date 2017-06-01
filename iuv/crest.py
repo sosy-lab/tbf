@@ -156,7 +156,9 @@ class CrestTestValidator(TestValidator):
     def _create_all_x(self, filename, creation_method, visited_tests):
         created_content = []
         new_test_files = get_test_files(visited_tests)
-        logging.info("Looking at %s test files", len(new_test_files))
+        if len(new_test_files) > 0:
+            logging.info("Looking at %s test files", len(new_test_files))
+        empty_case_handled = False
         for test_file in new_test_files:
             logging.debug("Looking at test case %s", test_file)
             test_name = utils.get_file_name(test_file)
@@ -164,12 +166,14 @@ class CrestTestValidator(TestValidator):
             assert os.path.exists(test_file)
             visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_file)
-            if test_vector:
+            if test_vector or not empty_case_handled:
+                if not test_vector:
+                    test_vector = dict()
                 new_content = creation_method(filename, test_file, test_vector)
                 if new_content:  # It's possible that no witness is created due to a missing test vector
                     created_content.append(new_content)
             else:
-                logging.info("Test vector was not generated for %s", test_file)
+                logging.debug("Test vector was not generated for %s", test_file)
         return created_content
 
     def create_all_witnesses(self, filename, visited_tests):
