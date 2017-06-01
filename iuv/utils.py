@@ -264,9 +264,9 @@ class Stopwatch(object):
         return self._process(val)
 
     def __str__(self):
-        str_rep = "{0} (s)"
+        str_rep = "{0} (s)".format(self.sum())
         if len(self._intervals) > 1:
-            str_rep += " (Avg.: {1} s, Min.: {2} s, Max.: {3} s)".format(self.sum(), self.avg(), self.min(), self.max())
+            str_rep += " (Avg.: {0} s, Min.: {1} s, Max.: {2} s)".format(self.avg(), self.min(), self.max())
         return str_rep
 
 
