@@ -189,6 +189,10 @@ def get_file_path(filename, temp_dir=True):
     return os.path.join(prefix, filename)
 
 
+def get_file_name(filename):
+    return os.path.basename(filename)
+
+
 def get_env_with_path_added(path_addition):
     env = os.environ.copy()
     env['PATH'] = path_addition + os.pathsep + env['PATH']
@@ -260,7 +264,9 @@ class Stopwatch(object):
         return self._process(val)
 
     def __str__(self):
-        str_rep = "{0} (s) (Avg.: {1} s, Min.: {2} s, Max.: {3} s)".format(self.sum(), self.avg(), self.min(), self.max())
+        str_rep = "{0} (s)"
+        if len(self._intervals) > 1:
+            str_rep += " (Avg.: {1} s, Min.: {2} s, Max.: {3} s)".format(self.sum(), self.avg(), self.min(), self.max())
         return str_rep
 
 
@@ -273,8 +279,8 @@ class Counter(object):
     def count(self):
         return self._count
 
-    def inc(self):
-        self._count += 1
+    def inc(self, amount=1):
+        self._count += amount
 
     def __str__(self):
         return str(self.count)

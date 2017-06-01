@@ -19,8 +19,8 @@ sym_var_prefix = '__sym_'
 
 
 def get_test_files(exclude=[]):
-    all_tests = [t.split('/')[-1] for t in glob.glob(tests_dir + '/*.ktest')]
-    return [t for t in all_tests if t not in exclude]
+    all_tests = [t for t in glob.glob(tests_dir + '/*.ktest')]
+    return [t for t in all_tests if utils.get_file_name(t) not in exclude]
 
 
 class InputGenerator(BaseInputGenerator):
@@ -106,7 +106,7 @@ class KleeTestValidator(TestValidator):
                 value = line.split(':')[-1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
                 objects[var_number]['value'] = value
 
-        return objects
+        return objects if objects.keys() else None
 
     def _get_nondet_method_name(self, nondet_var_name):
         return '__VERIFIER_nondet_' + nondet_var_name[len(sym_var_prefix):]
@@ -141,14 +141,18 @@ class KleeTestValidator(TestValidator):
         created_content = []
         new_test_files = get_test_files(visited_tests)
         logging.info("Looking at %s test files", len(new_test_files))
-        for test in new_test_files:
-            assert test not in visited_tests
-            logging.debug('Looking at test case %s', test)
-            test_name = test.split('/')[-1]
+        for test_file in new_test_files:
+            logging.debug('Looking at test case %s', test_file)
+            test_name = utils.get_file_name(test_file)
+            assert test_name not in visited_tests
+            assert os.path.exists(test_file)
             visited_tests.add(test_name)
-            test_vector = self.get_test_vector(test)
-            new_content = creator_method(filename, test, test_vector)
-            created_content.append(new_content)
+            test_vector = self.get_test_vector(test_file)
+            if test_vector:
+                new_content = creator_method(filename, test_file, test_vector)
+                created_content.append(new_content)
+            else:
+                logging.info("Test vector was not generated for %s", test_file)
         return created_content
 
     def create_all_witnesses(self, filename, visited_tests):

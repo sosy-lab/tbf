@@ -13,8 +13,8 @@ test_name_pattern = re.compile('input[0-9]+')
 
 
 def get_test_files(exclude=[]):
-    all_tests = [t.split('/')[-1] for t in os.listdir('.') if test_name_pattern.match(t)]
-    return [t for t in all_tests if t not in exclude]
+    all_tests = [t for t in os.listdir('.') if test_name_pattern.match(utils.get_file_name(t))]
+    return [t for t in all_tests if utils.get_file_name(t) not in exclude]
 
 
 class InputGenerator(BaseInputGenerator):
@@ -158,13 +158,18 @@ class CrestTestValidator(TestValidator):
         new_test_files = get_test_files(visited_tests)
         logging.info("Looking at %s test files", len(new_test_files))
         for test_file in new_test_files:
-            assert test_file not in visited_tests
-            test_name = test_file.split('/')[-1]
+            logging.debug("Looking at test case %s", test_file)
+            test_name = utils.get_file_name(test_file)
+            assert test_name not in visited_tests
+            assert os.path.exists(test_file)
             visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_file)
-            new_content = creation_method(filename, test_file, test_vector)
-            if new_content:  # It's possible that no witness is created due to a missing test vector
-                created_content.append(new_content)
+            if test_vector:
+                new_content = creation_method(filename, test_file, test_vector)
+                if new_content:  # It's possible that no witness is created due to a missing test vector
+                    created_content.append(new_content)
+            else:
+                logging.info("Test vector was not generated for %s", test_file)
         return created_content
 
     def create_all_witnesses(self, filename, visited_tests):
