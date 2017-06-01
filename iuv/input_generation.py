@@ -53,11 +53,10 @@ class BaseInputGenerator(object):
 
         if os.path.exists(file_to_analyze):
             logging.warning("Prepared file already exists. Not preparing again.")
-            return file_to_analyze
-
-        prepared_content = self.prepare0(filecontent)
-        with open(file_to_analyze, 'w+') as new_file:
-            new_file.write(prepared_content)
+        else:
+            prepared_content = self.prepare0(filecontent)
+            with open(file_to_analyze, 'w+') as new_file:
+                new_file.write(prepared_content)
 
         cmds = self.create_input_generation_cmds(file_to_analyze)
         for cmd in cmds:
