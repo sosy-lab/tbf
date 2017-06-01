@@ -47,20 +47,29 @@ class InputGenerator(BaseInputGenerator):
 
     def _get_nondet_method(self, method_name):
         m_type = utils.get_return_type(method_name)
-        if not self.is_supported_type(m_type):
-            logging.error('Crest can\'t handle symbolic values of type ' + m_type)
-            m_type = 'unsigned int'
-            logging.warning('Continuing with type %s for method %s', m_type, method_name)
         return self._create_nondet_method(method_name, m_type)
 
     def is_supported_type(self, method_type):
         return method_type in ['int', 'short', 'char', 'unsigned int', 'unsigned short', 'unsigned char']
 
     def _create_nondet_method(self, method_name, method_type):
+        if not self.is_supported_type(method_type):
+            logging.error('Crest can\'t handle symbolic values of type ' + method_type)
+            internal_type = 'unsigned int'
+            logging.warning('Continuing with type %s for method %s', internal_type, method_name)
+        else:
+            internal_type = method_type
         var_name = '__sym_' + method_name[len('__VERIFIER_nondet_'):]
-        marker_method_call = 'CREST_' + '_'.join(method_type.split())
-        return '{0} {1}() {{\n    {0} {2};\n ;\n    {3}({2});\n    return {2};\n}}\n'. \
-            format(method_type, method_name, var_name, marker_method_call)
+        marker_method_call = 'CREST_' + '_'.join(internal_type.split())
+        method = '{0} {1}() {{\n    {4} {2};\n    {3}({2});\n'.\
+            format(method_type, method_name, var_name, marker_method_call, internal_type)
+        if method_type == internal_type:
+            method += '    return {0};\n'.format(var_name)
+        else:
+            method += '    return ({0}) {1};\n'.format(method_type, var_name)
+        method += '}\n'
+
+        return method
 
     def create_input_generation_cmds(self, filename):
         compile_cmd = [os.path.join(bin_dir, 'crestc'),
