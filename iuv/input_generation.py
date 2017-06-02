@@ -61,6 +61,7 @@ class BaseInputGenerator(object):
         return 'void ' + utils.error_method + '() { exit(107); }\n'
 
     def generate_input(self, filename, stop_flag=None):
+        default_err = "Unknown error"
         self.timer_input_gen.start()
         try:
             suffix = 'c'
@@ -90,6 +91,13 @@ class BaseInputGenerator(object):
                     logging.error("Generating input failed at command %s", ' '.join(cmd))
 
             return file_to_analyze
+
+        except utils.CompileError as e:
+            logging.error("Compile error: %s", e.msg if e.msg else default_err)
+        except utils.InputGenerationError as e:
+            logging.error("Input generation error: %s", e.msg if e.msg else default_err)
+        except utils.ParseError as e:
+            logging.error("Parse error: %s", e.msg if e.msg else default_err)
 
         finally:
             self.timer_input_gen.stop()
