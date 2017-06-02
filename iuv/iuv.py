@@ -154,7 +154,8 @@ def run():
     if stop_event:
         stop_event.set()
 
-    generator_thread.join(timeout=5)
+    if generator_thread:
+        generator_thread.join(timeout=5)
 
     os.chdir(old_dir)
     print(utils.statistics)
