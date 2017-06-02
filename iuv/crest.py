@@ -56,9 +56,12 @@ class InputGenerator(BaseInputGenerator):
 
     def _create_nondet_method(self, method_name, method_type):
         if not self.is_supported_type(method_type):
-            logging.error('Crest can\'t handle symbolic values of type ' + method_type)
-            internal_type = 'unsigned int'
-            logging.warning('Continuing with type %s for method %s', internal_type, method_name)
+            logging.warning('Crest can\'t handle symbolic values of type %s', method_type)
+            if 'long' not in method_type:
+                internal_type = 'unsigned int'
+                logging.warning('Continuing with type %s for method %s', internal_type, method_name)
+            else:
+                raise utils.InputGenerationError("Can't create symbolic values for type " + method_type)
         else:
             internal_type = method_type
         var_name = '__sym_' + method_name[len('__VERIFIER_nondet_'):]
