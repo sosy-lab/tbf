@@ -41,20 +41,22 @@ class InputGenerator(BaseInputGenerator):
         content = '#include<crest.h>\n'
         content += filecontent
         content += '\n'
-        nondet_methods_used = utils.get_nondet_methods(filecontent)
+        nondet_methods_used = utils.get_undefined_methods(filecontent)
         for method in nondet_methods_used:  # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
         return content
 
-    def _get_nondet_method(self, method_name):
-        m_type = utils.get_return_type(method_name)
-        return self._create_nondet_method(method_name, m_type)
+    def _get_nondet_method(self, method_information):
+        method_name = method_information['name']
+        m_type = method_information['type']
+        param_types = method_information['params']
+        return self._create_nondet_method(method_name, m_type, param_types)
 
     def is_supported_type(self, method_type):
         return method_type in ['int', 'short', 'char', 'unsigned int', 'unsigned short', 'unsigned char']
 
-    def _create_nondet_method(self, method_name, method_type):
+    def _create_nondet_method(self, method_name, method_type, param_types):
         if not self.is_supported_type(method_type):
             logging.warning('Crest can\'t handle symbolic values of type %s', method_type)
             if 'long' not in method_type:
@@ -66,15 +68,22 @@ class InputGenerator(BaseInputGenerator):
             internal_type = method_type
         var_name = '__sym_' + method_name[len('__VERIFIER_nondet_'):]
         marker_method_call = 'CREST_' + '_'.join(internal_type.split())
-        method = '{0} {1}() {{\n    {4} {2};\n    {3}({2});\n'.\
-            format(method_type, method_name, var_name, marker_method_call, internal_type)
-        if method_type == internal_type:
-            method += '    return {0};\n'.format(var_name)
-        else:
-            method += '    return ({0}) {1};\n'.format(method_type, var_name)
-        method += '}\n'
+        method_head = utils.get_method_head(method_name, method_type, param_types)
+        method_body = ['{']
+        if method_type != 'void':
+            method_body += ['{0} {1};'.format(internal_type, var_name),
+                            '{0}({1});'.format(marker_method_call, var_name)
+                            ]
 
-        return method
+            if method_type == internal_type:
+                method_body.append('return {0};'.format(var_name))
+            else:
+                method_body.append('return ({0}) {1};'.format(method_type, var_name))
+
+        method_body = '\n    '.join(method_body)
+        method_body += '\n}\n'
+
+        return method_head + method_body
 
     def create_input_generation_cmds(self, filename):
         compile_cmd = [os.path.join(bin_dir, 'crestc'),
@@ -126,7 +135,7 @@ class CrestTestValidator(TestValidator):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      nondet_methods=utils.get_undefined_methods(filename),
                                                       machine_model=self.machine_model,
                                                       error_line=self.get_error_line(filename))
 
@@ -138,10 +147,11 @@ class CrestTestValidator(TestValidator):
 
     def create_harness(self, filename, test_file, test_vector):
         # If no inputs are defined don't create a witness
+        nondet_methods = utils.get_undefined_methods(filename)
         harness = self.harness_creator.create_harness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      nondet_methods=utils.get_undefined_methods(filename),
                                                       error_method=utils.error_method)
         test_name = os.path.basename(test_file)
         harness_file = test_name + '.harness.c'

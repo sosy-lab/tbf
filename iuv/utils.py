@@ -7,6 +7,7 @@ import tempfile
 import pycparser
 import re
 
+parser = pycparser.CParser()
 
 class ConfigError(Exception):
 
@@ -55,33 +56,6 @@ class ExecutionResult(object):
     @property
     def stderr(self):
         return self._stderr
-
-
-def parse_file_with_preprocessing(filename, includes=[]):
-    preprocessed_filename = preprocess(filename, includes)
-    ast = pycparser.parse_file(preprocessed_filename)
-    return ast
-
-
-def preprocess(filename, includes=[]):
-    preprocessed_filename = '.'.join(filename.split('/')[-1].split('.')[:-1] + ['i'])
-    preprocessed_filename = get_file_path(preprocessed_filename, temp_dir=True)
-    if preprocessed_filename == filename:
-        logging.warning("Overwriting existing file " + preprocessed_filename)
-
-    # The defines (-D) remove gcc extensions that pycparser can't handle
-    # -E : only preprocess
-    # -o : output file name
-    preprocess_cmd = ['gcc',
-                      '-E',
-                      '-D', '__attribute__(x)=',
-                      '-D', '__extension=']
-    for inc in includes:
-        preprocess_cmd += ['-I', inc]
-    preprocess_cmd += ['-o', preprocessed_filename,
-                       filename]
-    p = execute(preprocess_cmd)
-    return preprocessed_filename
 
 
 def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, input_str=None):
@@ -201,18 +175,21 @@ def get_env_with_path_added(path_addition):
     env['PATH'] = path_addition + os.pathsep + env['PATH']
     return env
 
-
-def get_nondet_methods(file_content):
-    if os.path.exists(file_content):
-        with open(file_content, 'r') as inp:
-            content = inp.read()
-    else:
-        content = file_content
-    return set([s[:-2] for s in nondet_pattern.findall(content)])
-
-
 def get_assume_method():
     return 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        exit(0);\n    }\n}\n'
+
+
+def get_method_head(method_name, method_type, param_types):
+    method_head = '{0} {1}('.format(method_type, method_name)
+    params = list()
+    for (idx, pt) in enumerate(param_types):
+        if '...' in pt:
+            params.append('...')
+        else:
+            params.append('{0} param{1}'.format(pt, idx))
+    method_head += ', '.join(params)
+    method_head += ')'
+    return method_head
 
 
 def get_return_type(method):
@@ -275,6 +252,77 @@ class Stopwatch(object):
         if len(self._intervals) > 1:
             str_rep += " (Avg.: {0} s, Min.: {1} s, Max.: {2} s)".format(self.avg(), self.min(), self.max())
         return str_rep
+
+
+def get_nondet_methods_deprecated(file_content):
+    if os.path.exists(file_content):
+        with open(file_content, 'r') as inp:
+            content = inp.read()
+    else:
+        content = file_content
+    return set([s[:-2] for s in nondet_pattern.findall(content)])
+
+
+def parse_file_with_preprocessing(filename, includes=[]):
+    preprocessed_filename = preprocess(filename, includes)
+    ast = pycparser.parse_file(preprocessed_filename)
+    return ast
+
+
+def preprocess(filename, includes=[]):
+    preprocessed_filename = '.'.join(filename.split('/')[-1].split('.')[:-1] + ['i'])
+    preprocessed_filename = get_file_path(preprocessed_filename, temp_dir=True)
+    if preprocessed_filename == filename:
+        logging.warning("Overwriting existing file " + preprocessed_filename)
+
+    # The defines (-D) remove gcc extensions that pycparser can't handle
+    # -E : only preprocess
+    # -o : output file name
+    preprocess_cmd = ['gcc',
+                      '-E',
+                      '-D', '__attribute__(x)=',
+                      '-D', '__extension=']
+    for inc in includes:
+        preprocess_cmd += ['-I', inc]
+    preprocess_cmd += ['-o', preprocessed_filename,
+                       filename]
+    p = execute(preprocess_cmd)
+    return preprocessed_filename
+
+
+def get_undefined_methods(file_content):
+    import ast_visitor
+    if not os.path.exists(file_content):
+        filename = get_file_path('temp.c', temp_dir=True)
+        with open(filename, 'w+') as outp:
+            outp.write(file_content)
+    else:
+        filename = file_content
+    ast = parse_file_with_preprocessing(filename)
+    func_decl_collector = ast_visitor.FuncDeclCollector()
+    func_def_collector = ast_visitor.FuncDefCollector()
+
+    func_decl_collector.visit(ast)
+    function_declarations = func_decl_collector.func_decls
+    func_def_collector.visit(ast)
+    function_definitions = [f.name for f in func_def_collector.func_defs]
+    function_definitions += ['__VERIFIER_assume', '__VERIFIER_error']
+
+    undefined_functions = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
+    undefined_functions = [_prettify(f) for f in undefined_functions]
+    return undefined_functions
+
+
+def _prettify(func_def):
+    import ast_visitor
+    name = ast_visitor.get_name(func_def)
+    return_type = ast_visitor.get_type(func_def.type)
+    params = list()
+    if func_def.args:
+        for parameter in func_def.args.params:
+            param_type = ast_visitor.get_type(parameter)
+            params.append(param_type)
+    return {'name': name, 'type': return_type, 'params': params}
 
 
 class Counter(object):
@@ -361,4 +409,3 @@ statistics = StatisticsPool()
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
-

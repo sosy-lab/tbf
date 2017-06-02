@@ -122,7 +122,8 @@ class WitnessCreator(object):
     def create_witness(self, producer, filename, test_vector, nondet_methods, machine_model, error_line):
         self._reset_node_id()
         witness = self._create_witness_header(filename)
-        graph = self._create_graph(producer, filename, test_vector, nondet_methods, machine_model, error_line)
+        nondet_method_names = [m['name'] for m in nondet_methods]
+        graph = self._create_graph(producer, filename, test_vector, nondet_method_names, machine_model, error_line)
         witness.append(graph)
 
         xml_string = ET.tostring(witness, 'utf-8')

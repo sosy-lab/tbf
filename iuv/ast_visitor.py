@@ -2,7 +2,7 @@ from abc import abstractmethod, ABCMeta
 
 from pycparser import c_generator
 from pycparser import c_ast as a
-from utils import flatten, ParseError, error_method
+from utils import ParseError, error_method
 
 import re
 
@@ -904,3 +904,38 @@ def get_name(node):
         raise AssertionError("Unhandled node type: " + str(type(node)))
     return name
 
+
+def get_type(node):
+    node_type = type(node)
+    if node_type is a.IdentifierType:
+        return node.names[0]
+    elif node_type is a.EllipsisParam:
+        return '...'
+    elif node_type is a.Struct:
+        return 'struct ' + node.name
+    elif node_type is a.TypeDecl:
+        return ' '.join([get_type(node.type)] + node.quals)
+    elif node_type is a.Typename:
+        return get_type(node.type)
+    elif node_type is a.PtrDecl:
+        return get_type(node.type) + '*'
+    else:
+        raise AssertionError("Unhandled node type: " + node_type)
+
+
+class FuncDefCollector(a.NodeVisitor):
+
+    def __init__(self):
+        self.func_defs = []
+
+    def visit_FuncDef(self, node):
+        self.func_defs.append(node.decl)
+
+
+class FuncDeclCollector(a.NodeVisitor):
+
+    def __init__(self):
+        self.func_decls = []
+
+    def visit_FuncDecl(self, node):
+        self.func_decls.append(node)

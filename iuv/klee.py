@@ -44,20 +44,31 @@ class InputGenerator(BaseInputGenerator):
     def prepare(self, filecontent):
         content = filecontent
         content += '\n'
-        nondet_methods_used = utils.get_nondet_methods(filecontent)
+        nondet_methods_used = utils.get_undefined_methods(filecontent)
         for method in nondet_methods_used:  # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
         return content
 
-    def _get_nondet_method(self, method_name):
-        m_type = utils.get_return_type(method_name)
-        return self._create_nondet_method(method_name, m_type)
+    def _get_nondet_method(self, method_information):
+        method_name = method_information['name']
+        m_type = method_information['type']
+        param_types = method_information['params']
+        return self._create_nondet_method(method_name, m_type, param_types)
 
-    def _create_nondet_method(self, method_name, method_type):
+    def _create_nondet_method(self, method_name, method_type, param_types):
         var_name = sym_var_prefix + method_name[len('__VERIFIER_nondet_'):]
-        return '{0} {1}() {{\n    {0} {2};\n    klee_make_symbolic(&{2}, sizeof({2}), \"{2}\");\n    return {2};\n}}\n'.\
-            format(method_type, method_name, var_name)
+        method_head = utils.get_method_head(method_name, method_type, param_types)
+        method_body = ['{']
+        if method_type != 'void':
+            method_body += ['{0} {1};'.format(method_type, var_name),
+                            'klee_make_symbolic(&{0}, sizeof({0}), \"{0}\");'.format(var_name),
+                            'return {0};'.format(var_name)
+                            ]
+        method_body = '\n    '.join(method_body)
+        method_body += '\n}\n'
+
+        return method_head + method_body
 
     def create_input_generation_cmds(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
@@ -115,7 +126,7 @@ class KleeTestValidator(TestValidator):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      nondet_methods=utils.get_undefined_methods(filename),
                                                       machine_model=self.machine_model,
                                                       error_line=self.get_error_line(filename))
 
@@ -129,7 +140,7 @@ class KleeTestValidator(TestValidator):
         harness = self.harness_creator.create_harness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      nondet_methods=utils.get_undefined_methods(filename),
                                                       error_method=utils.error_method)
         test_name = os.path.basename(test_file)
         harness_file = test_name + '.harness.c'

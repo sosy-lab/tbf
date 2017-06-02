@@ -21,15 +21,17 @@ class HarnessCreator(object):
         if not concrete_values:
             definitions += 'unsigned int ' + counter + ' = 0;\n\n'
         for method in nondet_methods:
-            method_type = utils.get_return_type(method)
-            definitions += method_type + ' ' + method + '() {\n'
-            if concrete_values:
-                definitions += '    static unsigned int ' + counter + '= 0;\n'
-            definitions += '    ' + counter + '++;\n'
-            definitions += '    switch(' + counter + ') {\n'
-            for num, instantiation in sorted(test_vector.items(), key=lambda x: x[0]):
-                definitions += ' ' * 8 + 'case ' + num + ': return ' + instantiation['value'] + ';\n'
-            definitions += '    }\n}\n'
+            definitions += utils.get_method_head(method['name'], method['type'], method['params'])
+            definitions += ' {\n'
+            if method['type'] != 'void':
+                if concrete_values:
+                    definitions += '    static unsigned int ' + counter + '= 0;\n'
+                definitions += '    ' + counter + '++;\n'
+                definitions += '    switch(' + counter + ') {\n'
+                for num, instantiation in sorted(test_vector.items(), key=lambda x: x[0]):
+                    definitions += ' ' * 8 + 'case ' + num + ': return ' + instantiation['value'] + ';\n'
+                definitions += '    }\n'
+            definitions += '}\n'
         return definitions
 
     def create_harness(self, producer, filename, test_vector, nondet_methods, error_method):
