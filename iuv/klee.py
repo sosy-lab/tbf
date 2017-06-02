@@ -4,9 +4,6 @@ import utils
 import glob
 import os
 import logging
-from ast_visitor import NondetReplacer
-from pycparser import c_ast as a
-import pycparser
 
 include_dir = os.path.abspath('./klee/include/')
 lib_dir = os.path.abspath('./klee/lib')
@@ -15,7 +12,6 @@ tests_output = utils.tmp
 tests_dir = os.path.join(tests_output, 'klee-tests')
 klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
-sym_var_prefix = '__sym_'
 
 
 def get_test_files(exclude=[]):
@@ -57,7 +53,7 @@ class InputGenerator(BaseInputGenerator):
         return self._create_nondet_method(method_name, m_type, param_types)
 
     def _create_nondet_method(self, method_name, method_type, param_types):
-        var_name = sym_var_prefix + method_name[len('__VERIFIER_nondet_'):]
+        var_name = utils.get_sym_var_name(method_name)
         method_head = utils.get_method_head(method_name, method_type, param_types)
         method_body = ['{']
         if method_type != 'void':
@@ -109,7 +105,7 @@ class KleeTestValidator(TestValidator):
                 var_name = line.split(':')[2][2:-1]  # [1:-1] to cut the surrounding ''
                 if var_number not in objects.keys():
                     objects[var_number] = dict()
-                nondet_method_name = self._get_nondet_method_name(var_name)
+                nondet_method_name = utils.get_corresponding_method_name(var_name)
                 objects[var_number]['name'] = nondet_method_name
             elif 'data:' in line:
                 #assert len(line.split(':')) == 3
@@ -118,9 +114,6 @@ class KleeTestValidator(TestValidator):
                 objects[var_number]['value'] = value
 
         return objects if objects.keys() else None
-
-    def _get_nondet_method_name(self, nondet_var_name):
-        return '__VERIFIER_nondet_' + nondet_var_name[len(sym_var_prefix):]
 
     def create_witness(self, filename, test_file, test_vector):
         witness = self.witness_creator.create_witness(producer=self.get_name(),

@@ -8,6 +8,8 @@ import pycparser
 import re
 
 parser = pycparser.CParser()
+sym_var_prefix = '__sym_'
+
 
 class ConfigError(Exception):
 
@@ -175,6 +177,7 @@ def get_env_with_path_added(path_addition):
     env['PATH'] = path_addition + os.pathsep + env['PATH']
     return env
 
+
 def get_assume_method():
     return 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        exit(0);\n    }\n}\n'
 
@@ -185,30 +188,11 @@ def get_method_head(method_name, method_type, param_types):
     for (idx, pt) in enumerate(param_types):
         if '...' in pt:
             params.append('...')
-        else:
+        elif pt != 'void':
             params.append('{0} param{1}'.format(pt, idx))
     method_head += ', '.join(params)
     method_head += ')'
     return method_head
-
-
-def get_return_type(method):
-    assert method.startswith('__VERIFIER_nondet_')
-    assert method[-2:] != '()'
-    m_type = method[len('__VERIFIER_nondet_'):]
-    if m_type == 'bool':
-        m_type = '_Bool'
-    elif m_type == 'u32':
-        m_type = 'u32'
-    elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
-        m_type = 'unsigned int'
-    elif m_type[0] == 'u':  # resolve uint to unsigned int (e.g.)
-        m_type = 'unsigned ' + m_type[1:]
-    elif m_type == 'pointer':
-        m_type = 'void *'
-    elif m_type == 'pchar':
-        m_type = 'char *'
-    return m_type
 
 
 class Stopwatch(object):
@@ -254,15 +238,6 @@ class Stopwatch(object):
         return str_rep
 
 
-def get_nondet_methods_deprecated(file_content):
-    if os.path.exists(file_content):
-        with open(file_content, 'r') as inp:
-            content = inp.read()
-    else:
-        content = file_content
-    return set([s[:-2] for s in nondet_pattern.findall(content)])
-
-
 def parse_file_with_preprocessing(filename, includes=[]):
     preprocessed_filename = preprocess(filename, includes)
     ast = pycparser.parse_file(preprocessed_filename)
@@ -281,7 +256,8 @@ def preprocess(filename, includes=[]):
     preprocess_cmd = ['gcc',
                       '-E',
                       '-D', '__attribute__(x)=',
-                      '-D', '__extension=']
+                      '-D', '__extension=',
+                      '-D', '__restrict=']
     for inc in includes:
         preprocess_cmd += ['-I', inc]
     preprocess_cmd += ['-o', preprocessed_filename,
@@ -306,10 +282,21 @@ def get_undefined_methods(file_content):
     function_declarations = func_decl_collector.func_decls
     func_def_collector.visit(ast)
     function_definitions = [f.name for f in func_def_collector.func_defs]
-    function_definitions += ['__VERIFIER_assume', '__VERIFIER_error']
+    function_definitions += ['__VERIFIER_assume', '__VERIFIER_error', 'malloc', 'memcpy']
 
-    undefined_functions = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
-    undefined_functions = [_prettify(f) for f in undefined_functions]
+    undef_func_prepared = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
+    undef_func_prepared = [_prettify(f) for f in undef_func_prepared]
+
+    # List every undefined, but declared function only once.
+    # This is necessary because there are a few SV-COMP programs that declare
+    # functions multiple times.
+    undef_func_names = set()
+    undefined_functions = list()
+    for f in undef_func_prepared:
+        if f['name'] and f['name'] not in undef_func_names:
+            undef_func_names.add(f['name'])
+            undefined_functions.append(f)
+
     return undefined_functions
 
 
@@ -323,6 +310,14 @@ def _prettify(func_def):
             param_type = ast_visitor.get_type(parameter)
             params.append(param_type)
     return {'name': name, 'type': return_type, 'params': params}
+
+
+def get_sym_var_name(method_name):
+    return sym_var_prefix + method_name
+
+
+def get_corresponding_method_name(sym_var_name):
+    return sym_var_name[len(sym_var_prefix):]
 
 
 class Counter(object):

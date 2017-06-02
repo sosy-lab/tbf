@@ -908,7 +908,7 @@ def get_name(node):
 def get_type(node):
     node_type = type(node)
     if node_type is a.IdentifierType:
-        return node.names[0]
+        return ' '.join(node.names)
     elif node_type is a.EllipsisParam:
         return '...'
     elif node_type is a.Struct:
@@ -917,10 +917,25 @@ def get_type(node):
         return ' '.join([get_type(node.type)] + node.quals)
     elif node_type is a.Typename:
         return get_type(node.type)
+    elif node_type is a.Decl:
+        return ' '.join([get_type(node.type)] + node.quals)
     elif node_type is a.PtrDecl:
-        return get_type(node.type) + '*'
+        if type(node.type) is a.FuncDecl:
+            func_decl = node.type
+            m_type = get_type(func_decl.type) + '(*fp)('
+            if func_decl.args:
+                params = list()
+                for param in func_decl.args.params:
+                    params.append(get_type(param))
+                ', '.join(params)
+            m_type += ')'
+            return m_type
+        else:
+            return get_type(node.type) + '*'
+    elif node_type is a.FuncDecl:
+        return get_type(node.type) + node.declname + '()'
     else:
-        raise AssertionError("Unhandled node type: " + node_type)
+        raise AssertionError("Unhandled node type: " + str(node_type))
 
 
 class FuncDefCollector(a.NodeVisitor):
@@ -939,3 +954,9 @@ class FuncDeclCollector(a.NodeVisitor):
 
     def visit_FuncDecl(self, node):
         self.func_decls.append(node)
+
+    def visit_PtrDecl(self, node):
+        pass  # Don't go deeper so we don't collect function pointer
+
+    def visit_Typedef(self, node):
+        pass  # Don't go deeper so we don't collect typedef functions

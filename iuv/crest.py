@@ -66,7 +66,7 @@ class InputGenerator(BaseInputGenerator):
                 raise utils.InputGenerationError("Can't create symbolic values for type " + method_type)
         else:
             internal_type = method_type
-        var_name = '__sym_' + method_name[len('__VERIFIER_nondet_'):]
+        var_name = utils.get_sym_var_name(method_name)
         marker_method_call = 'CREST_' + '_'.join(internal_type.split())
         method_head = utils.get_method_head(method_name, method_type, param_types)
         method_body = ['{']

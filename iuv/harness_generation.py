@@ -18,18 +18,17 @@ class HarnessCreator(object):
         definitions = ''
         concrete_values = len([s for s in test_vector.values() if s['name']]) == len(test_vector.values())
         counter = 'access_counter'
-        if not concrete_values:
-            definitions += 'unsigned int ' + counter + ' = 0;\n\n'
+        definitions += 'unsigned int ' + counter + ' = 0;\n\n'
         for method in nondet_methods:
             definitions += utils.get_method_head(method['name'], method['type'], method['params'])
             definitions += ' {\n'
             if method['type'] != 'void':
-                if concrete_values:
-                    definitions += '    static unsigned int ' + counter + '= 0;\n'
-                definitions += '    ' + counter + '++;\n'
+                cast = '({0})'.format(method['type'])
                 definitions += '    switch(' + counter + ') {\n'
                 for num, instantiation in sorted(test_vector.items(), key=lambda x: x[0]):
-                    definitions += ' ' * 8 + 'case ' + num + ': return ' + instantiation['value'] + ';\n'
+                    if instantiation['name'] and instantiation['name'] == method['name']:
+                        definitions += ' ' * 8 + 'case ' + num + ': ' + counter + '++; return ' + cast + ' ' + instantiation['value'] + ';\n'
+                definitions += ' ' * 8 + 'default: return 1/0;\n'  # Force a program failure
                 definitions += '    }\n'
             definitions += '}\n'
         return definitions
