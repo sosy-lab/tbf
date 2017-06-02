@@ -4,7 +4,7 @@
   <column title="status" />
   <column title="cputime" displayTitle="CPU time" />
   <column title="memUsage" displayTitle="Memory consumed" />
-  <column title="testsGenerated" displayTitle="Tests generated">Number of generated tests</column>
+  <column title="testsGenerated" displayTitle="Tests generated">Number of generated test cases</column>
   <column title="inputGenerationTime" displayTitle="CPU time input generation">Time for input generation</column>
   <column title="validationTime" displayTitle="CPU time for test case validation">Time for validation</column>
 
