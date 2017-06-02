@@ -274,30 +274,70 @@ def get_undefined_methods(file_content):
             outp.write(file_content)
     else:
         filename = file_content
-    ast = parse_file_with_preprocessing(filename)
-    func_decl_collector = ast_visitor.FuncDeclCollector()
-    func_def_collector = ast_visitor.FuncDefCollector()
+    try:
+        ast = parse_file_with_preprocessing(filename)
 
-    func_decl_collector.visit(ast)
-    function_declarations = func_decl_collector.func_decls
-    func_def_collector.visit(ast)
-    function_definitions = [f.name for f in func_def_collector.func_defs]
-    function_definitions += ['__VERIFIER_assume', '__VERIFIER_error', 'malloc', 'memcpy']
+        func_decl_collector = ast_visitor.FuncDeclCollector()
+        func_def_collector = ast_visitor.FuncDefCollector()
 
-    undef_func_prepared = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
-    undef_func_prepared = [_prettify(f) for f in undef_func_prepared]
+        func_decl_collector.visit(ast)
+        function_declarations = func_decl_collector.func_decls
+        func_def_collector.visit(ast)
+        function_definitions = [f.name for f in func_def_collector.func_defs]
+        function_definitions += ['__VERIFIER_assume', '__VERIFIER_error', 'malloc', 'memcpy']
 
-    # List every undefined, but declared function only once.
-    # This is necessary because there are a few SV-COMP programs that declare
-    # functions multiple times.
-    undef_func_names = set()
-    undefined_functions = list()
-    for f in undef_func_prepared:
-        if f['name'] and f['name'] not in undef_func_names:
-            undef_func_names.add(f['name'])
-            undefined_functions.append(f)
+        undef_func_prepared = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
+        undef_func_prepared = [_prettify(f) for f in undef_func_prepared]
+
+        # List every undefined, but declared function only once.
+        # This is necessary because there are a few SV-COMP programs that declare
+        # functions multiple times.
+        undef_func_names = set()
+        undefined_functions = list()
+        for f in undef_func_prepared:
+            if f['name'] and f['name'] not in undef_func_names:
+                undef_func_names.add(f['name'])
+                undefined_functions.append(f)
+
+    except pycparser.plyparser.ParseError as e:
+        logging.error("Parse error in pycparser while parsing %s", filename)
+        undefined_functions = get_nondet_methods(file_content)
 
     return undefined_functions
+
+
+def get_nondet_methods(file_content):
+    if os.path.exists(file_content):
+        with open(file_content, 'r') as inp:
+            content = inp.read()
+    else:
+        content = file_content
+    method_names = set([s[:-2] for s in nondet_pattern.findall(content)])
+
+    functions = list()
+    for method_name in method_names:
+        method_type = _get_return_type(method_name)
+        functions.append({'name': method_name, 'type': method_type, 'params': []})
+    return functions
+
+
+def _get_return_type(method):
+    assert method.startswith('__VERIFIER_nondet_')
+    assert method[-2:] != '()'
+    m_type = method[len('__VERIFIER_nondet_'):]
+    if m_type == 'bool':
+        m_type = '_Bool'
+    elif m_type == 'u32':
+        m_type = 'u32'
+    elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
+        m_type = 'unsigned int'
+    elif m_type[0] == 'u':  # resolve uint to unsigned int (e.g.)
+        m_type = 'unsigned ' + m_type[1:]
+    elif m_type == 'pointer':
+        m_type = 'void *'
+    elif m_type == 'pchar':
+        m_type = 'char *'
+    return m_type
 
 
 def _prettify(func_def):
