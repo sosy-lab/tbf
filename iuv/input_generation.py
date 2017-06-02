@@ -53,10 +53,11 @@ class BaseInputGenerator(object):
     def prepare0(self, filecontent):
         content = filecontent
         content += '\n'
-        content += self._get_error_dummy()
+        content += self._get_error_method_dummy()
+        content += utils.get_assume_method()
         return self.prepare(content)
 
-    def _get_error_dummy(self):
+    def _get_error_method_dummy(self):
         return 'void ' + utils.error_method + '() { exit(107); }\n'
 
     def generate_input(self, filename, stop_flag=None):

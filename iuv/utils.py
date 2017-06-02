@@ -211,6 +211,10 @@ def get_nondet_methods(file_content):
     return set([s[:-2] for s in nondet_pattern.findall(content)])
 
 
+def get_assume_method():
+    return 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        exit(0);\n    }\n}\n'
+
+
 def get_return_type(method):
     assert method.startswith('__VERIFIER_nondet_')
     assert method[-2:] != '()'

@@ -7,7 +7,7 @@ class HarnessCreator(object):
         pass
 
     def _get_preamble(self):
-        preamble = 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        exit(0);\n    }\n}\n'
+        preamble = utils.get_assume_method()
         return preamble
 
     def _get_error_definition(self, method_name):
