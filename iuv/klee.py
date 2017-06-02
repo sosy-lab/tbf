@@ -154,6 +154,7 @@ class KleeTestValidator(TestValidator):
                 if not test_vector:
                     test_vector = dict()
                 new_content = creator_method(filename, test_file, test_vector)
+                new_content['vector'] = test_vector
                 created_content.append(new_content)
             else:
                 logging.info("Test vector was not generated for %s", test_file)

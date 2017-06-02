@@ -60,6 +60,9 @@ class TestValidator(object):
         self.counter_handled_test_cases = utils.Counter()
         self.statistics.add_value('Number of looked-at test cases', self.counter_handled_test_cases)
 
+        self.final_test_vector_size = utils.Constant()
+        self.statistics.add_value("Size of successful test vector", self.final_test_vector_size)
+
     def get_error_line(self, filename):
         with open(filename, 'r') as inp:
             content = inp.readlines()
@@ -110,6 +113,7 @@ class TestValidator(object):
 
             logging.info('Results for %s: %s', witness_name, str(results))
             if [s for s in results if FALSE in s]:
+                self.final_test_vector_size.value = len(witness['vector'])
                 return FALSE
         return UNKNOWN
 
@@ -146,6 +150,7 @@ class TestValidator(object):
 
             logging.debug('Results for %s: %s', harness_name, str(result))
             if [s for s in result if FALSE in s]:
+                self.final_test_vector_size.value = len(harness['vector'])
                 return FALSE
         return UNKNOWN
 

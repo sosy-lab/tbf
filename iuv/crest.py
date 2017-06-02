@@ -163,8 +163,8 @@ class CrestTestValidator(TestValidator):
                 if not test_vector:
                     test_vector = dict()
                 new_content = creation_method(filename, test_file, test_vector)
-                if new_content:  # It's possible that no witness is created due to a missing test vector
-                    created_content.append(new_content)
+                new_content['vector'] = test_vector
+                created_content.append(new_content)
             else:
                 logging.debug("Test vector was not generated for %s", test_file)
         return created_content
