@@ -102,7 +102,10 @@ def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, 
         while returncode is None:
             if stop_flag.is_set():
                 p.terminate()
-                returncode = p.wait()
+                try:
+                    returncode = p.wait(timeout=4)
+                except subprocess.TimeoutExpired as e:
+                    logging.info("Wasn't able to shut down process within timeout.")
             else:
                 time.sleep(0.001)
                 returncode = p.poll()
