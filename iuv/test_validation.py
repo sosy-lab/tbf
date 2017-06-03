@@ -54,8 +54,12 @@ class TestValidator(object):
         self.statistics.add_value('Time for validation', self.timer_validation)
         self.timer_witness_validation = utils.Stopwatch()
         self.statistics.add_value('Time for witness validation', self.timer_witness_validation)
+        self.counter_size_witnesses = utils.Counter()
+        self.statistics.add_value('Total size of witnesses', self.counter_size_witnesses)
         self.timer_execution_validation = utils.Stopwatch()
         self.statistics.add_value('Time for execution validation', self.timer_execution_validation)
+        self.counter_size_harnesses = utils.Counter()
+        self.statistics.add_value('Total size of harnesses', self.counter_size_harnesses)
 
         self.counter_handled_test_cases = utils.Counter()
         self.statistics.add_value('Number of looked-at test cases', self.counter_handled_test_cases)
@@ -105,6 +109,8 @@ class TestValidator(object):
         for witness in produced_witnesses:
             logging.debug('Looking at witness %s', witness['name'])
             witness_name = witness['name']
+            content_to_write = witness['content']
+            self.counter_size_witnesses.inc(len(content_to_write))
             with open(witness_name, 'w+') as outp:
                 outp.write(witness['content'])
 
@@ -145,8 +151,10 @@ class TestValidator(object):
 
         for harness in produced_harnesses:
             harness_name = harness['name']
+            content_to_write = harness['content']
+            self.counter_size_harnesses.inc(len(content_to_write))
             with open(harness_name, 'w+') as outp:
-                outp.write(harness['content'])
+                outp.write(content_to_write)
 
             result = validator.run(filename, harness_name)
             self.counter_handled_test_cases.inc()
