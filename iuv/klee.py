@@ -42,7 +42,7 @@ class InputGenerator(BaseInputGenerator):
     def prepare(self, filecontent):
         content = filecontent
         content += '\n'
-        nondet_methods_used = utils.get_undefined_methods(filecontent)
+        nondet_methods_used = utils.get_nondet_methods(filecontent)
         for method in nondet_methods_used:  # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
@@ -121,7 +121,7 @@ class KleeTestValidator(TestValidator):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_undefined_methods(filename),
+                                                      nondet_methods=utils.get_nondet_methods(filename),
                                                       machine_model=self.machine_model,
                                                       error_line=self.get_error_line(filename))
 
@@ -135,7 +135,7 @@ class KleeTestValidator(TestValidator):
         harness = self.harness_creator.create_harness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_undefined_methods(filename),
+                                                      nondet_methods=utils.get_nondet_methods(filename),
                                                       error_method=utils.error_method)
         test_name = os.path.basename(test_file)
         harness_file = test_name + '.harness.c'

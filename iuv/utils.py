@@ -266,47 +266,56 @@ def preprocess(filename, includes=[]):
     return preprocessed_filename
 
 
-def get_undefined_methods(file_content):
-    import ast_visitor
-    if not os.path.exists(file_content):
+undefined_methods = None
+
+
+def get_nondet_methods(file_content):
+    global undefined_methods
+
+    if undefined_methods is None:
+        assert not os.path.exists(file_content)
         filename = get_file_path('temp.c', temp_dir=True)
         with open(filename, 'w+') as outp:
             outp.write(file_content)
-    else:
-        filename = file_content
-    try:
-        ast = parse_file_with_preprocessing(filename)
+        try:
+            undefined_methods = find_undefined_methods(filename)
+        except pycparser.plyparser.ParseError as e:
+            logging.error("Parse error in pycparser while parsing %s", filename)
+            undefined_methods = find_nondet_methods(file_content)
+    return undefined_methods
 
-        func_decl_collector = ast_visitor.FuncDeclCollector()
-        func_def_collector = ast_visitor.FuncDefCollector()
 
-        func_decl_collector.visit(ast)
-        function_declarations = func_decl_collector.func_decls
-        func_def_collector.visit(ast)
-        function_definitions = [f.name for f in func_def_collector.func_defs]
-        function_definitions += ['__VERIFIER_assume', '__VERIFIER_error', 'malloc', 'memcpy']
+def find_undefined_methods(filename):
+    import ast_visitor
 
-        undef_func_prepared = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
-        undef_func_prepared = [_prettify(f) for f in undef_func_prepared]
+    ast = parse_file_with_preprocessing(filename)
 
-        # List every undefined, but declared function only once.
-        # This is necessary because there are a few SV-COMP programs that declare
-        # functions multiple times.
-        undef_func_names = set()
-        undefined_functions = list()
-        for f in undef_func_prepared:
-            if f['name'] and f['name'] not in undef_func_names:
-                undef_func_names.add(f['name'])
-                undefined_functions.append(f)
+    func_decl_collector = ast_visitor.FuncDeclCollector()
+    func_def_collector = ast_visitor.FuncDefCollector()
 
-    except pycparser.plyparser.ParseError as e:
-        logging.error("Parse error in pycparser while parsing %s", filename)
-        undefined_functions = get_nondet_methods(file_content)
+    func_decl_collector.visit(ast)
+    function_declarations = func_decl_collector.func_decls
+    func_def_collector.visit(ast)
+    function_definitions = [f.name for f in func_def_collector.func_defs]
+    function_definitions += ['__VERIFIER_assume', '__VERIFIER_error', 'malloc', 'memcpy']
+
+    undef_func_prepared = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
+    undef_func_prepared = [_prettify(f) for f in undef_func_prepared]
+
+    # List every undefined, but declared function only once.
+    # This is necessary because there are a few SV-COMP programs that declare
+    # functions multiple times.
+    undef_func_names = set()
+    undefined_functions = list()
+    for f in undef_func_prepared:
+        if f['name'] and f['name'] not in undef_func_names:
+            undef_func_names.add(f['name'])
+            undefined_functions.append(f)
 
     return undefined_functions
 
 
-def get_nondet_methods(file_content):
+def find_nondet_methods(file_content):
     if os.path.exists(file_content):
         with open(file_content, 'r') as inp:
             content = inp.read()
