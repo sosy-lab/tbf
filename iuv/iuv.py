@@ -146,7 +146,7 @@ def run():
     else:
         stop_event = None
         generator_thread = None
-        file_for_analysis = inp_module.generate_input(filename)
+        inp_module.generate_input(filename)
 
     validator_module = _get_validator_module(args)
     validation_result = validator_module.check_inputs(filename, generator_thread)

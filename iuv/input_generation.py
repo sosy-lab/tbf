@@ -89,16 +89,19 @@ class BaseInputGenerator(object):
                 result = utils.execute(cmd, env=self.get_run_env(), quiet=True, err_to_output=True, stop_flag=stop_flag)
                 if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
                     logging.error("Generating input failed at command %s", ' '.join(cmd))
-
-            return file_to_analyze
+            # May throw an InputGenerationError if no test cases were generated
+            self.number_generated_tests.value = self.get_test_count()
+            return True
 
         except utils.CompileError as e:
             logging.error("Compile error: %s", e.msg if e.msg else default_err)
+            return False
         except utils.InputGenerationError as e:
             logging.error("Input generation error: %s", e.msg if e.msg else default_err)
+            return False
         except utils.ParseError as e:
             logging.error("Parse error: %s", e.msg if e.msg else default_err)
+            return False
 
         finally:
             self.timer_input_gen.stop()
-            self.number_generated_tests.value = self.get_test_count()

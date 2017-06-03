@@ -14,6 +14,8 @@ test_name_pattern = re.compile('input[0-9]+')
 
 def get_test_files(exclude=[]):
     all_tests = [t for t in os.listdir('.') if test_name_pattern.match(utils.get_file_name(t))]
+    if not all_tests:
+        raise utils.InputGenerationError('No test files generated.')
     return [t for t in all_tests if utils.get_file_name(t) not in exclude]
 
 

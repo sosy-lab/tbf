@@ -128,10 +128,13 @@ class TestValidator(object):
 
             visited_tests = set()
             while generator_thread and generator_thread.is_alive():
-                result = self._h(filename, validator, visited_tests)
-                if result == FALSE:
-                    return result
-                sleep(0.001)  # Sleep for 1 millisecond
+                try:
+                    result = self._h(filename, validator, visited_tests)
+                    if result == FALSE:
+                        return result
+                    sleep(0.001)  # Sleep for 1 millisecond
+                except utils.InputGenerationError as e:  # Just capture here and retry as long as the thread is alive
+                    pass
 
             return self._h(filename, validator, visited_tests)
         finally:
