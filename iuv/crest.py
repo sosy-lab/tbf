@@ -40,8 +40,14 @@ class InputGenerator(BaseInputGenerator):
         return len(get_test_files())
 
     def prepare(self, filecontent):
-        content = '#include<crest.h>\n'
-        content += filecontent
+        content = ''
+        for line in filecontent.split('\n'):
+            prepared_line = line
+            if '//' in prepared_line:
+                start = prepared_line.find('//')
+                prepared_line = prepared_line[:start]
+            content += prepared_line + '\n'
+        content = '#include<crest.h>\n' + content
         content += '\n'
         nondet_methods_used = utils.get_nondet_methods(filecontent)
         for method in nondet_methods_used:  # append method definition at end of file content
