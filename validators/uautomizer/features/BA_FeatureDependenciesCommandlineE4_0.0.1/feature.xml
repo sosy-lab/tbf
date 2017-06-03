@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="BA_FeatureDependenciesCommandlineE4"
+      label="BA_FeatureDependenciesCommandlineE4"
+      version="0.0.1">
+
+   <description url="http://www.example.com/description">
+      [Enter Feature Description here.]
+   </description>
+
+   <copyright url="http://www.example.com/copyright">
+      [Enter Copyright Description here.]
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      [Enter License Description here.]
+   </license>
+
+   <requires>
+      <import plugin="org.eclipse.core.runtime" version="3.3.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.common" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.common" version="3.6.0" match="compatible"/>
+      <import plugin="org.eclipse.e4.core.di" version="0.9.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.equinox.registry" version="3.6.0" match="equivalent"/>
+      <import plugin="org.eclipse.cdt.core.native" version="5.7.0" match="compatible"/>
+      <import plugin="org.eclipse.core.contenttype" version="3.3.0" match="compatible"/>
+      <import plugin="org.eclipse.core.expressions" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.core.filebuffers" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.core.filesystem" version="1.1.0" match="compatible"/>
+      <import plugin="org.eclipse.core.resources" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.core.runtime" version="3.7.0" match="compatible"/>
+      <import plugin="org.eclipse.core.variables" version="3.1.100" match="compatible"/>
+      <import plugin="org.eclipse.ltk.core.refactoring" version="3.4.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.text" version="3.2.0" match="compatible"/>
+      <import plugin="com.ibm.icu" version="4.4.2" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.emf.common" version="2.11.0" match="compatible"/>
+      <import plugin="org.eclipse.emf.ecore" version="2.11.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.preferences" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.registry" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.registry" version="3.4.0" match="compatible"/>
+      <import plugin="org.eclipse.core.runtime" version="3.6.0" match="compatible"/>
+      <import plugin="org.eclipse.core.expressions" version="3.4.200" match="compatible"/>
+      <import plugin="org.eclipse.core.variables" version="3.1.0" match="compatible"/>
+      <import plugin="org.eclipse.core.runtime" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.core.runtime" version="3.5.0" match="compatible"/>
+      <import plugin="org.eclipse.core.expressions" version="3.4.100" match="compatible"/>
+      <import plugin="org.eclipse.core.filesystem" version="1.2.0" match="compatible"/>
+      <import plugin="org.eclipse.core.filebuffers" version="3.5.0" match="compatible"/>
+      <import plugin="org.eclipse.core.resources" version="3.5.0" match="compatible"/>
+      <import plugin="org.eclipse.core.commands" version="3.5.0" match="compatible"/>
+      <import plugin="org.eclipse.text" version="3.5.0" match="compatible"/>
+      <import plugin="org.eclipse.core.filesystem" version="1.3.0" match="compatible"/>
+      <import plugin="org.w3c.dom.smil" version="1.0.0" match="equivalent"/>
+      <import plugin="org.hamcrest.core" version="1.3.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.osgi" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.osgi" version="3.6.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.osgi" version="3.7.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.common" version="3.7.0" match="compatible"/>
+      <import plugin="org.eclipse.core.jobs" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.preferences" version="3.4.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.app" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.equinox.common" version="3.5.0" match="compatible"/>
+      <import plugin="org.eclipse.core.databinding.observable" version="1.3.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.preferences" version="3.3.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.osgi.services" version="3.2.100" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.core.databinding.property" version="1.3.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.common" version="3.6.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.equinox.registry" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.e4.core.di.annotations" version="1.4.0" match="compatible"/>
+      <import plugin="org.apache.batik.util" version="1.7.0" match="equivalent"/>
+      <import plugin="org.eclipse.equinox.common" version="3.4.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.core.jobs" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.core.filesystem" version="1.4.0" match="compatible"/>
+      <import plugin="org.apache.batik.util.gui" version="1.7.0" match="equivalent"/>
+      <import plugin="org.eclipse.core.runtime" version="3.1.0" match="compatible"/>
+   </requires>
+
+   <plugin
+         id="org.eclipse.core.expressions"
+         download-size="88"
+         install-size="172"
+         version="3.5.0.v20150421-2214"
+         unpack="false"/>
+
+   <plugin
+         id="org.hamcrest.core"
+         download-size="54"
+         install-size="113"
+         version="1.3.0.v201303031735"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.preferences"
+         download-size="125"
+         install-size="252"
+         version="3.5.300.v20150408-1437"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.e4.core.commands"
+         download-size="25"
+         install-size="44"
+         version="0.11.0.v20150422-0725"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.runtime.compatibility.registry"
+         download-size="17"
+         install-size="22"
+         version="3.6.0.v20150318-1505"
+         fragment="true"/>
+
+   <plugin
+         id="org.eclipse.cdt.core"
+         download-size="5302"
+         install-size="12197"
+         version="5.11.0.201602051005"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.emf.ecore"
+         download-size="1162"
+         install-size="2877"
+         version="2.11.2.v20160208-0816"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.variables"
+         download-size="34"
+         install-size="63"
+         version="3.2.800.v20130819-1716"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.jobs"
+         download-size="104"
+         install-size="207"
+         version="3.7.0.v20150330-2103"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.emf.ecore.xmi"
+         download-size="225"
+         install-size="481"
+         version="2.11.1.v20160208-0816"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.contenttype"
+         download-size="96"
+         install-size="203"
+         version="3.5.0.v20150421-2214"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.app"
+         download-size="84"
+         install-size="170"
+         version="1.3.300.v20150423-1356"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.help"
+         download-size="252"
+         install-size="650"
+         version="3.6.0.v20130326-1254"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ant.core"
+         download-size="105"
+         install-size="184"
+         version="3.4.0.v20150428-1928"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ltk.core.refactoring"
+         download-size="324"
+         install-size="714"
+         version="3.6.201.v20150819-1034"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.resources"
+         download-size="863"
+         install-size="1854"
+         version="3.10.1.v20150725-1910"
+         unpack="false"/>
+
+   <plugin
+         id="org.w3c.dom.svg"
+         download-size="85"
+         install-size="119"
+         version="1.1.0.v201011041433"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.util"
+         download-size="76"
+         install-size="139"
+         version="1.0.500.v20130404-1337"
+         unpack="false"/>
+
+   <plugin
+         id="com.ibm.icu"
+         download-size="11143"
+         install-size="24705"
+         version="54.1.1.v201501272100"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.batik.util.gui"
+         download-size="196"
+         install-size="358"
+         version="1.7.0.v200903091627"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.filebuffers"
+         download-size="112"
+         install-size="244"
+         version="3.5.500.v20140723-1040"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.cdt.core.win32.x86_64"
+         os="win32"
+         arch="x86_64"
+         download-size="353"
+         install-size="736"
+         version="5.4.0.201602051005"
+         fragment="true"/>
+
+   <plugin
+         id="org.eclipse.cdt.core.win32.x86"
+         os="win32"
+         arch="x86"
+         download-size="260"
+         install-size="558"
+         version="5.4.0.201602051005"
+         fragment="true"/>
+
+   <plugin
+         id="org.eclipse.cdt.core.linux.x86_64"
+         os="linux"
+         arch="x86_64"
+         download-size="20"
+         install-size="42"
+         version="5.3.0.201602051005"
+         fragment="true"/>
+
+   <plugin
+         id="org.eclipse.cdt.core.linux.x86"
+         os="linux"
+         arch="x86"
+         download-size="18"
+         install-size="36"
+         version="5.3.0.201602051005"
+         fragment="true"/>
+
+   <plugin
+         id="org.junit"
+         download-size="284"
+         install-size="335"
+         version="4.12.0.v201504281640"/>
+
+   <plugin
+         id="org.eclipse.core.commands"
+         download-size="111"
+         install-size="210"
+         version="3.7.0.v20150422-0725"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.cdt.core.win32"
+         os="win32"
+         download-size="13"
+         install-size="17"
+         version="5.4.0.201602051005"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.cdt.core.linux"
+         os="linux"
+         download-size="13"
+         install-size="19"
+         version="5.3.0.201602051005"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.resources.win32.x86_64"
+         os="win32"
+         arch="x86_64"
+         download-size="27"
+         install-size="53"
+         version="3.5.0.v20140124-1940"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.resources.win32.x86"
+         os="win32"
+         arch="x86"
+         download-size="17"
+         install-size="42"
+         version="3.5.100.v20140124-1940"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.filesystem"
+         download-size="60"
+         install-size="112"
+         version="1.5.0.v20150725-1910"
+         unpack="false"/>
+
+   <plugin
+         id="javax.annotation"
+         download-size="27"
+         install-size="58"
+         version="1.2.0.v201401042248"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.e4.core.contexts"
+         download-size="49"
+         install-size="95"
+         version="1.4.0.v20150828-0818"
+         unpack="false"/>
+
+   <plugin
+         id="javax.xml"
+         download-size="232"
+         install-size="378"
+         version="1.3.4.v201005080400"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.runtime"
+         download-size="77"
+         install-size="163"
+         version="3.11.1.v20150903-1804"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.text"
+         download-size="247"
+         install-size="486"
+         version="3.5.400.v20150505-1044"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.databinding.observable"
+         download-size="304"
+         install-size="640"
+         version="1.5.0.v20150422-0725"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.registry"
+         download-size="178"
+         install-size="371"
+         version="3.6.0.v20150318-1503"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.ds"
+         download-size="191"
+         install-size="392"
+         version="1.4.300.v20150423-1356"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.osgi"
+         download-size="1276"
+         install-size="2697"
+         version="3.10.102.v20160118-1700"
+         unpack="false"/>
+
+   <plugin
+         id="javax.inject"
+         download-size="12"
+         install-size="21"
+         version="1.0.0.v20091030"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.osgi.services"
+         download-size="107"
+         install-size="167"
+         version="3.5.0.v20150519-2006"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.databinding.property"
+         download-size="172"
+         install-size="401"
+         version="1.5.0.v20150422-0725"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.e4.core.di.extensions"
+         download-size="27"
+         install-size="50"
+         version="0.13.0.v20150421-2214"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.databinding"
+         download-size="195"
+         install-size="408"
+         version="1.5.0.v20150422-0725"
+         unpack="false"/>
+
+   <plugin
+         id="javax.servlet"
+         download-size="102"
+         install-size="202"
+         version="3.1.0.v201410161800"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.emf.common"
+         download-size="349"
+         install-size="735"
+         version="2.11.1.v20160208-0816"
+         unpack="false"/>
+
+   <plugin
+         id="org.w3c.css.sac"
+         download-size="32"
+         install-size="56"
+         version="1.3.1.v200903091627"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.common"
+         download-size="109"
+         install-size="206"
+         version="3.7.0.v20150402-1709"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.bidi"
+         download-size="47"
+         install-size="89"
+         version="0.10.0.v20130327-1442"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.e4.core.di"
+         download-size="50"
+         install-size="102"
+         version="1.5.0.v20150421-2214"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.emf.ecore.change"
+         download-size="85"
+         install-size="202"
+         version="2.11.0.v20160208-0816"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.batik.css"
+         download-size="335"
+         install-size="687"
+         version="1.7.0.v201011041433"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.commons.io"
+         download-size="190"
+         install-size="391"
+         version="2.2.0.v201405211200"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.e4.core.services"
+         download-size="52"
+         install-size="94"
+         version="2.0.0.v20150403-1912"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.filesystem.win32.x86_64"
+         os="win32"
+         arch="x86_64"
+         download-size="31"
+         install-size="64"
+         version="1.4.0.v20140124-1940"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.filesystem.win32.x86"
+         os="win32"
+         arch="x86"
+         download-size="27"
+         install-size="54"
+         version="1.4.0.v20140124-1940"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.filesystem.linux.x86_64"
+         os="linux"
+         arch="x86_64"
+         download-size="10"
+         install-size="19"
+         version="1.2.200.v20140124-1940"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.core.filesystem.linux.x86"
+         os="linux"
+         arch="x86"
+         download-size="10"
+         install-size="17"
+         version="1.4.200.v20140124-1940"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.batik.util"
+         download-size="147"
+         install-size="293"
+         version="1.7.0.v201011041433"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.event"
+         download-size="31"
+         install-size="57"
+         version="1.3.100.v20140115-1647"
+         unpack="false"/>
+
+   <plugin
+         id="org.w3c.dom.smil"
+         download-size="18"
+         install-size="37"
+         version="1.0.1.v200903091627"
+         unpack="false"/>
+
+   <plugin
+         id="org.w3c.dom.events"
+         download-size="12"
+         install-size="19"
+         version="3.0.0.draft20060413_v201105210656"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.cdt.core.native"
+         download-size="34"
+         install-size="56"
+         version="5.8.1.201602051005"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.e4.core.di.annotations"
+         download-size="10"
+         install-size="12"
+         version="1.4.0.v20150528-1451"
+         unpack="false"/>
+
+</feature>

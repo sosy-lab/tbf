@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config date="1483867673528" transient="false">
+	<site updateable="true" url="platform:/base/" enabled="true" policy="USER-EXCLUDE">
+		<feature id="BA_FeatureDependenciesCommandlineE4" version="0.0.1" url="features/BA_FeatureDependenciesCommandlineE4_0.0.1/">
+		</feature>
+		<feature id="BA_FeatureUltimateCommandLine" version="0.0.1" url="features/BA_FeatureUltimateCommandLine_0.0.1/">
+		</feature>
+	</site>
+</config>
