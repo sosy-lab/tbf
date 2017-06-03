@@ -280,7 +280,7 @@ def get_nondet_methods(file_content):
         try:
             undefined_methods = find_undefined_methods(filename)
         except pycparser.plyparser.ParseError as e:
-            logging.error("Parse error in pycparser while parsing %s", filename)
+            logging.warning("Parse error in pycparser while parsing %s", filename)
             undefined_methods = find_nondet_methods(file_content)
     return undefined_methods
 
