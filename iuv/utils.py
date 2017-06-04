@@ -486,8 +486,7 @@ class StatisticsPool(object):
 
 error_return = 107
 error_method = '__VERIFIER_error'
-sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
-spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
+spec_file = os.path.abspath('./ReachSafety.prp')
 output_dir = os.path.abspath('./output')
 tmp = tempfile.mkdtemp()
 nondet_pattern = re.compile('__VERIFIER_nondet_.+?\(\)')
