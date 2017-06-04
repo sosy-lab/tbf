@@ -6,15 +6,19 @@
     <option name='-i'>klee</option>
     <option name="--execution" />
   </rundefinition>
+  <rundefinition name='klee_ex_write_ints'>
+    <option name='-i'>klee</option>
+    <option name="--execution" />
+    <option name="--write-integers" />
+  </rundefinition>
   <rundefinition name='klee_ex_no-parallel'>
     <option name='-i'>klee</option>
     <option name="--execution" />
     <option name="--no-parallel" />
   </rundefinition>
-  <rundefinition name='klee_ex_ig-timelimit600'>
+  <rundefinition name='klee_ex_ig-timelimit'>
     <option name="-i">klee</option>
     <option name="--execution" />
-    <option name="--no-parallel" />
     <option name="--ig-timelimit">600</option>
   </rundefinition>
   <rundefinition name='crest_ex'>
@@ -36,41 +40,12 @@
     <option name='-i'>klee</option>
     <option name="--witness-validation" />
     <option name="--validators">cpachecker</option>
-  </rundefinition>
-  <rundefinition name='klee_uautomizer'>
-    <option name='-i'>klee</option>
-    <option name="--witness-validation" />
-    <option name="--validators">uautomizer</option>
-  </rundefinition>
-  <rundefinition name='klee_fshell'>
-    <option name='-i'>klee</option>
-    <option name="--witness-validation" />
-    <option name="--validators">fshell-w2t</option>
-  </rundefinition>
-  <rundefinition name='klee_cpa-w2t'>
-    <option name='-i'>klee</option>
-    <option name="--witness-validation" />
-    <option name="--validators">cpa-w2t</option>
+    <option name="--write-integers" />
   </rundefinition>
   <rundefinition name='crest_cpachecker'>
     <option name='-i'>crest</option>
     <option name="--witness-validation" />
     <option name="--validators">cpachecker</option>
-  </rundefinition>
-  <rundefinition name='crest_uautomizer'>
-    <option name='-i'>crest</option>
-    <option name="--witness-validation" />
-    <option name="--validators">uautomizer</option>
-  </rundefinition>
-  <rundefinition name='crest_fshell'>
-    <option name='-i'>crest</option>
-    <option name="--witness-validation" />
-    <option name="--validators">fshell-w2t</option>
-  </rundefinition>
-  <rundefinition name='crest_cpa-w2t'>
-    <option name='-i'>crest</option>
-    <option name="--witness-validation" />
-    <option name="--validators">cpa-w2t</option>
   </rundefinition>
 
   <tasks name="ReachSafety-ArraysReach">
