@@ -243,7 +243,7 @@ class ValidationRunner(object):
     def __init__(self, validators):
         self.validators = list()
         validators_used = set()
-        for val in [v.lowercase() for v in validators]:
+        for val in [v.lower() for v in validators]:
             if val == 'cpachecker' and 'cpachecker' not in validators_used:
                 self.validators.append(CPAcheckerValidator())
                 validators_used.add('cpachecker')
