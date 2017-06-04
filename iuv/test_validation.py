@@ -25,7 +25,7 @@ class ValidationConfig(object):
 
         if self.witness_validators and not self.use_witness_validation:
             raise utils.ConfigError("Validators specified but no witness validation used (--witness-validation).")
-        elif self.use_witness_validation and self.witness_validators:
+        elif self.use_witness_validation and not self.witness_validators:
             logging.warning("Witness validation used and no validator specified. Only generating witnesses.")
         elif self.witness_validators:
             for validator in self.witness_validators:
@@ -34,6 +34,8 @@ class ValidationConfig(object):
                                             "{0} not in {1}".format(validator, valid_validators))
         elif not self.use_witness_validation and not self.use_execution:
             raise utils.ConfigError("No validation technique specified. Specify --execution or --witness-validation .")
+
+        self.convert_to_int = args.write_integers
 
 
 class TestValidator(object):

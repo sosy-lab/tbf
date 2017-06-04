@@ -8,12 +8,12 @@ import argparse
 import klee
 import crest
 import utils
-from utils import FALSE
 
 import threading
+
 from test_validation import ValidationConfig
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 __VERSION__ = 0.1
 
@@ -41,6 +41,14 @@ def _create_cli_arg_parser():
                                            + "After this limit, input generation"
                                            + " stops and analysis is performed\nwith the inputs generated up"
                                            + " to this point."
+                                      )
+    input_generator_args.add_argument("--write-integers",
+                                      dest="write_integers",
+                                      action='store_true',
+                                      default=False,
+                                      help="always write test vector values as integer values."
+                                           "E.g., klee uses multi-character chars by default."
+                                           "Given this argument, these values are converted to integers."
                                       )
     validation_args = run_args.add_argument_group('Validation')
     witness_validation_args = validation_args.add_argument_group('Witness validation')

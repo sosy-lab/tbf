@@ -113,7 +113,9 @@ class KleeTestValidator(TestValidator):
                 #assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
                 value = line.split(':')[-1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
-                objects[var_number]['value'] = value
+                if self.config.convert_to_int:
+                    value, = utils.convert_to_int(value, objects[var_number]['name'])
+                objects[var_number]['value'] = str(value)
 
         return objects if objects.keys() else None
 

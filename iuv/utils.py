@@ -6,6 +6,8 @@ import hashlib
 import tempfile
 import pycparser
 import re
+from struct import unpack
+import codecs
 
 parser = pycparser.CParser()
 sym_var_prefix = '__sym_'
@@ -110,7 +112,6 @@ def get_hash(filename):
             data = inp.read(buf_size)
 
     return sha1.hexdigest()
-
 
 def get_machine_model(witness_file):
     with open(witness_file, 'r') as inp:
@@ -330,10 +331,10 @@ def find_nondet_methods(file_content):
     return functions
 
 
-def _get_return_type(method):
-    assert method.startswith('__VERIFIER_nondet_')
-    assert method[-2:] != '()'
-    m_type = method[len('__VERIFIER_nondet_'):]
+def _get_return_type(verifier_nondet_method):
+    assert verifier_nondet_method.startswith('__VERIFIER_nondet_')
+    assert verifier_nondet_method[-2:] != '()'
+    m_type = verifier_nondet_method[len('__VERIFIER_nondet_'):]
     if m_type == 'bool':
         m_type = '_Bool'
     elif m_type == 'u32':
@@ -367,6 +368,52 @@ def get_sym_var_name(method_name):
 
 def get_corresponding_method_name(sym_var_name):
     return sym_var_name[len(sym_var_prefix):]
+
+
+def convert_to_int(value, method_name):
+    assert undefined_methods is not None
+    if type(value) is str and value.startswith('\'') and value.endswith('\''):
+        value = value[1:-1]
+    value = codecs.decode(value, 'unicode_escape').encode('latin1')
+    corresponding_method = [m for m in undefined_methods if m['name'] == method_name][0]
+    # The type of the symbolic variable may be different from the method return type,
+    # but must be ultimately cast to the method return type,
+    # so this is fine - unless we have undefined behavior prior to this point due to a downcast of the variable type.
+    # In that case, hope is already lost.
+    value_type = corresponding_method['type']
+    data_format = '<'  # Klee output uses little endian format
+    if value_type == 'char' or value_type == 'signed char':
+
+        # b == signed char. There's also 'c' == 'char', but that translates to a python character and not to an int
+        data_format += 'b'
+    elif value_type == 'unsigned char':
+        data_format += 'B'
+    elif value_type == '_Bool' or value_type == 'bool':
+        data_format += '?'
+    elif value_type == 'short' or value_type == 'signed short':
+        data_format += 'h'
+    elif value_type == 'unsigned short':
+        data_format += 'H'
+    elif value_type == 'int' or value_type == 'signed int':
+        data_format += 'i'
+    elif value_type == 'unsigned int':
+        data_format += 'I'
+    elif value_type == 'float':
+        data_format += 'f'
+    elif value_type == 'double':
+        data_format += 'd'
+    elif '*' in value_type:
+        data_format += 'P'
+    elif value_type == 'long long' or value_type == 'signed long long':
+        data_format += 'q'
+    elif value_type == 'unsigned long long':
+        data_format += 'Q'
+    elif value_type == 'long' or value_type == 'signed long':
+        data_format += 'l'
+    else:
+        logging.debug('Converting type %s using unsigned long type', value_type)
+        data_format += 'L'
+    return unpack(data_format, value)
 
 
 class Counter(object):
