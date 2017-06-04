@@ -107,7 +107,8 @@ class WitnessCreator(object):
         # Add transition to sink node if an additional nondet call is performed
         sink_node = self._create_node()
         sink_node.set('id', 'sink')
-        for nondet_method in possible_methods:
+        graph.append(sink_node)
+        for nondet_method in nondet_methods:
             assumption = '\\result == 0;'  # dummy assumption
             new_edge = self._create_edge(previous_node.get('id'), sink_node.get('id'), assumption)
             new_edge.append(self._create_data_element('assumption.resultfunction', nondet_method))
