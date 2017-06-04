@@ -113,6 +113,7 @@ def get_hash(filename):
 
     return sha1.hexdigest()
 
+
 def get_machine_model(witness_file):
     with open(witness_file, 'r') as inp:
         for line in inp.readlines():
@@ -409,10 +410,10 @@ def convert_to_int(value, method_name):
     elif value_type == 'unsigned long long':
         data_format += 'Q'
     elif value_type == 'long' or value_type == 'signed long':
-        data_format += 'l'
+        data_format += 'q'
     else:
-        logging.debug('Converting type %s using unsigned long type', value_type)
-        data_format += 'L'
+        logging.debug('Converting type %s using type unsigned long ', value_type)
+        data_format += 'Q'
     return unpack(data_format, value)
 
 
@@ -489,7 +490,7 @@ sv_benchmarks_dir = os.path.abspath('../sv-benchmarks/c')
 spec_file = os.path.join(sv_benchmarks_dir, 'ReachSafety.prp')
 output_dir = os.path.abspath('./output')
 tmp = tempfile.mkdtemp()
-nondet_pattern = re.compile('__VERIFIER_nondet_.+\(\)')
+nondet_pattern = re.compile('__VERIFIER_nondet_.+?\(\)')
 
 FALSE = 'false'
 UNKNOWN = 'unknown'
