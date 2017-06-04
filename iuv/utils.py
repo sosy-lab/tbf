@@ -406,7 +406,7 @@ def convert_to_int(value, method_name):
     elif value_type == 'double':
         data_format += 'd'
     elif '*' in value_type:
-        data_format += 'P'
+        data_format = 'P'
     elif value_type == 'long long' or value_type == 'signed long long':
         data_format += 'q'
     elif value_type == 'unsigned long long':
