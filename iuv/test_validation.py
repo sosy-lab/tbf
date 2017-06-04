@@ -5,6 +5,7 @@ import logging
 import utils
 import os
 from time import sleep
+import re
 from utils import FALSE, UNKNOWN, ERROR
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
@@ -51,6 +52,8 @@ class TestValidator(object):
         if self.config.use_execution:
             self.harness_creator = harness_gen.HarnessCreator()
 
+        self.error_method_pattern = re.compile('.*(?!void) *__VERIFIER_error\(\) *;.*')
+
         self.statistics = utils.statistics.new('Test Validator ' + self.get_name())
         self.timer_validation = utils.Stopwatch()
         self.statistics.add_value('Time for validation', self.timer_validation)
@@ -73,9 +76,10 @@ class TestValidator(object):
         with open(filename, 'r') as inp:
             content = inp.readlines()
         error_line = -1
+
         for line_num, line in enumerate(content, start=1):
             # Try to differentiate definition from call through the 'void' condition
-            if utils.error_method in line and 'void' not in line:
+            if self.error_method_pattern.match(line):
                 assert error_line == -1  # Assert that there's only one call to __VERIFIER_error()
                 error_line = line_num
         assert error_line > 0  # Assert that there's a call to __VERIFIER_error
