@@ -335,11 +335,11 @@ def find_nondet_methods(file_content):
 def _get_return_type(verifier_nondet_method):
     assert verifier_nondet_method.startswith('__VERIFIER_nondet_')
     assert verifier_nondet_method[-2:] != '()'
-    m_type = verifier_nondet_method[len('__VERIFIER_nondet_'):]
+    m_type = verifier_nondet_method[len('__VERIFIER_nondet_'):].lower()
     if m_type == 'bool':
         m_type = '_Bool'
     elif m_type == 'u32':
-        m_type = 'u32'
+        m_type = 'unsigned int'
     elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
         m_type = 'unsigned int'
     elif m_type[0] == 'u':  # resolve uint to unsigned int (e.g.)
@@ -348,6 +348,8 @@ def _get_return_type(verifier_nondet_method):
         m_type = 'void *'
     elif m_type == 'pchar':
         m_type = 'char *'
+    elif m_type == 's8':
+        m_type = 'char'
     return m_type
 
 
@@ -390,7 +392,7 @@ def convert_to_int(value, method_name):
     elif value_type == 'unsigned char':
         data_format += 'B'
     elif value_type == '_Bool' or value_type == 'bool':
-        data_format += '?'
+        data_format += 'b'
     elif value_type == 'short' or value_type == 'signed short':
         data_format += 'h'
     elif value_type == 'unsigned short':
@@ -404,7 +406,7 @@ def convert_to_int(value, method_name):
     elif value_type == 'double':
         data_format += 'd'
     elif '*' in value_type:
-        data_format += 'P'
+        data_format = 'P'
     elif value_type == 'long long' or value_type == 'signed long long':
         data_format += 'q'
     elif value_type == 'unsigned long long':
