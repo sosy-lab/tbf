@@ -308,10 +308,16 @@ class CPAcheckerValidator(Validator):
     def __init__(self):
         super().__init__('cpachecker')
         self.executable = None  # executable will compile CPAchecker when called, so only do this if we really validate
+        self.cpa_directory = None
 
     def _get_cmd(self, program_file, witness_file):
         if not self.executable:
+            import shutil
             self.executable = self.tool.executable()
+            self.cpa_directory = os.path.join(os.path.dirname(self.executable), '..')
+            copy_dir = os.path.join(self.cpa_directory, 'config')
+            config_copy_dir = utils.get_file_path('config', temp_dir=True)
+            shutil.copytree(copy_dir, config_copy_dir)
         return [self.executable] + \
                utils.get_cpachecker_options(witness_file) +\
                ['-witnessValidation', program_file]
