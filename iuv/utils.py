@@ -392,7 +392,7 @@ def convert_to_int(value, method_name):
     elif value_type == 'unsigned char':
         data_format += 'B'
     elif value_type == '_Bool' or value_type == 'bool':
-        data_format += '?'
+        data_format += 'b'
     elif value_type == 'short' or value_type == 'signed short':
         data_format += 'h'
     elif value_type == 'unsigned short':
