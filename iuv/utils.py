@@ -148,7 +148,7 @@ def get_cpachecker_options(witness_file):
         '-setprop', 'cfa.simplifyCfa=false',
         '-setprop', 'cfa.allowBranchSwapping=false',
         '-setprop', 'cpa.predicate.ignoreIrrelevantVariables=false',
-        '-setprop', 'cpa.predicate.refinement.performINitialStaticRefinement=false',
+        '-setprop', 'cpa.predicate.refinement.performInitialStaticRefinement=false',
         '-setprop', 'counterexample.export.compressWitness=false',
         '-setprop', 'counterexample.export.assumptions.includeConstantsForPointers=false',
         '-setprop', 'analysis.summaryEdge=true',
