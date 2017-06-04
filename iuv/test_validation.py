@@ -339,10 +339,10 @@ class UAutomizerValidator(Validator):
             raise AssertionError("Unhandled machine model: " + machine_model)
 
         cmd = [self.executable,
-               '--spec', utils.spec_file,
                '--validate', witness_file,
-               '--file', program_file,
-               machine_model]
+               utils.spec_file,
+               machine_model,
+               program_file]
         return cmd
 
 
