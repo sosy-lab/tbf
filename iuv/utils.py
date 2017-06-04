@@ -335,11 +335,11 @@ def find_nondet_methods(file_content):
 def _get_return_type(verifier_nondet_method):
     assert verifier_nondet_method.startswith('__VERIFIER_nondet_')
     assert verifier_nondet_method[-2:] != '()'
-    m_type = verifier_nondet_method[len('__VERIFIER_nondet_'):]
+    m_type = verifier_nondet_method[len('__VERIFIER_nondet_'):].lower()
     if m_type == 'bool':
         m_type = '_Bool'
     elif m_type == 'u32':
-        m_type = 'u32'
+        m_type = 'unsigned int'
     elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
         m_type = 'unsigned int'
     elif m_type[0] == 'u':  # resolve uint to unsigned int (e.g.)
@@ -348,6 +348,8 @@ def _get_return_type(verifier_nondet_method):
         m_type = 'void *'
     elif m_type == 'pchar':
         m_type = 'char *'
+    elif m_type == 's8':
+        m_type = 'char'
     return m_type
 
 

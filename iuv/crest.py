@@ -62,7 +62,7 @@ class InputGenerator(BaseInputGenerator):
         return self._create_nondet_method(method_name, m_type, param_types)
 
     def is_supported_type(self, method_type):
-        return method_type in ['int', 'short', 'char', 'unsigned int', 'unsigned short', 'unsigned char']
+        return method_type in ['_Bool', 'int', 'short', 'char', 'unsigned int', 'unsigned short', 'unsigned char']
 
     def _create_nondet_method(self, method_name, method_type, param_types):
         if not self.is_supported_type(method_type):
@@ -72,6 +72,8 @@ class InputGenerator(BaseInputGenerator):
                 logging.warning('Continuing with type %s for method %s', internal_type, method_name)
             else:
                 raise utils.InputGenerationError("Can't create symbolic values for type " + method_type)
+        elif method_type == '_Bool':
+            internal_type = 'char'
         else:
             internal_type = method_type
         var_name = utils.get_sym_var_name(method_name)
