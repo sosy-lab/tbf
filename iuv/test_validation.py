@@ -52,7 +52,10 @@ class TestValidator(object):
         if self.config.use_execution:
             self.harness_creator = harness_gen.HarnessCreator()
 
-        self.error_method_pattern = re.compile('.*(?!void) *__VERIFIER_error\(\) *;.*')
+        # If a void appears in a line, there must be something between
+        # the void and the __VERIFIER_error() symbol - otherwise
+        # it is a function definition/declaration.
+        self.error_method_pattern = re.compile('((?!void).)*(void.*\S.*)?__VERIFIER_error\(\) *;.*')
 
         self.statistics = utils.statistics.new('Test Validator ' + self.get_name())
         self.timer_validation = utils.Stopwatch()
