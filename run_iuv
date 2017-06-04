@@ -6,5 +6,5 @@ crest_lib=${project_dir}/crest/lib
 export LD_LIBRARY_PATH=$klee_lib:$crest_lib:$LD_LIBRARY_PATH
 export KLEE_RUNTIME_LIBRARY_PATH=$klee_lib
 export PYTHONPATH=${project_dir}/lib/py
-export PATH=${project_dir}/validators/cpachecker/scripts:${project_dir}/validators/uautomizer:$PATH
+export PATH=${project_dir}/validators/cpachecker/scripts:$PATH
 python3 ${project_dir}/iuv/iuv.py $@
