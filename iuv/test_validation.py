@@ -324,9 +324,10 @@ class CPAcheckerValidator(Validator):
             import shutil
             self.executable = self.tool.executable()
             self.cpa_directory = os.path.join(os.path.dirname(self.executable), '..')
-            copy_dir = os.path.join(self.cpa_directory, 'config')
             config_copy_dir = utils.get_file_path('config', temp_dir=True)
-            shutil.copytree(copy_dir, config_copy_dir)
+            if not os.path.exists(config_copy_dir):
+                copy_dir = os.path.join(self.cpa_directory, 'config')
+                shutil.copytree(copy_dir, config_copy_dir)
         return [self.executable] + \
                utils.get_cpachecker_options(witness_file) +\
                ['-witnessValidation', program_file]

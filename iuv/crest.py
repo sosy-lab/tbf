@@ -161,7 +161,7 @@ class CrestTestValidator(TestValidator):
         harness = self.harness_creator.create_harness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      nondet_methods=nondet_methods,
                                                       error_method=utils.error_method)
         test_name = os.path.basename(test_file)
         harness_file = test_name + '.harness.c'

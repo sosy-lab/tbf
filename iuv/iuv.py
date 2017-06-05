@@ -5,6 +5,7 @@ import os
 import logging
 import argparse
 
+import cpatiger
 import klee
 import crest
 import utils
@@ -30,9 +31,9 @@ def _create_cli_arg_parser():
                                                        )
     input_generator_args.add_argument("--input-generator", '-i',
                                       dest="input_generator",
-                                      action="store",  # TODO: Change to only allow enum selection
+                                      action="store",
                                       required=True,
-                                      choices=['klee', 'crest'],
+                                      choices=['klee', 'crest', 'cpatiger'],
                                       help="input generator to use"
                                       )
     input_generator_args.add_argument("--ig-timelimit",
@@ -121,9 +122,11 @@ def _parse_cli_args(argv):
 def _get_input_generator_module(args):
     input_generator = args.input_generator.lower()
     if input_generator == 'klee':
-        return klee.InputGenerator(args.ig_timelimit, args.log_verbose)
+        return klee.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
     elif input_generator == 'crest':
-        return crest.InputGenerator(args.ig_timelimit, args.log_verbose)
+        return crest.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
+    elif input_generator == 'cpatiger':
+        return cpatiger.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
     else:
         raise AssertionError('Unhandled input generator: ' + input_generator)
 
@@ -135,6 +138,8 @@ def _get_validator_module(args):
         return klee.KleeTestValidator(validation_config)
     elif validator == 'crest':
         return crest.CrestTestValidator(validation_config)
+    elif validator == 'cpatiger':
+        return cpatiger.CpaTigerTestValidator(validation_config)
     else:
         raise AssertionError('Unhandled validator: ' + validator)
 
