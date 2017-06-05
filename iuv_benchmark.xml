@@ -47,6 +47,22 @@
     <option name="--witness-validation" />
     <option name="--validators">cpachecker</option>
   </rundefinition>
+  <rundefinition name="cpatiger_ex">
+    <option name="-i">cpatiger</option>
+    <option name="--execution" />
+    <option name="--no-parallel" />
+  </rundefinition>
+  <rundefinition name="cpatiger_ex_ig-timelimit">
+    <option name="-i">cpatiger</option>
+    <option name="--execution" />
+    <option name="--no-parallel" />
+    <option name="--ig-timelimit">600</option>
+  </rundefinition>
+  <rundefinition name="cpatiger_cpachecker">
+    <option name="-i">cpatiger</option>
+    <option name="--witness-validation" />
+    <option name="--validators">cpachecker</option>
+  </rundefinition>
 
   <tasks name="ReachSafety-ArraysReach">
     <includesfile>../sv-benchmarks/c/ReachSafety-Arrays.set</includesfile>
