@@ -16,7 +16,6 @@ class HarnessCreator(object):
 
     def _get_nondet_method_definitions(self, test_vector, nondet_methods):
         definitions = ''
-        concrete_values = len([s for s in test_vector.values() if s['name']]) == len(test_vector.values())
         counter = 'access_counter'
         definitions += 'unsigned int ' + counter + ' = 0;\n\n'
         for method in nondet_methods:
@@ -26,8 +25,7 @@ class HarnessCreator(object):
                 cast = '({0})'.format(method['type'])
                 definitions += '    switch(' + counter + ') {\n'
                 for num, instantiation in sorted(test_vector.items(), key=lambda x: x[0]):
-                    if instantiation['name'] and instantiation['name'] == method['name']:
-                        definitions += ' ' * 8 + 'case ' + num + ': ' + counter + '++; return ' + cast + ' ' + instantiation['value'] + ';\n'
+                    definitions += ' ' * 8 + 'case ' + num + ': ' + counter + '++; return ' + cast + ' ' + instantiation['value'] + ';\n'
                 definitions += ' ' * 8 + 'default: return 1/0;\n'  # Force a program failure
                 definitions += '    }\n'
             definitions += '}\n'
