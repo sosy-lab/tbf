@@ -90,7 +90,10 @@ class BaseInputGenerator(object):
                 if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
                     logging.error("Generating input failed at command %s", ' '.join(cmd))
             # May throw an InputGenerationError if no test cases were generated
-            self.number_generated_tests.value = self.get_test_count()
+            try:
+                self.number_generated_tests.value = self.get_test_count()
+            except utils.InputGenerationError as e:
+                logging.warning(e.msg)
             return True
 
         except utils.CompileError as e:
