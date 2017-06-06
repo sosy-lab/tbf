@@ -62,6 +62,37 @@ class ExecutionResult(object):
         return self._stderr
 
 
+class Verdict(object):
+    """Results of a test validation, either witness validation or test execution validation currently."""
+
+    def __init__(self, verdict, test=None, harness=None, witness=None):
+        self.verdict = verdict
+        self.test = test
+        self.harness = harness
+        self.witness = witness
+
+    def is_positive(self):
+        return self.verdict == FALSE
+
+    def __str__(self):
+        return self.verdict
+
+
+class VerdictTrue(Verdict):
+    def __init__(self):
+        super().__init__(TRUE)
+
+
+class VerdictFalse(Verdict):
+    def __init__(self, test, harness=None, witness=None):
+        super().__init__(FALSE, test, harness, witness)
+
+
+class VerdictUnknown(Verdict):
+    def __init__(self):
+        super().__init__(UNKNOWN)
+
+
 def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, input_str=None):
     log_method = logging.debug if quiet else logging.info
 

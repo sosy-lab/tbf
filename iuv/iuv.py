@@ -9,6 +9,7 @@ import cpatiger
 import klee
 import crest
 import utils
+import shutil
 
 import threading
 
@@ -43,10 +44,10 @@ def _create_cli_arg_parser():
                                            + " stops and analysis is performed\nwith the inputs generated up"
                                            + " to this point."
                                       )
-    input_generator_args.add_argument("--write-integers",
+    input_generator_args.add_argument("--no-write-integers",
                                       dest="write_integers",
-                                      action='store_true',
-                                      default=False,
+                                      action='store_false',
+                                      default=True,
                                       help="always write test vector values as integer values."
                                            "E.g., klee uses multi-character chars by default."
                                            "Given this argument, these values are converted to integers."
@@ -164,6 +165,15 @@ def run():
     validator_module = _get_validator_module(args)
     validation_result = validator_module.check_inputs(filename, generator_thread)
 
+    if validation_result.is_positive():
+        test_name = os.path.basename(validation_result.test)
+        persistent_test = utils.get_file_path(test_name, temp_dir=False)
+        shutil.copy(validation_result.test, persistent_test)
+        for proof in validation_result.harness, validation_result.witness:
+            proof_name = os.path.basename(proof)
+            persistent_proof = utils.get_file_path(proof_name, temp_dir=False)
+            shutil.copy(proof, persistent_proof)
+
     if stop_event:
         stop_event.set()
 
@@ -172,7 +182,7 @@ def run():
 
     os.chdir(old_dir)
     print(utils.statistics)
-    print("IUV: " + validation_result.upper())
+    print("IUV: " + validation_result.verdict.upper())
 
 if __name__ == '__main__':
     default_err = "Unknown error"

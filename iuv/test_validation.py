@@ -47,10 +47,8 @@ class TestValidator(object):
         self._nondet_var_map = None
         self.machine_model = validation_config.machine_model
         self.config = validation_config
-        if self.config.use_witness_validation:
-            self.witness_creator = wit_gen.WitnessCreator()
-        if self.config.use_execution:
-            self.harness_creator = harness_gen.HarnessCreator()
+        self.witness_creator = wit_gen.WitnessCreator()
+        self.harness_creator = harness_gen.HarnessCreator()
 
         # If a void appears in a line, there must be something between
         # the void and the __VERIFIER_error() symbol - otherwise
@@ -96,6 +94,10 @@ class TestValidator(object):
     def create_all_witnesses(self, filename, visited_tests):
         pass
 
+    @abstractmethod
+    def create_witness(self, filename, test_file, test_vector):
+        pass
+
     def perform_witness_validation(self, filename, generator_thread):
         self.timer_witness_validation.start()
         try:
@@ -105,10 +107,10 @@ class TestValidator(object):
             while generator_thread and generator_thread.is_alive():
                 try:
                     result = self._m(filename, validator, visited_tests)
-                    if result == FALSE:
-                        return FALSE
+                    if result.is_positive():
+                        return result
                     sleep(0.001)  # Sleep for 1 millisecond
-                except utils.InputGenerationError as e:  # Just capture here and retry as long as the thread is alive
+                except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                     pass
             return self._m(filename, validator, visited_tests)
         finally:
@@ -125,17 +127,25 @@ class TestValidator(object):
             with open(witness_name, 'w+') as outp:
                 outp.write(witness['content'])
 
-            results = validator.run(filename, witness_name)
+            verdicts = validator.run(filename, witness_name)
             self.counter_handled_test_cases.inc()
-
-            logging.info('Results for %s: %s', witness_name, str(results))
-            if [s for s in results if FALSE in s]:
+            logging.info('Results for %s: %s', witness_name, str(verdicts))
+            if any([v == FALSE for v in verdicts]):
                 self.final_test_vector_size.value = len(witness['vector'])
-                return FALSE
-        return UNKNOWN
+                return utils.VerdictFalse(witness['origin'], witness_name)
+
+        return utils.VerdictUnknown()
 
     @abstractmethod
     def create_all_harnesses(self, filename, visited_tests):
+        pass
+
+    @abstractmethod
+    def create_harness(self, test_file, test_vector):
+        pass
+
+    @abstractmethod
+    def get_test_vector(self, test_file):
         pass
 
     def perform_execution_validation(self, filename, generator_thread):
@@ -147,10 +157,10 @@ class TestValidator(object):
             while generator_thread and generator_thread.is_alive():
                 try:
                     result = self._h(filename, validator, visited_tests)
-                    if result == FALSE:
+                    if result.is_positive():
                         return result
                     sleep(0.001)  # Sleep for 1 millisecond
-                except utils.InputGenerationError as e:  # Just capture here and retry as long as the thread is alive
+                except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                     pass
 
             return self._h(filename, validator, visited_tests)
@@ -167,27 +177,40 @@ class TestValidator(object):
             with open(harness_name, 'w+') as outp:
                 outp.write(content_to_write)
 
-            result = validator.run(filename, harness_name)
+            verdicts = validator.run(filename, harness_name)
             self.counter_handled_test_cases.inc()
 
-            logging.debug('Results for %s: %s', harness_name, str(result))
-            if [s for s in result if FALSE in s]:
+            logging.debug('Results for %s: %s', harness_name, str(verdicts))
+            if any([v == FALSE for v in verdicts]):
                 self.final_test_vector_size.value = len(harness['vector'])
-                return FALSE
-        return UNKNOWN
+                return utils.VerdictFalse(harness['origin'], harness_name)
+        return utils.VerdictUnknown()
 
     def check_inputs(self, filename, generator_thread=None):
         self.timer_validation.start()
         try:
             logging.debug('Checking inputs for file %s', filename)
-            result = 'unknown'
+            result = utils.VerdictUnknown()
             if self.config.use_execution:
                 result = self.perform_execution_validation(filename, generator_thread)
                 logging.info("Execution validation says: " + str(result))
 
-            if result != 'false' and self.config.use_witness_validation:
+            if not result.is_positive() and self.config.use_witness_validation:
                 result = self.perform_witness_validation(filename, generator_thread)
                 logging.info("Witness validation says: " + str(result))
+
+            if result.is_positive():
+                if result.witness is None:
+                    witness = self.create_witness(filename, result.test, self.get_test_vector(result.test))
+                    with open(witness['name'], 'w+') as outp:
+                        outp.write(witness['content'])
+                    result.witness = witness['name']
+                if result.harness is None:
+                    harness = self.create_harness(filename, result.test, self.get_test_vector(result.test))
+                    with open(harness['name'], 'w+') as outp:
+                        outp.write(harness['content'])
+                    result.harness = harness['name']
+
             return result
         finally:
             self.timer_validation.stop()

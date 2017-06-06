@@ -129,7 +129,7 @@ class KleeTestValidator(TestValidator):
 
         test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
         witness_file = test_name + ".witness.graphml"
-        witness_file = utils.get_file_path(witness_file, temp_dir=False)
+        witness_file = utils.get_file_path(witness_file)
 
         return {'name': witness_file, 'content': witness}
 
@@ -141,7 +141,7 @@ class KleeTestValidator(TestValidator):
                                                       error_method=utils.error_method)
         test_name = os.path.basename(test_file)
         harness_file = test_name + '.harness.c'
-        harness_file = utils.get_file_path(harness_file, temp_dir=False)
+        harness_file = utils.get_file_path(harness_file)
 
         return {'name': harness_file, 'content': harness}
 
@@ -163,6 +163,7 @@ class KleeTestValidator(TestValidator):
                     test_vector = dict()
                 new_content = creator_method(filename, test_file, test_vector)
                 new_content['vector'] = test_vector
+                new_content['origin'] = test_file
                 created_content.append(new_content)
             else:
                 logging.info("Test vector was not generated for %s", test_file)

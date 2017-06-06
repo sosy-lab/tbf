@@ -129,7 +129,7 @@ class CpaTigerTestValidator(TestValidator):
                                                       error_line=self.get_error_line(filename))
 
         witness_file = test_name + ".witness.graphml"
-        witness_file = utils.get_file_path(witness_file, temp_dir=False)
+        witness_file = utils.get_file_path(witness_file)
 
         return {'name': witness_file, 'content': witness}
 
@@ -142,7 +142,7 @@ class CpaTigerTestValidator(TestValidator):
                                                       nondet_methods=nondet_methods,
                                                       error_method=utils.error_method)
         harness_file = test_name + '.harness.c'
-        harness_file = utils.get_file_path(harness_file, temp_dir=False)
+        harness_file = utils.get_file_path(harness_file)
 
         return {'name': harness_file, 'content': harness}
 
@@ -162,6 +162,7 @@ class CpaTigerTestValidator(TestValidator):
                     test_vector = dict()
                 new_content = creation_method(filename, testname, test_vector)
                 new_content['vector'] = test_vector
+                new_content['origin'] = tests_file
                 created_content.append(new_content)
             else:
                 logging.debug("Test vector was not generated", )
