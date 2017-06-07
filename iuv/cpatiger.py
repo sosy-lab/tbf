@@ -74,6 +74,7 @@ class InputGenerator(BaseInputGenerator):
         if self.timelimit > 0:
             input_generation_cmd += ['-timelimit', str(self.timelimit)]
         input_generation_cmd += ['-tiger-variants',
+                                 '-skipRecursion',
                                  '-outputpath', tests_dir,
                                  '-spec', utils.spec_file,
                                  filename]
