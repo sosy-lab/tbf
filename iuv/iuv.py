@@ -171,7 +171,11 @@ def run():
         shutil.copy(validation_result.test, persistent_test)
         for proof in validation_result.harness, validation_result.witness:
             proof_name = os.path.basename(proof)
-            persistent_proof = utils.get_file_path(proof_name, temp_dir=False)
+            if proof_name.endswith('.harness.c'):
+                persistent_proof = utils.get_file_path('harness.c', temp_dir=False)
+            else:
+                assert proof_name.endswith('.witness.graphml')
+                persistent_proof = utils.get_file_path('witness.graphml', temp_dir=False)
             shutil.copy(proof, persistent_proof)
 
     if stop_event:
