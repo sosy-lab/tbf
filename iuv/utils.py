@@ -371,6 +371,8 @@ def _get_return_type(verifier_nondet_method):
         m_type = '_Bool'
     elif m_type == 'u32':
         m_type = 'unsigned int'
+    elif m_type == 'u8':
+        m_type = 'unsigned char'
     elif m_type == 'unsigned':  # unsigned is a synonym for unsigned int, so recall the method with that
         m_type = 'unsigned int'
     elif m_type[0] == 'u':  # resolve uint to unsigned int (e.g.)
