@@ -5,62 +5,62 @@
   <rundefinition name='klee_ex'>
     <option name='-i'>klee</option>
     <option name="--execution" />
-  <resultfiles>harness.c</resultfiles>
+  <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='klee_ex_no-parallel'>
     <option name='-i'>klee</option>
     <option name="--execution" />
     <option name="--no-parallel" />
-  <resultfiles>harness.c</resultfiles>
+  <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='klee_ex_ig-timelimit'>
     <option name="-i">klee</option>
     <option name="--execution" />
     <option name="--ig-timelimit">600</option>
-  <resultfiles>harness.c</resultfiles>
+  <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='crest_ex'>
     <option name='-i'>crest</option>
     <option name="--execution" />
-  <resultfiles>harness.c</resultfiles>
+  <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='crest_ex_no-parallel'>
     <option name='-i'>crest</option>
     <option name="--execution" />
     <option name="--no-parallel" />
-  <resultfiles>harness.c</resultfiles>
+  <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='crest_ex_iterations500'>
     <option name="-i">crest</option>
     <option name="--execution" />
     <option name="--no-parallel" />
     <option name="--ig-timelimit">500</option>
-  <resultfiles>harness.c</resultfiles>
+  <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='klee_cpachecker'>
     <option name='-i'>klee</option>
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
-    <resultfiles>witness.graphml</resultfiles>
+    <resultfiles>**/witness.graphml</resultfiles>
   </rundefinition>
   <rundefinition name='crest_cpachecker'>
     <option name='-i'>crest</option>
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
-    <resultfiles>witness.graphml</resultfiles>
+    <resultfiles>**/witness.graphml</resultfiles>
   </rundefinition>
   <rundefinition name="cpatiger_ex">
     <option name="-i">cpatiger</option>
     <option name="--execution" />
     <option name="--no-parallel" />
-  <resultfiles>harness.c</resultfiles>
+  <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name="cpatiger_cpachecker">
     <option name="-i">cpatiger</option>
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
     <option name="--no-parallel" />
-    <resultfiles>witness.graphml</resultfiles>
+    <resultfiles>**/witness.graphml</resultfiles>
   </rundefinition>
 
   <tasks name="ReachSafety-ArraysReach">
