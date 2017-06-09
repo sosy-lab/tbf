@@ -201,12 +201,18 @@ class TestValidator(object):
 
             if result.is_positive():
                 if result.witness is None:
-                    witness = self.create_witness(filename, result.test, self.get_test_vector(result.test))
+                    test_vector = self.get_test_vector(result.test)
+                    if test_vector is None:
+                        test_vector = dict()
+                    witness = self.create_witness(filename, result.test, test_vector)
                     with open(witness['name'], 'w+') as outp:
                         outp.write(witness['content'])
                     result.witness = witness['name']
                 if result.harness is None:
-                    harness = self.create_harness(filename, result.test, self.get_test_vector(result.test))
+                    test_vector = self.get_test_vector(result.test)
+                    if test_vector is None:
+                        test_vector = dict()
+                    harness = self.create_harness(filename, result.test, test_vector)
                     with open(harness['name'], 'w+') as outp:
                         outp.write(harness['content'])
                     result.harness = harness['name']
