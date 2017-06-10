@@ -125,7 +125,7 @@ class KleeTestValidator(TestValidator):
                                                       test_vector=test_vector,
                                                       nondet_methods=utils.get_nondet_methods(filename),
                                                       machine_model=self.machine_model,
-                                                      error_line=self.get_error_line(filename))
+                                                      error_lines=self.get_error_lines(filename))
 
         test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
         witness_file = test_name + ".witness.graphml"

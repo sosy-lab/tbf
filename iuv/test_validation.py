@@ -73,18 +73,17 @@ class TestValidator(object):
         self.final_test_vector_size = utils.Constant()
         self.statistics.add_value("Size of successful test vector", self.final_test_vector_size)
 
-    def get_error_line(self, filename):
+    def get_error_lines(self, filename):
         with open(filename, 'r') as inp:
             content = inp.readlines()
-        error_line = -1
 
+        err_lines = list()
         for line_num, line in enumerate(content, start=1):
             # Try to differentiate definition from call through the 'void' condition
             if self.error_method_pattern.match(line):
-                assert error_line == -1  # Assert that there's only one call to __VERIFIER_error()
-                error_line = line_num
-        assert error_line > 0  # Assert that there's a call to __VERIFIER_error
-        return error_line
+                err_lines.append(line_num)
+        assert err_lines  # Asser that there is at least one error call
+        return err_lines
 
     @abstractmethod
     def get_name(self):

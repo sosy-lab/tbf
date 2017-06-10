@@ -77,7 +77,7 @@ class WitnessCreator(object):
 
         return graph
 
-    def _create_automaton(self, graph, test_vector, nondet_methods, error_line):
+    def _create_automaton(self, graph, test_vector, nondet_methods, error_lines):
         # Create entry node
         previous_node = self._create_node(entry=True)
 
@@ -101,8 +101,9 @@ class WitnessCreator(object):
         # Add transition to violation node if line representing error location is reached
         target_node = self._create_node(violation=True)
         graph.append(target_node)
-        new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), startline=error_line)
-        graph.append(new_edge)
+        for error_line in error_lines:
+            new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), startline=error_line)
+            graph.append(new_edge)
 
         # Add transition to sink node if an additional nondet call is performed
         sink_node = self._create_node()
@@ -116,15 +117,15 @@ class WitnessCreator(object):
 
         return graph
 
-    def _create_graph(self, producer, filename, test_vector, nondet_methods, machine_model, error_line):
+    def _create_graph(self, producer, filename, test_vector, nondet_methods, machine_model, error_lines):
         graph = self._create_graph_head(producer, filename, machine_model)
-        return self._create_automaton(graph, test_vector, nondet_methods, error_line)
+        return self._create_automaton(graph, test_vector, nondet_methods, error_lines)
 
-    def create_witness(self, producer, filename, test_vector, nondet_methods, machine_model, error_line):
+    def create_witness(self, producer, filename, test_vector, nondet_methods, machine_model, error_lines):
         self._reset_node_id()
         witness = self._create_witness_header(filename)
         nondet_method_names = [m['name'] for m in nondet_methods]
-        graph = self._create_graph(producer, filename, test_vector, nondet_method_names, machine_model, error_line)
+        graph = self._create_graph(producer, filename, test_vector, nondet_method_names, machine_model, error_lines)
         witness.append(graph)
 
         xml_string = ET.tostring(witness, 'utf-8')
