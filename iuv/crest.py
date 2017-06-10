@@ -9,7 +9,7 @@ bin_dir = os.path.abspath('./crest/bin')
 lib_dir = os.path.abspath('./crest/lib')
 include_dir = os.path.abspath('./crest/include')
 name = 'crest'
-test_name_pattern = re.compile('input[0-9]+')
+test_name_pattern = re.compile('input[0-9]+$')
 
 
 def get_test_files(exclude=[]):
