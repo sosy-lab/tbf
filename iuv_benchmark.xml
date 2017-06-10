@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE benchmark PUBLIC "+/IDN sosy-lab.org/DTD BenchExec benchmark 1.0/EN" "http:/www.sosy-lab.org/benchexec/benchmark-1.0.dtd">
-<benchmark tool="iuv" timelimit="180s" hardtimelimit="250s" cpuCores="8" memlimit="15GB">
+<benchmark tool="iuv" timelimit="900s" hardtimelimit="950s" cpuCores="8" memlimit="15GB">
 
   <rundefinition name='klee_ex'>
     <option name='-i'>klee</option>
