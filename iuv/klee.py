@@ -161,6 +161,7 @@ class KleeTestValidator(TestValidator):
             if test_vector or not empty_case_handled:
                 if not test_vector:
                     test_vector = dict()
+                    empty_case_handled = True
                 new_content = creator_method(filename, test_file, test_vector)
                 new_content['vector'] = test_vector
                 new_content['origin'] = test_file

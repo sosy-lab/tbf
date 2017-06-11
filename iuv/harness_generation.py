@@ -25,7 +25,8 @@ class HarnessCreator(object):
                 cast = '({0})'.format(method['type'])
                 definitions += '    switch(' + counter + ') {\n'
                 for num, instantiation in sorted(test_vector.items(), key=lambda x: x[0]):
-                    definitions += ' ' * 8 + 'case ' + num + ': ' + counter + '++; return ' + cast + ' ' + instantiation['value'] + ';\n'
+                    if not instantiation['name'] or instantiation['name'] == method['name']:
+                        definitions += ' ' * 8 + 'case ' + num + ': ' + counter + '++; return ' + cast + ' ' + instantiation['value'] + ';\n'
                 definitions += ' ' * 8 + 'default: return 1/0;\n'  # Force a program failure
                 definitions += '    }\n'
             definitions += '}\n'

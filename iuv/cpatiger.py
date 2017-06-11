@@ -160,6 +160,7 @@ class CpaTigerTestValidator(TestValidator):
                 testname = 'test{0}'.format(count)
                 if not test_vector:
                     test_vector = dict()
+                    empty_case_handled = True
                 new_content = creation_method(filename, testname, test_vector)
                 new_content['vector'] = test_vector
                 new_content['origin'] = tests_file

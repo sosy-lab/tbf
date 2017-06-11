@@ -212,7 +212,7 @@ def get_env_with_path_added(path_addition):
 
 
 def get_assume_method():
-    return 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        exit(0);\n    }\n}\n'
+    return 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        abort();\n    }\n}\n'
 
 
 def get_method_head(method_name, method_type, param_types):

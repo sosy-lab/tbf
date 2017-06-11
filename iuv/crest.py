@@ -184,6 +184,7 @@ class CrestTestValidator(TestValidator):
             test_vector = self.get_test_vector(test_file)
             if test_vector or not empty_case_handled:
                 if not test_vector:
+                    empty_case_handled = True
                     test_vector = dict()
                 new_content = creation_method(filename, test_file, test_vector)
                 new_content['vector'] = test_vector
