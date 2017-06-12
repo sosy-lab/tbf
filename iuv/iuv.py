@@ -185,7 +185,6 @@ def run():
         generator_thread.join(timeout=5)
 
     os.chdir(old_dir)
-    print(utils.statistics)
     print("IUV: " + validation_result.verdict.upper())
 
 if __name__ == '__main__':
@@ -199,3 +198,5 @@ if __name__ == '__main__':
         logging.error("Input generation error: %s", e.msg if e.msg else default_err)
     except utils.ParseError as e:
         logging.error("Parse error: %s", e.msg if e.msg else default_err)
+    finally:
+        print(utils.statistics)
