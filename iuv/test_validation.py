@@ -238,8 +238,8 @@ class ExecutionRunner(object):
         cmd += ['-std={}'.format(c_version),
                 '-D__alias__(x)=',
                 '-o', output_file,
-                harness_file,
-                program_file]
+                '-include', program_file,
+                harness_file]
 
         return cmd
 
