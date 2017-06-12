@@ -3,9 +3,10 @@
 project_dir=`realpath run_iuv | rev | cut -d'/' -f 2- | rev`
 klee_lib=${project_dir}/klee/lib
 klee_include=${project_dir}/klee/include
+klee_bin=${project_dir}/klee/bin
 export LD_LIBRARY_PATH=$klee_lib:$LD_LIBRARY_PATH
 export KLEE_RUNTIME_LIBRARY_PATH=$klee_lib
-export PATH=klee/bin:$PATH
+export PATH=$klee_bin:$PATH
 
 klee_cmd='klee'
 arg_length=$(($#-1))
