@@ -130,7 +130,7 @@ class TestValidator(object):
                 self.timer_validation.stop()
             self.counter_handled_test_cases.inc()
             logging.info('Results for %s: %s', witness_name, str(verdicts))
-            if any([v == FALSE for v in verdicts]):
+            if any(['false' in v.lower() for v in verdicts]):
                 self.final_test_vector_size.value = len(witness['vector'])
                 return utils.VerdictFalse(witness['origin'], witness_name)
 
