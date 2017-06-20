@@ -2,7 +2,8 @@
 
 To run TBF, run
 `./run_iuv -i TEST_GENERATOR [--execution|--validators cpachecker --witness_validators] FILE`
-form the repositories root directory.
+from the repository's root directory,
+where `TEST_GENERATOR` is one of `{crest, cpatiger, klee}`.
 
 The name "iuv" stand for input-using verifier,
 which is the final goal of this
