@@ -109,8 +109,8 @@ class InputGenerator(BaseInputGenerator):
 
 class CrestTestValidator(TestValidator):
 
-    def __init__(self, machine_model='32bit'):
-        super().__init__(machine_model)
+    def __init__(self, validation_config):
+        super().__init__(validation_config)
         self.counter = 0
 
     def get_name(self):

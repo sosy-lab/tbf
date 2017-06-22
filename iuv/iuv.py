@@ -74,6 +74,13 @@ def _create_cli_arg_parser():
                                  help="use test execution to find successful test vector"
                                  )
 
+    validation_args.add_argument("--naive-verification",
+                                 dest="naive_verification",
+                                 action="store_true",
+                                 default=False,
+                                 help="If no error was found and all test cases were handled, assume that the program under test is safe"
+                                 )
+
     machine_model_args = run_args.add_mutually_exclusive_group()
     machine_model_args.add_argument('-32',
                                     dest="machine_model",

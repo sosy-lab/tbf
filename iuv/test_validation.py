@@ -6,7 +6,7 @@ import utils
 import os
 from time import sleep
 import re
-from utils import FALSE, UNKNOWN, ERROR
+from utils import TRUE, FALSE, UNKNOWN, ERROR
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 
@@ -37,6 +37,7 @@ class ValidationConfig(object):
             raise utils.ConfigError("No validation technique specified. Specify --execution or --witness-validation .")
 
         self.convert_to_int = args.write_integers
+        self.naive_verification = args.naive_verification
 
 
 class TestValidator(object):
@@ -49,6 +50,8 @@ class TestValidator(object):
         self.config = validation_config
         self.witness_creator = wit_gen.WitnessCreator()
         self.harness_creator = harness_gen.HarnessCreator()
+
+        self.naive_verification = validation_config.naive_verification
 
         # If a void appears in a line, there must be something between
         # the void and the __VERIFIER_error() symbol - otherwise
@@ -97,6 +100,12 @@ class TestValidator(object):
     def create_witness(self, filename, test_file, test_vector):
         pass
 
+    def decide_final_verdict(self, final_result):
+        if final_result.is_positive() or not self.naive_verification:
+            return final_result
+        else:
+            return utils.VerdictTrue()
+
     def perform_witness_validation(self, filename, generator_thread):
         validator = ValidationRunner(self.config.witness_validators)
 
@@ -109,7 +118,8 @@ class TestValidator(object):
                 sleep(0.001)  # Sleep for 1 millisecond
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
-        return self._m(filename, validator, visited_tests)
+        result = self._m(filename, validator, visited_tests)
+        return self.decide_final_verdict(result)
 
     def _m(self, filename, validator, visited_tests):
         produced_witnesses = self.create_all_witnesses(filename, visited_tests)
@@ -161,8 +171,8 @@ class TestValidator(object):
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
 
-        return self._h(filename, validator, visited_tests)
-
+        result = self._h(filename, validator, visited_tests)
+        return self.decide_final_verdict(result)
 
     def _h(self, filename, validator, visited_tests):
         produced_harnesses = self.create_all_harnesses(filename, visited_tests)
