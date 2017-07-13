@@ -2,40 +2,23 @@
 <!DOCTYPE benchmark PUBLIC "+/IDN sosy-lab.org/DTD BenchExec benchmark 1.0/EN" "http:/www.sosy-lab.org/benchexec/benchmark-1.0.dtd">
 <benchmark tool="iuv" timelimit="900s" hardtimelimit="950s" cpuCores="8" memlimit="15GB">
 
+  <option name="--naive-verification" />
+
   <rundefinition name='klee_ex'>
     <option name='-i'>klee</option>
     <option name="--execution" />
-  <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='klee_ex_no-parallel'>
-    <option name='-i'>klee</option>
-    <option name="--execution" />
-    <option name="--no-parallel" />
-  <resultfiles>**/harness.c</resultfiles>
+    <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='klee_ex_ig-timelimit'>
     <option name="-i">klee</option>
     <option name="--execution" />
     <option name="--ig-timelimit">600</option>
-  <resultfiles>**/harness.c</resultfiles>
+    <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='crest_ex'>
     <option name='-i'>crest</option>
     <option name="--execution" />
-  <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='crest_ex_no-parallel'>
-    <option name='-i'>crest</option>
-    <option name="--execution" />
-    <option name="--no-parallel" />
-  <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='crest_ex_iterations500'>
-    <option name="-i">crest</option>
-    <option name="--execution" />
-    <option name="--no-parallel" />
-    <option name="--ig-timelimit">500</option>
-  <resultfiles>**/harness.c</resultfiles>
+    <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name='klee_cpachecker'>
     <option name='-i'>klee</option>
@@ -53,7 +36,7 @@
     <option name="-i">cpatiger</option>
     <option name="--execution" />
     <option name="--no-parallel" />
-  <resultfiles>**/harness.c</resultfiles>
+    <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name="cpatiger_cpachecker">
     <option name="-i">cpatiger</option>
@@ -109,3 +92,4 @@
   </tasks>
 
 </benchmark>
+
