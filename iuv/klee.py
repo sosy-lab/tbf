@@ -14,8 +14,8 @@ klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
 
 
-def get_test_files(exclude=[]):
-    all_tests = [t for t in glob.glob(tests_dir + '/*.ktest')]
+def get_test_files(exclude=[], directory=utils.tmp):
+    all_tests = [t for t in glob.glob(directory + '/*.ktest')]
     if not all_tests:
         raise utils.InputGenerationError('No test files generated.')
     return [t for t in all_tests if utils.get_file_name(t) not in exclude]
@@ -145,9 +145,9 @@ class KleeTestValidator(TestValidator):
 
         return {'name': harness_file, 'content': harness}
 
-    def _create_all_x(self, filename, creator_method, visited_tests):
+    def _create_all_x(self, filename, creator_method, visited_tests, directory):
         created_content = []
-        new_test_files = get_test_files(visited_tests)
+        new_test_files = get_test_files(visited_tests, directory)
         if len(new_test_files) > 0:
             logging.info("Looking at %s test files", len(new_test_files))
         empty_case_handled = False
@@ -170,8 +170,8 @@ class KleeTestValidator(TestValidator):
                 logging.info("Test vector was not generated for %s", test_file)
         return created_content
 
-    def create_all_witnesses(self, filename, visited_tests):
-        return self._create_all_x(filename, self.create_witness, visited_tests)
+    def create_all_witnesses(self, filename, visited_tests, directory=utils.tmp):
+        return self._create_all_x(filename, self.create_witness, visited_tests, directory)
 
-    def create_all_harnesses(self, filename, visited_tests):
-        return self._create_all_x(filename, self.create_harness, visited_tests)
+    def create_all_harnesses(self, filename, visited_tests, directory=utils.tmp):
+        return self._create_all_x(filename, self.create_harness, visited_tests, directory)
