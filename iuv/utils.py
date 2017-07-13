@@ -93,7 +93,19 @@ class VerdictUnknown(Verdict):
         super().__init__(UNKNOWN)
 
 
-def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, input_str=None):
+def shut_down(process):
+    process.terminate()
+    returncode = None
+    try:
+        returncode = process.wait(timeout=4)
+    except subprocess.TimeoutExpired:
+        logging.info("Wasn't able to shut down process within timeout. Trying to kill it.")
+        process.kill()
+
+    return returncode
+
+
+def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, input_str=None, timelimit=None):
     log_method = logging.debug if quiet else logging.info
 
     log_method(" ".join(command))
@@ -106,22 +118,26 @@ def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, 
                          env=env
                          )
 
+    output = None
+    err_output = None
     if stop_flag:
+        stopwatch = Stopwatch()
+        stopwatch.start()
         returncode = p.poll()
         while returncode is None:
-            if stop_flag.is_set():
-                p.terminate()
-                try:
-                    returncode = p.wait(timeout=4)
-                except subprocess.TimeoutExpired as e:
-                    logging.info("Wasn't able to shut down process within timeout.")
+            if stop_flag.is_set() or (timelimit and stopwatch.curr_s() > timelimit):
+                returncode = shut_down(p)
             else:
                 time.sleep(0.001)
                 returncode = p.poll()
         output, err_output = p.communicate()
     else:
-        output, err_output = p.communicate(input=input_str)
-        returncode = p.poll()
+        try:
+            output, err_output = p.communicate(input=input_str, timeout=timelimit)
+            returncode = p.poll()
+        except subprocess.TimeoutExpired:
+            logging.info("Timeout of %s s expired. Killing process.")
+            returncode = shut_down(p)
 
     log_method(output)
 
@@ -246,6 +262,11 @@ class Stopwatch(object):
         time_elapsed = self._process(end_time - self._current_start)
         self._current_start = None
         self._intervals.append(time_elapsed)
+
+    def curr_s(self):
+        """ Return current time in seconds """
+        assert self._current_start
+        return int(round(self._process(time.perf_counter() - self._current_start), 0))
 
     def _process(self, value):
         return round(value, 3)
