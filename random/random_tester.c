@@ -11,7 +11,7 @@ unsigned int get_rand_seed() {
 
 void input(void * var, size_t var_size, const char * var_name) {
   srand(get_rand_seed());
-  FILE *vector = fopen("vector.txt", "a+");
+  FILE *vector = fopen("vector.test", "a+");
   size_t int_size = sizeof(int);
   unsigned char * new_val = malloc(var_size);
 

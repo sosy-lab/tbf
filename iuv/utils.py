@@ -204,6 +204,8 @@ def get_file_path(filename, temp_dir=True):
 def get_file_name(filename):
     return os.path.basename(filename)
 
+def get_env():
+    return os.environ.copy()
 
 def get_env_with_path_added(path_addition):
     env = os.environ.copy()
