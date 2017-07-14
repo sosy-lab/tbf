@@ -20,6 +20,11 @@
     <option name="--execution" />
     <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
+  <rundefinition name='random_ex'>
+    <option name="-i">random</option>
+    <option name="--execution" />
+    <resultfiles>**/harness.c</resultfiles>
+  </rundefinition>
   <rundefinition name='klee_cpachecker'>
     <option name='-i'>klee</option>
     <option name="--validators">cpachecker</option>
@@ -43,6 +48,12 @@
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
     <option name="--no-parallel" />
+    <resultfiles>**/witness.graphml</resultfiles>
+  </rundefinition>
+  <rundefinition name='random_cpachecker'>
+    <option name="-i">random</option>
+    <option name="--validators">cpachecker</option>
+    <option name="--witness-validation" />
     <resultfiles>**/witness.graphml</resultfiles>
   </rundefinition>
 
