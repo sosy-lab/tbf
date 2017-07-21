@@ -1,15 +1,11 @@
-# Test-based Falsification (TBF)
+# Input-using Verifier (IUV)
 
-To run TBF, run
+To run IUV, run
 `./run_iuv -i TEST_GENERATOR [--execution|--validators cpachecker --witness_validators] FILE`
 from the repository's root directory,
-where `TEST_GENERATOR` is one of `{crest, cpatiger, klee}`.
+where `TEST_GENERATOR` is one of `{crest, cpatiger, klee, random}`.
 
-The name "iuv" stand for input-using verifier,
-which is the final goal of this
-tool.
-Currently, only falsification using test case generators
-is possible, neither 'test-based falsification' is a more
-concise name for the current tool.
-
-
+[CREST](http://jburnim.github.io/crest/) is a concolic tester.
+[CPATiger](http://forsyte.at/software/cpatiger/) is a multi-goal tester based on the model checker CPAchecker.
+[KLEE](klee.github.io) is a symbolic execution-based tester and verifier.
+Random is a very simple implementation of a random tester.
