@@ -57,7 +57,7 @@ class BaseInputGenerator(object):
         return self.prepare(content)
 
     def _get_error_method_dummy(self):
-        return 'void ' + utils.error_method + '() { exit(107); }\n'
+        return 'void ' + utils.error_method + '() { abort(); }\n'
 
     def generate_input(self, filename, stop_flag=None):
         default_err = "Unknown error"

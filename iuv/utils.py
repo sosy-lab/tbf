@@ -681,6 +681,7 @@ class StatisticsPool(object):
         return '\n\n'.join([str(s) for s in self._stat_objects])
 
 
+error_string = "Error found."
 error_return = 107
 error_method = '__VERIFIER_error'
 spec_file = os.path.abspath('./ReachSafety.prp')

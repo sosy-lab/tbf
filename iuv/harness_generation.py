@@ -56,7 +56,9 @@ class HarnessCreator(object):
         return preamble
 
     def _get_error_definition(self, method_name):
-        definition = 'void {0}() {{\n    exit({1});\n}}\n\n'.format(method_name, utils.error_return)
+        definition = 'void {0}() {{\n'.format(method_name)
+        definition += '    fprintf(stderr, \"{0}\");\n'.format(utils.error_string)
+        definition += '    exit(0);\n}\n\n'
         return definition
 
     def _get_nondet_method_definitions(self, nondet_methods, test_vector):
