@@ -202,12 +202,13 @@ def run():
         generator_thread.join(timeout=5)
 
     os.chdir(old_dir)
-    print("IUV: " + validation_result.verdict.upper())
+    return validation_result
 
 if __name__ == '__main__':
     default_err = "Unknown error"
+    result = None
     try:
-        run()
+        result = run()
 
     except utils.CompileError as e:
         logging.error("Compile error: %s", e.msg if e.msg else default_err)
@@ -217,3 +218,4 @@ if __name__ == '__main__':
         logging.error("Parse error: %s", e.msg if e.msg else default_err)
     finally:
         print(utils.statistics)
+        print("\nIUV verdict: ", result.verdict.upper() if result else "UNKNOWN")
