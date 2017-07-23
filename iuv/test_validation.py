@@ -278,9 +278,9 @@ class ExecutionRunner(object):
         executable = self.compile(program_file, harness_file)
         if executable:
             run_cmd = self._get_run_cmd(executable)
-            run_result = utils.execute(run_cmd, quiet=True)
+            run_result = utils.execute(run_cmd, quiet=True, err_to_output=False)
 
-            if utils.error_return == run_result.returncode:
+            if utils.found_err(run_result):
                 return [FALSE]
             else:
                 return [UNKNOWN]
@@ -315,9 +315,9 @@ class ExecutionRunnerTwo(ExecutionRunner):
 
         if executable:
             run_cmd = self._get_run_cmd(executable)
-            run_result = utils.execute(run_cmd, quiet=True, input_str=input_vector)
+            run_result = utils.execute(run_cmd, quiet=True, err_to_output=False, input_str=input_vector)
 
-            if utils.error_return == run_result.returncode:
+            if utils.found_err(run_result):
                 return [FALSE]
             else:
                 return [UNKNOWN]

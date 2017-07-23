@@ -701,3 +701,7 @@ statistics = StatisticsPool()
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
+
+
+def found_err(run_result):
+    return error_string in run_result.stderr
