@@ -125,7 +125,11 @@ def _create_cli_arg_parser():
 
 def _parse_cli_args(argv):
     parser = _create_cli_arg_parser()
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if not args.machine_model:
+        logging.warning("No machine model specified. Assuming 32 bit")
+        args.machine_model = '32bit'
+    return args
 
 
 def _get_input_generator_module(args):

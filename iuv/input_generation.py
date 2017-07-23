@@ -1,7 +1,6 @@
 import utils
 import os
 import logging
-import re
 from abc import ABCMeta, abstractmethod
 
 

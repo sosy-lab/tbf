@@ -95,14 +95,12 @@ class CpaTigerTestValidator(TestValidator):
             for line in inp.readlines():
                 processed_line  = line.strip()
                 if processed_line.startswith('[') and processed_line.endswith(']'):
-                    test_vector = dict()
+                    test_vector = utils.TestVector(test)
                     processed_line = processed_line[1:-1]
                     test_values = processed_line.split(', ')
-                    for counter, value in enumerate(test_values):
-                        try:
-                            test_vector[str(counter)] = {'name': None, 'value': value}
-                        except ValueError as e:
-                            raise AssertionError(e)
+                    for value in test_values:
+                        hex_value = utils.convert_dec_to_hex(value)
+                        test_vector.add(hex_value)
                     vectors.append(test_vector)
         if not vectors:
             return None
@@ -136,11 +134,11 @@ class CpaTigerTestValidator(TestValidator):
     def create_harness(self, filename, test_name, test_vector):
         # If no inputs are defined don't create a witness
         nondet_methods = utils.get_nondet_methods(filename)
-        harness = self.harness_creator.create_harness(producer=self.get_name(),
-                                                      filename=filename,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=nondet_methods,
-                                                      error_method=utils.error_method)
+        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
+                                                      error_method=utils.error_method,
+                                                      test_vector=test_vector)
+
+
         harness_file = test_name + '.harness.c'
         harness_file = utils.get_file_path(harness_file)
 
@@ -169,8 +167,15 @@ class CpaTigerTestValidator(TestValidator):
                 logging.debug("Test vector was not generated", )
         return created_content
 
+    def create_all_test_vectors(self, filename, visited_tests):
+        vectors = self.get_test_vectors(tests_file)
+        return vectors if vectors is not None else list()
+
     def create_all_witnesses(self, filename, visited_tests):
         return self._create_all_x(filename, self.create_witness, visited_tests)
 
     def create_all_harnesses(self, filename, visited_tests):
         return self._create_all_x(filename, self.create_harness, visited_tests)
+
+    def get_test_files(self, exclude=[]):
+        return get_test_cases(exclude)

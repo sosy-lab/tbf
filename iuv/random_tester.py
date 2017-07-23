@@ -13,8 +13,6 @@ random_runner = os.path.abspath("./random/run.sh")
 
 def get_test_files(exclude=[], directory=utils.tmp):
     all_tests = [t for t in glob.glob(directory + '/vector[0-9]*.test')]
-    if not all_tests:
-        raise utils.InputGenerationError('No test files generated.')
     return [t for t in all_tests if utils.get_file_name(t) not in exclude]
 
 
@@ -58,13 +56,22 @@ class InputGenerator(BaseInputGenerator):
     def create_input_generation_cmds(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1])
         compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
-        compile_cmd = ['gcc', '-I', include_dir, '-o', compiled_file, generator_harness, filename]
+        if '32' in self.machine_model:
+            machinem_arg = "-m32"
+        elif '64' in self.machine_model:
+            machinem_arg = "-m64"
+        else:
+            raise AssertionError("Unknown machine model: " + self.machine_model)
+        compile_cmd = ['gcc', machinem_arg, '-I', include_dir, '-o', compiled_file, generator_harness, filename]
         input_generation_cmd = [random_runner, compiled_file]
 
         return [compile_cmd, input_generation_cmd]
 
     def get_test_count(self):
-        return len(get_test_files())
+        files = get_test_files()
+        if not files:
+            raise utils.InputGenerationError('No test files generated.')
+        return len(files)
 
 
 class RandomTestValidator(TestValidator):
@@ -79,19 +86,14 @@ class RandomTestValidator(TestValidator):
     def get_test_vector(self, test):
         with open(test, 'r') as inp:
             test_info = inp.readlines()
-        objects = dict()
+        vector = utils.TestVector(test)
         for idx, line in enumerate(test_info):
-            var_number = str(idx)
             var_name = line.split(':')[0].strip()  # Line format is var: value
-            if var_number not in objects.keys():
-                objects[var_number] = dict()
             nondet_method_name = utils.get_corresponding_method_name(var_name)
-            objects[var_number]['name'] = nondet_method_name
-
             value = line.split(':')[1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
-            objects[var_number]['value'] = value
+            vector.add(value, nondet_method_name)
 
-        return objects if objects.keys() else None
+        return vector if vector.vector else None
 
     def create_witness(self, filename, test_file, test_vector):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
@@ -108,11 +110,9 @@ class RandomTestValidator(TestValidator):
         return {'name': witness_file, 'content': witness}
 
     def create_harness(self, filename, test_file, test_vector):
-        harness = self.harness_creator.create_harness(producer=self.get_name(),
-                                                      filename=filename,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
-                                                      error_method=utils.error_method)
+        harness = self.harness_creator.create_harness(nondet_methods=utils.get_nondet_methods(filename),
+                                                      error_method=utils.error_method,
+                                                      test_vector=test_vector)
         test_name = os.path.basename(test_file)
         harness_file = test_name + '.harness.c'
         harness_file = utils.get_file_path(harness_file)
@@ -149,5 +149,8 @@ class RandomTestValidator(TestValidator):
 
     def create_all_harnesses(self, filename, visited_tests):
         return self._create_all_x(filename, self.create_harness, visited_tests)
+
+    def get_test_files(self, exclude=[]):
+        return get_test_files(exclude)
 
 

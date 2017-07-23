@@ -14,10 +14,8 @@ klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
 
 
-def get_test_files(exclude=[], directory=utils.tmp):
+def get_test_files(exclude=[], directory=tests_dir):
     all_tests = [t for t in glob.glob(directory + '/*.ktest')]
-    if not all_tests:
-        raise utils.InputGenerationError('No test files generated.')
     return [t for t in all_tests if utils.get_file_name(t) not in exclude]
 
 
@@ -83,7 +81,10 @@ class InputGenerator(BaseInputGenerator):
         return [compile_cmd, input_generation_cmd]
 
     def get_test_count(self):
-        return len(get_test_files())
+        files = get_test_files()
+        if not files:
+            raise utils.InputGenerationError('No test files generated.')
+        return len(files)
 
 
 class KleeTestValidator(TestValidator):
@@ -95,29 +96,45 @@ class KleeTestValidator(TestValidator):
         assert 'object' in test_info_line
         return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
 
+    def _convert_to_hex(self, value):
+        refined_value = value[1:-1] # remove wrapping ''
+        hex_value = '0x'
+        for numbers in refined_value.split('\\x'):
+            hex_value += numbers
+        logging.debug("Converted value %s to hex value %s", value, hex_value)
+        return hex_value
+
     def get_test_vector(self, test):
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool')]
         exec_output = utils.execute(ktest_tool + [test], err_to_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')
-        objects = dict()
+        vector = utils.TestVector(test)
+        last_number = -1
+        last_nondet_method = None
+        last_value = None
         for line in [l for l in test_info if l.startswith('object')]:
+            logging.debug("Looking at line: %s", line)
             if 'name:' in line:
                 #assert len(line.split(':')) == 3
-                var_number = self._get_var_number(line)
+                var_number = int(self._get_var_number(line))
+                assert var_number > last_number
+                last_number = var_number
                 var_name = line.split(':')[2][2:-1]  # [1:-1] to cut the surrounding ''
-                if var_number not in objects.keys():
-                    objects[var_number] = dict()
-                nondet_method_name = utils.get_corresponding_method_name(var_name)
-                objects[var_number]['name'] = nondet_method_name
+                assert last_nondet_method is None
+                last_nondet_method = utils.get_corresponding_method_name(var_name)
             elif 'data:' in line:
                 #assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
-                value = line.split(':')[-1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
-                if self.config.convert_to_int:
-                    value, = utils.convert_to_int(value, objects[var_number]['name'])
-                objects[var_number]['value'] = str(value)
+                value = line.split(':')[-1].strip()  # is in C multichar notation, e.g. '\x00\x00' (WITH the ''!)
+                value = self._convert_to_hex(value)
+                assert last_value is None
+                last_value = value
+            if last_nondet_method is not None and last_value is not None:
+                vector.add(last_value, last_nondet_method)
+                last_nondet_method = None
+                last_value = None
 
-        return objects if objects.keys() else None
+        return vector if len(vector.vector) > 0 else None
 
     def create_witness(self, filename, test_file, test_vector):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
@@ -134,11 +151,9 @@ class KleeTestValidator(TestValidator):
         return {'name': witness_file, 'content': witness}
 
     def create_harness(self, filename, test_file, test_vector):
-        harness = self.harness_creator.create_harness(producer=self.get_name(),
-                                                      filename=filename,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
-                                                      error_method=utils.error_method)
+        harness = self.harness_creator.create_harness(nondet_methods=utils.get_nondet_methods(filename),
+                                                      error_method=utils.error_method,
+                                                      test_vector=test_vector)
         test_name = os.path.basename(test_file)
         harness_file = test_name + '.harness.c'
         harness_file = utils.get_file_path(harness_file)
@@ -175,3 +190,7 @@ class KleeTestValidator(TestValidator):
 
     def create_all_harnesses(self, filename, visited_tests, directory=utils.tmp):
         return self._create_all_x(filename, self.create_harness, visited_tests, directory)
+
+    def get_test_files(self, exclude=[]):
+        return get_test_files(exclude)
+

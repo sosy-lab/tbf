@@ -14,8 +14,6 @@ test_name_pattern = re.compile('input[0-9]+$')
 
 def get_test_files(exclude=[]):
     all_tests = [t for t in os.listdir('.') if test_name_pattern.match(utils.get_file_name(t))]
-    if not all_tests:
-        raise utils.InputGenerationError('No test files generated.')
     return [t for t in all_tests if utils.get_file_name(t) not in exclude]
 
 
@@ -37,7 +35,10 @@ class InputGenerator(BaseInputGenerator):
         return self._run_env
 
     def get_test_count(self):
-        return len(get_test_files())
+        files = get_test_files()
+        if not files:
+            raise utils.InputGenerationError('No test files generated.')
+        return len(files)
 
     def prepare(self, filecontent):
         content = ''
@@ -111,21 +112,23 @@ class CrestTestValidator(TestValidator):
 
     def __init__(self, validation_config):
         super().__init__(validation_config)
-        self.counter = 0
 
     def get_name(self):
         return name
 
+    def _convert_to_hex(self, dec_value):
+        return utils.convert_dec_to_hex(dec_value)
+
     def get_test_vector(self, test):
-        test_vector = dict()
+        test_vector = utils.TestVector(test)
         with open(test, 'r') as inp:
             for line in inp.readlines():
                 try:
-                    test_vector[str(self.counter)] = {'name': None, 'value': line.strip()}
-                    self.counter += 1
+                    value = self._convert_to_hex(line.strip())
+                    test_vector.add(value)
                 except ValueError as e:
                     raise AssertionError(e)
-        if not test_vector:
+        if not test_vector.vector:
             return None
         else:
             return test_vector
@@ -158,11 +161,9 @@ class CrestTestValidator(TestValidator):
     def create_harness(self, filename, test_file, test_vector):
         # If no inputs are defined don't create a witness
         nondet_methods = utils.get_nondet_methods(filename)
-        harness = self.harness_creator.create_harness(producer=self.get_name(),
-                                                      filename=filename,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=nondet_methods,
-                                                      error_method=utils.error_method)
+        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
+                                                      error_method=utils.error_method,
+                                                      test_vector=test_vector)
         test_name = os.path.basename(test_file)
         harness_file = test_name + '.harness.c'
         harness_file = utils.get_file_path(harness_file)
@@ -199,3 +200,6 @@ class CrestTestValidator(TestValidator):
 
     def create_all_harnesses(self, filename, visited_tests):
         return self._create_all_x(filename, self.create_harness, visited_tests)
+
+    def get_test_files(self, exclude=[]):
+        return get_test_files(exclude)

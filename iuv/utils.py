@@ -13,6 +13,64 @@ parser = pycparser.CParser()
 sym_var_prefix = '__sym_'
 
 
+class MachineModel(object):
+
+    def __init__(self, short_size, int_size, long_size, long_long_size, float_size, double_size, long_double_size, compile_param):
+        self.model = {
+            'short': short_size,
+            'int': int_size,
+            'long': long_size,
+            'long long': long_long_size,
+            'float': float_size,
+            'double': double_size,
+            'long double': long_double_size
+        }
+        self.compile_param = compile_param
+
+    @property
+    def short_size(self):
+        return self.model['short']
+    @property
+    def int_size(self):
+        return self.model['int']
+    @property
+    def long_size(self):
+        return self.model['long']
+    @property
+    def long_long_size(self):
+        return self.model['long long']
+    @property
+    def float_size(self):
+        return self.model['float']
+    @property
+    def double_size(self):
+        return self.model['double']
+    @property
+    def long_double_size(self):
+        return self.model['long double']
+
+    def get_size(self, data_type):
+        if 'short' in data_type:
+            return self.short_size
+        elif 'long long' in data_type:
+            return self.long_long_size
+        elif 'long double' in data_type:
+            return self.long_double_size
+        elif 'long' in data_type:
+            return self.long_size
+        elif 'double' in data_type:
+            return self.double_size
+        elif 'float' in data_type:
+            return self.float_size
+        elif 'int' in data_type:
+            return self.int_size
+        else:
+            raise AssertionError("Unhandled data type: " + data_type)
+
+    def get_compile_parameter(self):
+        return self.compile_param
+
+
 class ConfigError(Exception):
 
     def __init__(self, msg=None, cause=None):
@@ -93,6 +151,22 @@ class VerdictUnknown(Verdict):
         super().__init__(UNKNOWN)
 
 
+class TestVector(object):
+
+    def __init__(self, origin_file):
+        self.origin = origin_file
+        self.vector = list()
+
+    def add(self, value, method=None):
+        self.vector.append({'value': value, 'name': method})
+
+    def __len__(self):
+        return len(self.vector)
+
+    def __str__(self):
+        return self.origin + " (" + str(self.vector) + " )"
+
+
 def shut_down(process):
     process.terminate()
     returncode = None
@@ -133,10 +207,10 @@ def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, 
         output, err_output = p.communicate()
     else:
         try:
-            output, err_output = p.communicate(input=input_str, timeout=timelimit)
+            output, err_output = p.communicate(input=input_str, timeout=timelimit if timelimit else None)
             returncode = p.poll()
         except subprocess.TimeoutExpired:
-            logging.info("Timeout of %s s expired. Killing process.")
+            logging.info("Timeout of %s s expired. Killing process.", timelimit)
             returncode = shut_down(p)
 
     log_method(output)
@@ -220,8 +294,10 @@ def get_file_path(filename, temp_dir=True):
 def get_file_name(filename):
     return os.path.basename(filename)
 
+
 def get_env():
     return os.environ.copy()
+
 
 def get_env_with_path_added(path_addition):
     env = os.environ.copy()
@@ -244,6 +320,34 @@ def get_method_head(method_name, method_type, param_types):
     method_head += ', '.join(params)
     method_head += ')'
     return method_head
+
+
+def get_input_vector(test_vector, escape_newline=False):
+    input_vector = ''
+    if escape_newline:
+        newline = '\\n'
+    else:
+        newline = '\n'
+    for item in test_vector.vector:
+        input_vector += item['value'] + newline
+    logging.debug("Input for test %s: %s", test_vector.origin, [l for l in input_vector.split('\n')])
+    return input_vector
+
+
+def convert_dec_to_hex(dec_value, byte_number=None):
+    hex_value = hex(int(dec_value))
+    pure_hex = hex_value[2:]
+
+    if byte_number is not None:
+        pure_hex = hex_value[2:]
+        hex_size = len(pure_hex)
+        necessary_padding = byte_number*2 - hex_size
+        if necessary_padding < 0:
+            raise AssertionError("Value " + hex_value + " doesn't fit byte number " + byte_number)
+        hex_value = "0x" + necessary_padding * '0' + pure_hex
+    elif len(pure_hex) % 2 > 0:
+        hex_value = "0x0" + pure_hex
+    return hex_value
 
 
 class Stopwatch(object):
@@ -477,6 +581,39 @@ def convert_to_int(value, method_name):
     return unpack(data_format, value)
 
 
+def get_format_specifier(method_type):
+    specifier = '%'
+    # Length modifiers
+    if 'short' in method_type:
+        specifier += 'h'
+    elif 'char' in method_type and 'unsigned char' not in method_type:
+        specifier += 'hh'
+    elif 'long long' in method_type:
+        specifier += 'll'
+    elif 'long double' in method_type:
+        specifier += 'L'
+    elif 'long' in method_type:
+        specifier += 'l'
+    elif 'size_t' in method_type:
+        specifier += 'z'
+
+    # Type specifier
+    if '*' in method_type:
+        specifier += 'p'
+    if 'unsigned char' in method_type:
+        specifier += 'c'
+    if 'float' in method_type or 'double' in method_type:
+        specifier += 'f'
+    elif 'unsigned' in method_type:
+        specifier += 'u'
+    elif 'int' in method_type or 'long' in method_type or 'short' in method_type or 'char' in method_type:
+        specifier += 'd'
+    else:
+        logging.debug('Using type unsigned long to read stdin for type %s', method_type)
+        specifier = '%lu'
+    return specifier
+
+
 class Counter(object):
 
     def __init__(self):
@@ -555,6 +692,9 @@ FALSE = 'false'
 UNKNOWN = 'unknown'
 TRUE = 'true'
 ERROR = 'error'
+
+MACHINE_MODEL_32 = MachineModel(2, 4, 4, 8, 4, 8, 12, '-m32')
+MACHINE_MODEL_64 = MachineModel(2, 4, 8, 8, 4, 8, 16, '-m64')
 
 statistics = StatisticsPool()
 

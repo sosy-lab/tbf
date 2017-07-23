@@ -16,10 +16,6 @@ class ValidationConfig(object):
     def __init__(self, args):
         self.machine_model = args.machine_model
 
-        if not self.machine_model:
-            logging.warning("No machine model specified. Assuming 32 bit")
-            self.machine_model = '32bit'
-
         self.use_execution = args.execution_validation
         self.use_witness_validation = args.witness_validation
         self.witness_validators = args.validators if args.validators else []
@@ -146,6 +142,26 @@ class TestValidator(object):
 
         return utils.VerdictUnknown()
 
+    def create_all_test_vectors(self, filename, visited_tests):
+        all_vectors = list()
+        new_test_files = self.get_test_files(visited_tests)
+        if len(new_test_files) > 0:
+            logging.info("Looking at %s test files", len(new_test_files))
+        empty_case_handled = False
+        for test_file in new_test_files:
+            logging.debug('Looking at test case %s', test_file)
+            test_name = utils.get_file_name(test_file)
+            assert test_name not in visited_tests
+            assert os.path.exists(test_file)
+            visited_tests.add(test_name)
+            test_vector = self.get_test_vector(test_file)
+            if test_vector or not empty_case_handled:
+                if not test_vector:
+                    test_vector = dict()
+                    empty_case_handled = True
+                all_vectors.append(test_vector)
+        return all_vectors
+
     @abstractmethod
     def create_all_harnesses(self, filename, visited_tests):
         pass
@@ -159,43 +175,38 @@ class TestValidator(object):
         pass
 
     def perform_execution_validation(self, filename, generator_thread):
-        validator = ExecutionRunner(self.config.machine_model)
+        validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
 
         visited_tests = set()
         while generator_thread and generator_thread.is_alive():
             try:
-                result = self._h(filename, validator, visited_tests)
+                result = self._hs(filename, validator, visited_tests)
                 if result.is_positive():
                     return result
                 sleep(0.001)  # Sleep for 1 millisecond
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
 
-        result = self._h(filename, validator, visited_tests)
+        result = self._hs(filename, validator, visited_tests)
         return self.decide_final_verdict(result)
 
-    def _h(self, filename, validator, visited_tests):
-        produced_harnesses = self.create_all_harnesses(filename, visited_tests)
+    def _hs(self, filename, validator, visited_tests):
+        test_vectors = self.create_all_test_vectors(filename, visited_tests)
 
-        for harness in produced_harnesses:
-            harness_name = harness['name']
-            content_to_write = harness['content']
-            self.counter_size_harnesses.inc(len(content_to_write))
-            with open(harness_name, 'w+') as outp:
-                outp.write(content_to_write)
+        for vector in test_vectors:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(filename, harness_name)
+                verdicts = validator.run(filename, vector)
             finally:
                 self.timer_execution_validation.stop()
                 self.timer_validation.stop()
             self.counter_handled_test_cases.inc()
 
-            logging.debug('Results for %s: %s', harness_name, str(verdicts))
+            logging.debug('Results for %s: %s', vector, str(verdicts))
             if any([v == FALSE for v in verdicts]):
-                self.final_test_vector_size.value = len(harness['vector'])
-                return utils.VerdictFalse(harness['origin'], harness_name)
+                self.final_test_vector_size.value = len(vector)
+                return utils.VerdictFalse(vector.origin)
         return utils.VerdictUnknown()
 
     def check_inputs(self, filename, generator_thread=None):
@@ -213,7 +224,7 @@ class TestValidator(object):
             if result.witness is None:
                 test_vector = self.get_test_vector(result.test)
                 if test_vector is None:
-                    test_vector = dict()
+                    test_vector = list()
                 witness = self.create_witness(filename, result.test, test_vector)
                 with open(witness['name'], 'w+') as outp:
                     outp.write(witness['content'])
@@ -221,7 +232,7 @@ class TestValidator(object):
             if result.harness is None:
                 test_vector = self.get_test_vector(result.test)
                 if test_vector is None:
-                    test_vector = dict()
+                    test_vector = list()
                 harness = self.create_harness(filename, result.test, test_vector)
                 with open(harness['name'], 'w+') as outp:
                     outp.write(harness['content'])
@@ -237,12 +248,9 @@ class ExecutionRunner(object):
 
     def _get_compile_cmd(self, program_file, harness_file, output_file, c_version='c11'):
         cmd = ['gcc']
-        if '32' in self.machine_model:
-            cmd.append('-m32')
-        elif '64' in self.machine_model:
-            cmd.append('-m64')
-        else:
-            raise AssertionError('Unhandled machine model: ' + self.machine_model)
+
+
+
 
         cmd += ['-std={}'.format(c_version),
                 '-D__alias__(x)=',
@@ -275,6 +283,43 @@ class ExecutionRunner(object):
         if executable:
             run_cmd = self._get_run_cmd(executable)
             run_result = utils.execute(run_cmd, quiet=True)
+
+            if utils.error_return == run_result.returncode:
+                return [FALSE]
+            else:
+                return [UNKNOWN]
+        else:
+            return [ERROR]
+
+
+class ExecutionRunnerTwo(ExecutionRunner):
+
+    def __init__(self, machine_model, producer_name):
+        super().__init__(machine_model)
+        self.harness = None
+        self.producer = producer_name
+        self.harness_generator = harness_gen.HarnessCreator()
+
+    def get_executable_harness(self, program_file):
+        if not self.harness:
+            self.harness = self._create_executable_harness(program_file)
+        return self.harness
+
+    def _create_executable_harness(self, program_file):
+        nondet_methods = utils.get_nondet_methods(program_file)
+        harness_content = self.harness_generator.create_harness(nondet_methods, utils.error_method)
+        harness_file = 'harness.c'
+        with open(harness_file, 'w+') as outp:
+            outp.write(harness_content)
+        return self.compile(program_file, harness_file)
+
+    def run(self, program_file, test_vector):
+        executable = self.get_executable_harness(program_file)
+        input_vector = utils.get_input_vector(test_vector)
+
+        if executable:
+            run_cmd = self._get_run_cmd(executable)
+            run_result = utils.execute(run_cmd, quiet=True, input_str=input_vector)
 
             if utils.error_return == run_result.returncode:
                 return [FALSE]
