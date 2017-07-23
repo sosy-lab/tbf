@@ -1,6 +1,16 @@
 #!/bin/bash
 
-project_dir=`realpath run_iuv | rev | cut -d'/' -f 2- | rev`
+platform="`uname -s`"
+
+case "$platform" in
+    Linux|CYGWIN*)
+        script="`readlink -f "$0"`"
+        project_dir="$(readlink -f "$(dirname "$script")")"
+        ;;
+    *)
+        project_dir="`dirname "$0"`"
+        ;;
+esac
 klee_lib=${project_dir}/klee/lib
 crest_lib=${project_dir}/crest/lib
 export LD_LIBRARY_PATH=$klee_lib:$crest_lib:$LD_LIBRARY_PATH
