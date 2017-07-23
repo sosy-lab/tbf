@@ -124,7 +124,7 @@ class CrestTestValidator(TestValidator):
         with open(test, 'r') as inp:
             for line in inp.readlines():
                 try:
-                    value = self._convert_to_hex(line.strip())
+                    value = line.strip()
                     test_vector.add(value)
                 except ValueError as e:
                     raise AssertionError(e)
@@ -186,7 +186,7 @@ class CrestTestValidator(TestValidator):
             if test_vector or not empty_case_handled:
                 if not test_vector:
                     empty_case_handled = True
-                    test_vector = dict()
+                    test_vector = utils.TestVector(test_file)
                 new_content = creation_method(filename, test_file, test_vector)
                 new_content['vector'] = test_vector
                 new_content['origin'] = test_file

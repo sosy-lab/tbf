@@ -83,7 +83,7 @@ class WitnessCreator(object):
 
         graph.append(previous_node)
 
-        for num, instantiation in enumerate(test_vector.vector):
+        for instantiation in test_vector.vector:
             target_node = self._create_node()
             graph.append(target_node)
             if instantiation['name']:

@@ -147,7 +147,6 @@ class TestValidator(object):
         new_test_files = self.get_test_files(visited_tests)
         if len(new_test_files) > 0:
             logging.info("Looking at %s test files", len(new_test_files))
-        empty_case_handled = False
         for test_file in new_test_files:
             logging.debug('Looking at test case %s', test_file)
             test_name = utils.get_file_name(test_file)
@@ -155,10 +154,7 @@ class TestValidator(object):
             assert os.path.exists(test_file)
             visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_file)
-            if test_vector or not empty_case_handled:
-                if not test_vector:
-                    test_vector = dict()
-                    empty_case_handled = True
+            if test_vector:
                 all_vectors.append(test_vector)
         return all_vectors
 
@@ -224,7 +220,7 @@ class TestValidator(object):
             if result.witness is None:
                 test_vector = self.get_test_vector(result.test)
                 if test_vector is None:
-                    test_vector = list()
+                    test_vector = utils.TestVector(result.test)
                 witness = self.create_witness(filename, result.test, test_vector)
                 with open(witness['name'], 'w+') as outp:
                     outp.write(witness['content'])
@@ -232,7 +228,7 @@ class TestValidator(object):
             if result.harness is None:
                 test_vector = self.get_test_vector(result.test)
                 if test_vector is None:
-                    test_vector = list()
+                    test_vector = utils.TestVector(result.test)
                 harness = self.create_harness(filename, result.test, test_vector)
                 with open(harness['name'], 'w+') as outp:
                     outp.write(harness['content'])

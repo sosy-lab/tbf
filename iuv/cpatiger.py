@@ -99,8 +99,7 @@ class CpaTigerTestValidator(TestValidator):
                     processed_line = processed_line[1:-1]
                     test_values = processed_line.split(', ')
                     for value in test_values:
-                        hex_value = utils.convert_dec_to_hex(value)
-                        test_vector.add(hex_value)
+                        test_vector.add(value)
                     vectors.append(test_vector)
         if not vectors:
             return None

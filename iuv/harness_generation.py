@@ -7,27 +7,24 @@ class HarnessCreator(object):
         return """char * read_bytes(size_t type_size, char * __inp_var) {
     size_t input_length = strlen(__inp_var)-1;
     __inp_var[input_length] = '\\0'; // Remove '\\n' at end
-    __inp_var = __inp_var + 2; // Remove "0x" at start
-    input_length -= 2;
 
-    if (input_length % 2 > 0) {
-        fprintf(stderr, "Input bytes not full bytes: %s\\n", __inp_var);
+    char * parseEnd;
+    char * value_pointer = malloc(16);
+
+    unsigned long long intVal = strtoull(__inp_var, &parseEnd, 0);
+    if (*parseEnd != 0) {
+      long double floatVal = strtold(__inp_var, &parseEnd);
+      if (*parseEnd != 0) {
+        fprintf(stderr, "Can't parse input: '%s' (failing at '%s')\\n", __inp_var, parseEnd);
         abort();
-    }
-    unsigned char * __value = malloc(type_size);
-    char * curr_pos_inp;
-    unsigned char * curr_pos_val;
-    unsigned int curr_inp_idx = input_length;
-    unsigned int curr_val_idx = -1;
-    while (curr_inp_idx > 0) {
-        curr_inp_idx = curr_inp_idx - 2;
-        curr_pos_inp = __inp_var + curr_inp_idx;
-        curr_val_idx = curr_val_idx + 1;
-        curr_pos_val = __value + curr_val_idx;
-        sscanf(curr_pos_inp, "%2hhx", curr_pos_val);
-    }
 
-    return __value;
+      } else {
+        memcpy(value_pointer, &floatVal, 16);
+      }
+    } else {
+        memcpy(value_pointer, &intVal, 8);
+    }
+    return value_pointer;
 }\n\n"""
 
     def __init__(self):
