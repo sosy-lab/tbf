@@ -125,10 +125,11 @@ class KleeTestValidator(TestValidator):
             elif 'data:' in line:
                 #assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
+                assert last_nondet_method is not None
                 value = line.split(':')[-1].strip()  # is in C multichar notation, e.g. '\x00\x00' (WITH the ''!)
-                value = self._convert_to_hex(value)
+                value, = utils.convert_to_int(value, last_nondet_method)
                 assert last_value is None
-                last_value = value
+                last_value = str(value)
             if last_nondet_method is not None and last_value is not None:
                 vector.add(last_value, last_nondet_method)
                 last_nondet_method = None
