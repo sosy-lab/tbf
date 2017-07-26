@@ -15,8 +15,33 @@
     <option name="--ig-timelimit">600</option>
     <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
-  <rundefinition name='crest_ex'>
+  <rundefinition name='crest_ex_cfg'>
     <option name='-i'>crest</option>
+    <option name="--strategy">cfg</option>
+    <option name="--execution" />
+    <resultfiles>**/harness.c</resultfiles>
+  </rundefinition>
+  <rundefinition name='crest_ex_dfs'>
+    <option name='-i'>crest</option>
+    <option name="--strategy">dfs</option>
+    <option name="--execution" />
+    <resultfiles>**/harness.c</resultfiles>
+  </rundefinition>
+  <rundefinition name='crest_ex_ppc'>
+    <option name='-i'>crest</option>
+    <option name="--strategy">ppc</option>
+    <option name="--execution" />
+    <resultfiles>**/harness.c</resultfiles>
+  </rundefinition>
+  <rundefinition name='crest_ex_ppccaching'>
+    <option name='-i'>crest</option>
+    <option name="--strategy">cfg_ppcWCaching</option>
+    <option name="--execution" />
+    <resultfiles>**/harness.c</resultfiles>
+  </rundefinition>
+  <rundefinition name='crest_ex_hybrid'>
+    <option name='-i'>crest</option>
+    <option name="--strategy">hybrid</option>
     <option name="--execution" />
     <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
