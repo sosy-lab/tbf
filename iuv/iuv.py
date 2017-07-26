@@ -38,6 +38,13 @@ def _create_cli_arg_parser():
                                       choices=['klee', 'crest', 'cpatiger', 'random'],
                                       help="input generator to use"
                                       )
+
+    input_generator_args.add_argument("--strategy", "-s",
+                                      dest="strategy",
+                                      nargs="+",
+                                      help="search heuristics to use"
+                                      )
+
     input_generator_args.add_argument("--ig-timelimit",
                                       dest="ig_timelimit",
                                       help="time limit (in s) for input generation.\n"
@@ -136,15 +143,23 @@ def _get_input_generator_module(args):
     input_generator = args.input_generator.lower()
 
     if input_generator == 'klee':
-        return klee.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
+        if args.strategy:
+            return klee.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy, machine_model=args.machine_model)
+        else:
+            return klee.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
     elif input_generator == 'crest':
-        return crest.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
+        if args.strategy:
+            if len(args.strategy) != 1:
+                raise utils.ConfigError("Crest requires exactly one strategy. Given strategies: " + args.strategy)
+            return crest.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy[0], machine_model=args.machine_model)
+        else:
+            return crest.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
     elif input_generator == 'cpatiger':
         return cpatiger.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
     elif input_generator == 'random':
         return random_tester.InputGenerator(args.ig_timelimit, machine_model=args.machine_model)
     else:
-        raise AssertionError('Unhandled input generator: ' + input_generator)
+        raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 
 
 def _get_validator_module(args):
