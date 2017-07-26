@@ -106,7 +106,7 @@ class TestValidator(object):
         validator = ValidationRunner(self.config.witness_validators)
 
         visited_tests = set()
-        while generator_thread and generator_thread.is_alive():
+        while generator_thread and not generator_thread.ready():
             try:
                 result = self._m(filename, validator, visited_tests)
                 if result.is_positive():
@@ -174,7 +174,7 @@ class TestValidator(object):
         validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
 
         visited_tests = set()
-        while generator_thread and generator_thread.is_alive():
+        while generator_thread and not generator_thread.ready():
             try:
                 result = self._hs(filename, validator, visited_tests)
                 if result.is_positive():

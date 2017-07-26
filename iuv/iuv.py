@@ -12,7 +12,8 @@ import random_tester
 import utils
 import shutil
 
-import threading
+from threading import Event
+from multiprocessing.pool import ThreadPool
 
 from test_validation import ValidationConfig
 
@@ -186,9 +187,9 @@ def run():
     old_dir = os.path.abspath('.')
     os.chdir(utils.tmp)
     if args.run_parallel:
-        stop_event = threading.Event()
-        generator_thread = threading.Thread(target=inp_module.generate_input, args=(filename, stop_event))
-        generator_thread.start()
+        pool = ThreadPool(processes=1)
+        stop_event = Event()
+        generator_thread = pool.apply_async(inp_module.generate_input, args=(filename, stop_event))
     else:
         stop_event = None
         generator_thread = None
@@ -196,6 +197,14 @@ def run():
 
     validator_module = _get_validator_module(args)
     validation_result = validator_module.check_inputs(filename, generator_thread)
+
+    if stop_event:
+        stop_event.set()
+
+    if generator_thread:
+        generation_done = generator_thread.get(timeout=5)
+    else:
+        generation_done = True
 
     if validation_result.is_positive():
         test_name = os.path.basename(validation_result.test)
@@ -209,12 +218,8 @@ def run():
                 assert proof_name.endswith('.witness.graphml')
                 persistent_proof = utils.get_file_path('witness.graphml', temp_dir=False)
             shutil.copy(proof, persistent_proof)
-
-    if stop_event:
-        stop_event.set()
-
-    if generator_thread:
-        generator_thread.join(timeout=5)
+    elif not generation_done:
+        validation_result = utils.VerdictUnknown()
 
     os.chdir(old_dir)
     return validation_result
