@@ -1761,8 +1761,7 @@ and __ocaml_lex_initial_rec lexbuf __ocaml_lex_state =
                                         )
 # 1763 "src/formatlex.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_initial_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_initial_rec lexbuf __ocaml_lex_state
 
 and comment lexbuf =
     __ocaml_lex_comment_rec lexbuf 169
@@ -1771,20 +1770,19 @@ and __ocaml_lex_comment_rec lexbuf __ocaml_lex_state =
       | 0 ->
 # 301 "src/formatlex.mll"
                      ( () )
-# 1775 "src/formatlex.ml"
+# 1774 "src/formatlex.ml"
 
   | 1 ->
 # 302 "src/formatlex.mll"
                                         ( E.newline (); comment lexbuf )
-# 1780 "src/formatlex.ml"
+# 1779 "src/formatlex.ml"
 
   | 2 ->
 # 303 "src/formatlex.mll"
          ( comment lexbuf )
-# 1785 "src/formatlex.ml"
+# 1784 "src/formatlex.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_comment_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_comment_rec lexbuf __ocaml_lex_state
 
 and endline lexbuf =
     __ocaml_lex_endline_rec lexbuf 174
@@ -1793,15 +1791,14 @@ and __ocaml_lex_endline_rec lexbuf __ocaml_lex_state =
       | 0 ->
 # 307 "src/formatlex.mll"
                 ( E.newline (); initial lexbuf)
-# 1797 "src/formatlex.ml"
+# 1795 "src/formatlex.ml"
 
   | 1 ->
 # 308 "src/formatlex.mll"
       ( endline lexbuf)
-# 1802 "src/formatlex.ml"
+# 1800 "src/formatlex.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_endline_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_endline_rec lexbuf __ocaml_lex_state
 
 ;;
 

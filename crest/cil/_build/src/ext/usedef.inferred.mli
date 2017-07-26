@@ -1,4 +1,59 @@
-module E = Errormsg
+module E :
+  sig
+    val logChannel : out_channel ref
+    val debugFlag : bool ref
+    val verboseFlag : bool ref
+    val colorFlag : bool ref
+    val redEscStr : string
+    val greenEscStr : string
+    val yellowEscStr : string
+    val blueEscStr : string
+    val purpleEscStr : string
+    val cyanEscStr : string
+    val whiteEscStr : string
+    val resetEscStr : string
+    val warnFlag : bool ref
+    exception Error
+    val error : ('a, unit, Pretty.doc, unit) format4 -> 'a
+    val bug : ('a, unit, Pretty.doc, unit) format4 -> 'a
+    val unimp : ('a, unit, Pretty.doc, unit) format4 -> 'a
+    val s : 'a -> 'b
+    val hadErrors : bool ref
+    val warn : ('a, unit, Pretty.doc, unit) format4 -> 'a
+    val warnOpt : ('a, unit, Pretty.doc, unit) format4 -> 'a
+    val log : ('a, unit, Pretty.doc, unit) format4 -> 'a
+    val logg : ('a, unit, Pretty.doc, unit) format4 -> 'a
+    val null : ('a, unit, Pretty.doc, unit) format4 -> 'a
+    val pushContext : (unit -> Pretty.doc) -> unit
+    val popContext : unit -> unit
+    val showContext : unit -> unit
+    val withContext : (unit -> Pretty.doc) -> ('a -> 'b) -> 'a -> 'b
+    val newline : unit -> unit
+    val newHline : unit -> unit
+    val getPosition : unit -> int * string * int
+    val getHPosition : unit -> int * string
+    val setHLine : int -> unit
+    val setHFile : string -> unit
+    val setCurrentLine : int -> unit
+    val setCurrentFile : string -> unit
+    type location =
+      Errormsg.location = {
+      file : string;
+      line : int;
+      hfile : string;
+      hline : int;
+    }
+    val d_loc : unit -> location -> Pretty.doc
+    val d_hloc : unit -> location -> Pretty.doc
+    val getLocation : unit -> location
+    val parse_error : string -> 'a
+    val locUnknown : location
+    val readingFromStdin : bool ref
+    val startParsing : ?useBasename:bool -> string -> Lexing.lexbuf
+    val startParsingFromString :
+      ?file:string -> ?line:int -> string -> Lexing.lexbuf
+    val finishParsing : unit -> unit
+  end
 module VS :
   sig
     type elt = Cil.varinfo
@@ -27,15 +82,13 @@ module VS :
     val max_elt : t -> elt
     val choose : t -> elt
     val split : elt -> t -> t * bool * t
-    val find : elt -> t -> elt
-    val of_list : elt list -> t
   end
 val getUseDefFunctionRef :
   (Cil.exp -> Cil.exp list -> VS.t * VS.t * Cil.exp list) ref
-val considerVariableUse : (Cil.varinfo -> bool) ref
-val considerVariableDef : (Cil.varinfo -> bool) ref
-val considerVariableAddrOfAsUse : (Cil.varinfo -> bool) ref
-val considerVariableAddrOfAsDef : (Cil.varinfo -> bool) ref
+val considerVariableUse : (VS.elt -> bool) ref
+val considerVariableDef : (VS.elt -> bool) ref
+val considerVariableAddrOfAsUse : (VS.elt -> bool) ref
+val considerVariableAddrOfAsDef : (VS.elt -> bool) ref
 val extraUsesOfExpr : (Cil.exp -> VS.t) ref
 val onlyNoOffsetsAreDefs : bool ref
 val ignoreSizeof : bool ref

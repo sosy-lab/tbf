@@ -149,7 +149,7 @@ module NeculaFolding :
       val setMemory : reg IntMap.t -> reg IntMap.t
       val setRegister :
         reg IntMap.t -> Cil.varinfo -> Cil.exp * bool -> reg IntMap.t
-      val resetRegister : 'a IntMap.t -> int -> 'a IntMap.t
+      val resetRegister : 'a IntMap.t -> IntMap.key -> 'a IntMap.t
       class findLval :
         Cil.lval ->
         bool ref ->
@@ -234,61 +234,61 @@ class vidVisitor :
   end
 val globally_unique_vids : Cil.file -> unit
 module MakePartial :
-  functor (S : Symex) (C : CallGraph) (A : AliasInfo) ->
-    sig
-      val debug : bool
-      module LabelSet :
+  functor (S : Symex) ->
+    functor (C : CallGraph) ->
+      functor (A : AliasInfo) ->
         sig
-          type elt = Cil.label
-          type t
-          val empty : t
-          val is_empty : t -> bool
-          val mem : elt -> t -> bool
-          val add : elt -> t -> t
-          val singleton : elt -> t
-          val remove : elt -> t -> t
-          val union : t -> t -> t
-          val inter : t -> t -> t
-          val diff : t -> t -> t
-          val compare : t -> t -> int
-          val equal : t -> t -> bool
-          val subset : t -> t -> bool
-          val iter : (elt -> unit) -> t -> unit
-          val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
-          val for_all : (elt -> bool) -> t -> bool
-          val exists : (elt -> bool) -> t -> bool
-          val filter : (elt -> bool) -> t -> t
-          val partition : (elt -> bool) -> t -> t * t
-          val cardinal : t -> int
-          val elements : t -> elt list
-          val min_elt : t -> elt
-          val max_elt : t -> elt
-          val choose : t -> elt
-          val split : elt -> t -> t * bool * t
-          val find : elt -> t -> elt
-          val of_list : elt list -> t
+          val debug : bool
+          module LabelSet :
+            sig
+              type elt = Cil.label
+              type t
+              val empty : t
+              val is_empty : t -> bool
+              val mem : elt -> t -> bool
+              val add : elt -> t -> t
+              val singleton : elt -> t
+              val remove : elt -> t -> t
+              val union : t -> t -> t
+              val inter : t -> t -> t
+              val diff : t -> t -> t
+              val compare : t -> t -> int
+              val equal : t -> t -> bool
+              val subset : t -> t -> bool
+              val iter : (elt -> unit) -> t -> unit
+              val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
+              val for_all : (elt -> bool) -> t -> bool
+              val exists : (elt -> bool) -> t -> bool
+              val filter : (elt -> bool) -> t -> t
+              val partition : (elt -> bool) -> t -> t * t
+              val cardinal : t -> int
+              val elements : t -> elt list
+              val min_elt : t -> elt
+              val max_elt : t -> elt
+              val choose : t -> elt
+              val split : elt -> t -> t * bool * t
+            end
+          type sinfo = {
+            incoming_state : (int, S.t) Hashtbl.t;
+            reachable_preds : (int, bool) Hashtbl.t;
+            mutable last_used_state : S.t option;
+            mutable priority : int;
+          }
+          val sinfo_ht : (int, sinfo) Hashtbl.t
+          val clear_sinfo : unit -> unit
+          val get_sinfo : Cil.stmt -> sinfo
+          val toposort_counter : int ref
+          val add_edge : Cil.stmt -> Cil.stmt -> unit
+          val toposort : callNodeHash -> Cil.stmt -> unit
+          val changed_cfg : bool ref
+          val partial_stmt :
+            callNodeHash ->
+            S.t -> Cil.stmt -> (Cil.stmt -> Cil.stmt -> S.t -> 'a) -> S.t
+          val dataflow : Cil.file -> callNodeHash -> S.t -> Cil.stmt -> unit
+          val simplify :
+            Cil.file ->
+            callNodeHash -> Cil.fundec -> (Cil.lval * Cil.exp) list -> unit
         end
-      type sinfo = {
-        incoming_state : (int, S.t) Hashtbl.t;
-        reachable_preds : (int, bool) Hashtbl.t;
-        mutable last_used_state : S.t option;
-        mutable priority : int;
-      }
-      val sinfo_ht : (int, sinfo) Hashtbl.t
-      val clear_sinfo : unit -> unit
-      val get_sinfo : Cil.stmt -> sinfo
-      val toposort_counter : int ref
-      val add_edge : Cil.stmt -> Cil.stmt -> unit
-      val toposort : callNodeHash -> Cil.stmt -> unit
-      val changed_cfg : bool ref
-      val partial_stmt :
-        callNodeHash ->
-        S.t -> Cil.stmt -> (Cil.stmt -> Cil.stmt -> S.t -> 'a) -> S.t
-      val dataflow : Cil.file -> callNodeHash -> S.t -> Cil.stmt -> unit
-      val simplify :
-        Cil.file ->
-        callNodeHash -> Cil.fundec -> (Cil.lval * Cil.exp) list -> unit
-    end
 module PartialAlgorithm :
   sig
     val use_ptranal_alias : bool ref

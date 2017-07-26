@@ -291,7 +291,7 @@ make -C .. _build/cilversion.ml # cached
 /usr/bin/ocamldep -modules src/frontc/clexer.ml > src/frontc/clexer.ml.depends # cached
 # Target: src/frontc/clexer.mli.depends, tags: { extension:mli, file:src/frontc/clexer.mli, ocaml, ocamldep, quiet, traverse }
 /usr/bin/ocamldep -modules src/frontc/clexer.mli > src/frontc/clexer.mli.depends # cached
-# Target: src/frontc/cparser.mly, tags: { extension:mly, file:src/frontc/cparser.mly, infer, ocaml, ocamlyacc, parser, quiet, traverse }
+# Target: src/frontc/cparser.mly, tags: { extension:mly, file:src/frontc/cparser.mly, ocaml, ocamlyacc, parser, quiet, traverse }
 /usr/bin/ocamlyacc src/frontc/cparser.mly # cached
 # Target: src/frontc/cparser.mli.depends, tags: { extension:mli, file:src/frontc/cparser.mli, ocaml, ocamldep, quiet, traverse }
 /usr/bin/ocamldep -modules src/frontc/cparser.mli > src/frontc/cparser.mli.depends # cached
@@ -487,7 +487,7 @@ make -C .. _build/cilversion.ml # cached
 /usr/bin/ocamllex -q src/formatlex.mll # cached
 # Target: src/formatlex.ml.depends, tags: { extension:ml, file:src/formatlex.ml, ocaml, ocamldep, quiet, traverse }
 /usr/bin/ocamldep -modules src/formatlex.ml > src/formatlex.ml.depends # cached
-# Target: src/formatparse.mly, tags: { extension:mly, file:src/formatparse.mly, infer, ocaml, ocamlyacc, parser, quiet, traverse }
+# Target: src/formatparse.mly, tags: { extension:mly, file:src/formatparse.mly, ocaml, ocamlyacc, parser, quiet, traverse }
 /usr/bin/ocamlyacc src/formatparse.mly # cached
 # Target: src/formatparse.mli.depends, tags: { extension:mli, file:src/formatparse.mli, ocaml, ocamldep, quiet, traverse }
 /usr/bin/ocamldep -modules src/formatparse.mli > src/formatparse.mli.depends # cached
