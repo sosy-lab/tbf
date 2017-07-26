@@ -19,14 +19,14 @@ def get_test_files(exclude=[]):
 
 class InputGenerator(BaseInputGenerator):
 
-    def __init__(self, timelimit=None, log_verbose=False, search_heuristic='cfg', machine_model='32bit'):
+    def __init__(self, timelimit=None, log_verbose=False, search_heuristic='ppc', machine_model='32bit'):
         super().__init__(timelimit, machine_model)
         self.log_verbose = log_verbose
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
 
         self.search_heuristic = search_heuristic
-        self.num_iterations = timelimit if timelimit else 1500
+        self.num_iterations = 100000
 
     def get_name(self):
         return name
@@ -123,11 +123,8 @@ class CrestTestValidator(TestValidator):
         test_vector = utils.TestVector(test)
         with open(test, 'r') as inp:
             for line in inp.readlines():
-                try:
                     value = line.strip()
                     test_vector.add(value)
-                except ValueError as e:
-                    raise AssertionError(e)
         if not test_vector.vector:
             return None
         else:
