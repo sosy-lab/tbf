@@ -20,6 +20,14 @@ class ValidationConfig(object):
         self.use_witness_validation = args.witness_validation
         self.witness_validators = args.validators if args.validators else []
 
+        if args.klee_replay_validation:
+            if args.input_generator != "klee":
+                raise utils.ConfigError("Klee-replay only works with klee as tester")
+            else:
+                logging.warning(
+                    "Klee-replay only supports the machine architecture! Machine model specified not respected.")
+                self.use_klee_replay = True
+
         if self.witness_validators and not self.use_witness_validation:
             raise utils.ConfigError("Validators specified but no witness validation used (--witness-validation).")
         elif self.use_witness_validation and not self.witness_validators:
@@ -29,7 +37,7 @@ class ValidationConfig(object):
                 if validator.lower() not in valid_validators:
                     raise utils.ConfigError("Validator not in list of known validators:"
                                             "{0} not in {1}".format(validator, valid_validators))
-        elif not self.use_witness_validation and not self.use_execution:
+        elif not self.use_witness_validation and not self.use_execution and not self.use_klee_replay:
             raise utils.ConfigError("No validation technique specified. Specify --execution or --witness-validation .")
 
         self.convert_to_int = args.write_integers
@@ -94,6 +102,10 @@ class TestValidator(object):
 
     @abstractmethod
     def create_witness(self, filename, test_file, test_vector):
+        pass
+
+    @abstractmethod
+    def get_test_files(self, visited_tests):
         pass
 
     def decide_final_verdict(self, final_result):
@@ -205,10 +217,49 @@ class TestValidator(object):
                 return utils.VerdictFalse(vector.origin)
         return utils.VerdictUnknown()
 
+    def _k(self, filename, validator, visited_tests):
+        test_files = self.get_test_files(visited_tests)
+
+        for test in test_files:
+            self.timer_execution_validation.start()
+            self.timer_validation.start()
+            try:
+                verdicts = validator.run(filename, test)
+            finally:
+                self.timer_execution_validation.stop()
+                self.timer_validation.stop()
+            self.counter_handled_test_cases.inc()
+
+            logging.debug('Results for %s: %s', test, str(verdicts))
+            if any([v == FALSE for v in verdicts]):
+                return utils.VerdictFalse(test)
+        return utils.VerdictUnknown()
+
+    def perform_klee_replay_validation(self, filename, generator_thread):
+        validator = KleeReplayRunner(self.config.machine_model)
+
+        visited_tests = set()
+        while generator_thread and not generator_thread.ready():
+            try:
+                result = self._k(filename, validator, visited_tests)
+                if result.is_positive():
+                    return result
+                sleep(0.001)  # Sleep for 1 millisecond
+            except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
+                pass
+
+        result = self._k(filename, validator, visited_tests)
+        return self.decide_final_verdict(result)
+
     def check_inputs(self, filename, generator_thread=None):
         logging.debug('Checking inputs for file %s', filename)
         result = utils.VerdictUnknown()
-        if self.config.use_execution:
+
+        if self.config.use_klee_replay:
+            result = self.perform_klee_replay_validation(filename, generator_thread)
+            logging.info("Klee-replay validation says: " + str(result))
+
+        if not result.is_positive() and self.config.use_execution:
             result = self.perform_execution_validation(filename, generator_thread)
             logging.info("Execution validation says: " + str(result))
 
@@ -323,6 +374,34 @@ class ExecutionRunnerTwo(ExecutionRunner):
                 return [UNKNOWN]
         else:
             return [ERROR]
+
+
+class KleeReplayRunner(object):
+
+    def __init__(self, machine_model):
+        self.machine_model = machine_model
+
+    def run(self, program_file, test_file):
+        import klee
+
+        klee_prepared_file = utils.get_prepared_name(program_file, klee.name)
+        executable_file = "./a.out"
+        compile_cmd = ["gcc", "-L", klee.lib_dir, "-o", executable_file, klee_prepared_file, "-lkleeRuntest"]
+        utils.execute(compile_cmd)
+
+        if not os.path.exists(executable_file):
+            return [ERROR]
+
+        curr_env = utils.get_env()
+        curr_env['KTEST_FILE'] = test_file
+
+        result = utils.execute([executable_file], env=curr_env, err_to_output=False)
+
+        if utils.found_err(result):
+            return [FALSE]
+        else:
+            return [UNKNOWN]
+
 
 
 class ValidationRunner(object):

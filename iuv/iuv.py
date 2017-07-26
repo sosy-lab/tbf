@@ -83,6 +83,12 @@ def _create_cli_arg_parser():
                                  help="use test execution to find successful test vector"
                                  )
 
+    validation_args.add_argument("--klee-replay",
+                                 dest="klee_replay_validation",
+                                 action="store_true",
+                                 default=False,
+                                 help="use klee-replay to execute test cases - only works when using klee.")
+
     validation_args.add_argument("--naive-verification",
                                  dest="naive_verification",
                                  action="store_true",

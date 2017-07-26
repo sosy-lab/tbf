@@ -705,3 +705,9 @@ if not os.path.exists(output_dir):
 
 def found_err(run_result):
     return error_string in run_result.stderr
+
+
+def get_prepared_name(filename, tool_name):
+    prepared_name = '.'.join(os.path.basename(filename).split('.')[:-1] + [tool_name, 'c'])
+    prepared_name = get_file_path(prepared_name, temp_dir=True)
+    return prepared_name

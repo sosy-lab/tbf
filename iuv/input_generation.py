@@ -52,20 +52,21 @@ class BaseInputGenerator(object):
     def prepare0(self, filecontent):
         content = filecontent
         content += '\n'
+        content += 'struct _IO_FILE;\ntypedef struct _IO_FILE FILE;\n'
+        content += "extern struct _IO_FILE *stdin;\n"
+        content += "extern struct _IO_FILE *stderr;\n"
         content += self._get_error_method_dummy()
         content += utils.get_assume_method()
         return self.prepare(content)
 
     def _get_error_method_dummy(self):
-        return 'void ' + utils.error_method + '() { abort(); }\n'
+        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(utils.error_string)
 
     def generate_input(self, filename, stop_flag=None):
         default_err = "Unknown error"
         self.timer_input_gen.start()
         try:
-            suffix = 'c'
-            file_to_analyze = '.'.join(os.path.basename(filename).split('.')[:-1] + [self.get_name(), suffix])
-            file_to_analyze = utils.get_file_path(file_to_analyze, temp_dir=True)
+            file_to_analyze = utils.get_prepared_name(filename, self.get_name())
 
             self.timer_file_access.start()
             with open(filename, 'r') as outp:
