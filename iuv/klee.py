@@ -15,6 +15,7 @@ name = 'klee'
 
 
 def get_test_files(exclude=[], directory=tests_dir):
+    logging.debug("Getting test files from directory %s", directory)
     all_tests = [t for t in glob.glob(directory + '/*.ktest')]
     return [t for t in all_tests if utils.get_file_name(t) not in exclude]
 
@@ -186,10 +187,10 @@ class KleeTestValidator(TestValidator):
                 logging.info("Test vector was not generated for %s", test_file)
         return created_content
 
-    def create_all_witnesses(self, filename, visited_tests, directory=utils.tmp):
+    def create_all_witnesses(self, filename, visited_tests, directory=tests_dir):
         return self._create_all_x(filename, self.create_witness, visited_tests, directory)
 
-    def create_all_harnesses(self, filename, visited_tests, directory=utils.tmp):
+    def create_all_harnesses(self, filename, visited_tests, directory=tests_dir):
         return self._create_all_x(filename, self.create_harness, visited_tests, directory)
 
     def get_test_files(self, exclude=[]):

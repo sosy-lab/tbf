@@ -84,6 +84,8 @@ class WitnessCreator(object):
         graph.append(previous_node)
 
         for instantiation in test_vector.vector:
+            if not instantiation['value']:
+                continue
             target_node = self._create_node()
             graph.append(target_node)
             if instantiation['name']:

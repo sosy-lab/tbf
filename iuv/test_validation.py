@@ -132,7 +132,6 @@ class TestValidator(object):
 
     def _m(self, filename, validator, visited_tests):
         produced_witnesses = self.create_all_witnesses(filename, visited_tests)
-
         for witness in produced_witnesses:
             logging.debug('Looking at witness %s', witness['name'])
             witness_name = witness['name']
@@ -386,7 +385,6 @@ class KleeReplayRunner(object):
         if os.path.exists(self.executable_name):
             os.remove(self.executable_name)
 
-
     def run(self, program_file, test_file):
         import klee
 
@@ -434,6 +432,7 @@ class ValidationRunner(object):
     def run(self, program_file, witness_file):
         results = []
         for validator in self.validators:
+            logging.debug("Running %s on %s", validator, witness_file)
             result = validator.validate(program_file, witness_file)
             results.append(result)
 
