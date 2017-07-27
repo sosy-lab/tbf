@@ -15,7 +15,6 @@ name = 'klee'
 
 
 def get_test_files(exclude=[], directory=tests_dir):
-    logging.debug("Getting test files from directory %s", directory)
     all_tests = [t for t in glob.glob(directory + '/*.ktest')]
     return [t for t in all_tests if utils.get_file_name(t) not in exclude]
 
