@@ -67,9 +67,16 @@ class InputGenerator(BaseInputGenerator):
         return method_head + method_body
 
     def create_input_generation_cmds(self, filename):
+        if '32' in self.machine_model:
+            mm_args = ['-arch', 'i386']
+        elif '64' in self.machine_model:
+            mm_args = ['-arch', 'x86_64']
+        else:
+            raise AssertionError("Unhandled machine model: " + self.machine_model)
+
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
         compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
-        compile_cmd = ['clang', '-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file, filename]
+        compile_cmd = ['clang'] + mm_args + ['-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file, filename]
         input_generation_cmd = ['klee']
         if self.timelimit > 0:
             input_generation_cmd += ['-max-time', str(self.timelimit)]

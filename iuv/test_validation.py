@@ -293,12 +293,16 @@ class ExecutionRunner(object):
         self.machine_model = machine_model
 
     def _get_compile_cmd(self, program_file, harness_file, output_file, c_version='c11'):
+        if '32' in self.machine_model:
+            mm_arg = '-m32'
+        elif '64' in self.machine_model:
+            mm_arg = '-m64'
+        else:
+            raise AssertionError("Unhandled machine model: ", self.machine_model)
+
         cmd = ['gcc']
-
-
-
-
         cmd += ['-std={}'.format(c_version),
+                mm_arg,
                 '-D__alias__(x)=',
                 '-o', output_file,
                 '-include', program_file,
