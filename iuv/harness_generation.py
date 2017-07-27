@@ -7,7 +7,9 @@ class HarnessCreator(object):
         return """char * read_bytes(unsigned int type_size, char * __inp_var) {
     unsigned int input_length = strlen(__inp_var)-1;
     /* Remove '\\n' at end of input */
-    __inp_var[input_length] = '\\0';
+    if (__inp_var[input_length] == '\\n') {
+        __inp_var[input_length] = '\\0';
+    }
 
     char * parseEnd;
     char * value_pointer = malloc(16);
@@ -78,7 +80,7 @@ class HarnessCreator(object):
                 else:
                     definitions += "    switch(access_counter) {\n"
                     for idx, item in enumerate(test_vector.vector):
-                        definitions += "        case {0}: strcpy(inp_var, \"{1}\\n\"); break;\n".format(idx, item['value'])
+                        definitions += "        case {0}: strcpy(inp_var, \"{1}\"); break;\n".format(idx, item['value'])
                     definitions += "        default: abort();\n"
                     definitions += "    }\n"
                     definitions += "    access_counter++;\n"
