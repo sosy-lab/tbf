@@ -176,7 +176,7 @@ class TestValidator(object):
         pass
 
     @abstractmethod
-    def create_harness(self, test_file, test_vector):
+    def create_harness(self, filename, test_file, test_vector):
         pass
 
     @abstractmethod
@@ -381,28 +381,33 @@ class KleeReplayRunner(object):
 
     def __init__(self, machine_model):
         self.machine_model = machine_model
+        self.executable_name = './a.out'
+        self.executable = None
+        if os.path.exists(self.executable_name):
+            os.remove(self.executable_name)
+
 
     def run(self, program_file, test_file):
         import klee
 
         klee_prepared_file = utils.get_prepared_name(program_file, klee.name)
-        executable_file = "./a.out"
-        compile_cmd = ["gcc", "-L", klee.lib_dir, "-o", executable_file, klee_prepared_file, "-lkleeRuntest"]
-        utils.execute(compile_cmd)
+        if not self.executable:
+            compile_cmd = ["gcc", "-L", klee.lib_dir, "-o", self.executable_name, klee_prepared_file, "-lkleeRuntest"]
+            utils.execute(compile_cmd)
+            self.executable = self.executable_name
 
-        if not os.path.exists(executable_file):
+        if not os.path.exists(self.executable_name):
             return [ERROR]
 
         curr_env = utils.get_env()
         curr_env['KTEST_FILE'] = test_file
 
-        result = utils.execute([executable_file], env=curr_env, err_to_output=False)
+        result = utils.execute([self.executable], env=curr_env, err_to_output=False)
 
         if utils.found_err(result):
             return [FALSE]
         else:
             return [UNKNOWN]
-
 
 
 class ValidationRunner(object):
