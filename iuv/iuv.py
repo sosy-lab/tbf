@@ -244,4 +244,4 @@ if __name__ == '__main__':
         logging.error("Parse error: %s", e.msg if e.msg else default_err)
     finally:
         print(utils.statistics)
-        print("\nIUV verdict: ", result.verdict.upper() if result else "UNKNOWN")
+        print("\nIUV verdict:", result.verdict.upper() if result else "UNKNOWN")
