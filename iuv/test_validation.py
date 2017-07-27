@@ -166,8 +166,7 @@ class TestValidator(object):
             assert os.path.exists(test_file)
             visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_file)
-            if test_vector:
-                all_vectors.append(test_vector)
+            all_vectors.append(test_vector)
         return all_vectors
 
     @abstractmethod
@@ -366,7 +365,7 @@ class ExecutionRunnerTwo(ExecutionRunner):
 
         if executable:
             run_cmd = self._get_run_cmd(executable)
-            run_result = utils.execute(run_cmd, quiet=True, err_to_output=False, input_str=input_vector)
+            run_result = utils.execute(run_cmd, quiet=True, err_to_output=False, input_str=input_vector, timelimit=15)
 
             if utils.found_err(run_result):
                 return [FALSE]

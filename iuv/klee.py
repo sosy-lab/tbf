@@ -135,7 +135,7 @@ class KleeTestValidator(TestValidator):
                 last_nondet_method = None
                 last_value = None
 
-        return vector if len(vector.vector) > 0 else None
+        return vector
 
     def create_witness(self, filename, test_file, test_vector):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
@@ -176,7 +176,7 @@ class KleeTestValidator(TestValidator):
             test_vector = self.get_test_vector(test_file)
             if test_vector or not empty_case_handled:
                 if not test_vector:
-                    test_vector = dict()
+                    test_vector = utils.TestVector(test_file)
                     empty_case_handled = True
                 new_content = creator_method(filename, test_file, test_vector)
                 new_content['vector'] = test_vector
