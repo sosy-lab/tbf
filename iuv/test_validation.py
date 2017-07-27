@@ -20,6 +20,7 @@ class ValidationConfig(object):
         self.use_witness_validation = args.witness_validation
         self.witness_validators = args.validators if args.validators else []
 
+        self.use_klee_replay = False
         if args.klee_replay_validation:
             if args.input_generator != "klee":
                 raise utils.ConfigError("Klee-replay only works with klee as tester")
