@@ -369,7 +369,7 @@ class ExecutionRunnerTwo(ExecutionRunner):
 
         if executable:
             run_cmd = self._get_run_cmd(executable)
-            run_result = utils.execute(run_cmd, quiet=True, err_to_output=False, input_str=input_vector, timelimit=15)
+            run_result = utils.execute(run_cmd, quiet=True, err_to_output=False, input_str=input_vector, timelimit=5)
 
             if utils.found_err(run_result):
                 return [FALSE]
