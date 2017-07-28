@@ -208,7 +208,10 @@ def run():
         stop_event.set()
 
     if generator_thread:
-        generation_done = generator_thread.get(timeout=5)
+        try:
+            generation_done = generator_thread.get(timeout=5)
+        except TimeoutError:
+            generation_done = False
     else:
         generation_done = True
 
