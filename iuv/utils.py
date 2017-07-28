@@ -704,7 +704,7 @@ if not os.path.exists(output_dir):
 
 
 def found_err(run_result):
-    return error_string in run_result.stderr
+    return run_result.stderr and error_string in run_result.stderr
 
 
 def get_prepared_name(filename, tool_name):
