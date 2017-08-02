@@ -131,7 +131,8 @@ class CrestTestValidator(TestValidator):
         with open(test, 'r') as inp:
             for line in inp.readlines():
                     value = line.strip()
-                    test_vector.add(value)
+                    if value:
+                        test_vector.add(value)
         if not test_vector.vector:
             return None
         else:

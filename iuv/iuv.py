@@ -14,6 +14,7 @@ import shutil
 
 from threading import Event
 from multiprocessing.pool import ThreadPool
+from multiprocessing.context import TimeoutError
 
 from test_validation import ValidationConfig
 
@@ -209,7 +210,7 @@ def run():
 
     if generator_thread:
         try:
-            generation_done = generator_thread.get(timeout=5)
+            generation_done = generator_thread.get(timeout=3)
         except TimeoutError:
             generation_done = False
     else:
