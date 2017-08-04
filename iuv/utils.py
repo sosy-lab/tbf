@@ -402,32 +402,95 @@ class Stopwatch(object):
         return str_rep
 
 
-def parse_file_with_preprocessing(filename, includes=[]):
-    preprocessed_filename = preprocess(filename, includes)
-    ast = pycparser.parse_file(preprocessed_filename)
+def rewrite_cproblems(content):
+    need_struct_body = False
+    skip_asm = False
+    in_attribute = False
+    in_cxx_comment = False
+    prepared_content = ''
+    for line in [c + "\n" for c in content.split('\n')]:
+        # remove C++-style comments
+        if not in_cxx_comment:
+            line = re.sub(r'/\*.*?\*/', '', line)
+        if re.search(r'\*/', line):
+            line = re.sub(r'.*\*/', '', line)
+            in_cxx_comment = False
+        if re.search(r'/\*', line):
+            line = re.sub(r'/\*.*', '', line)
+            in_cxx_comment = True
+        # remove __attribute__
+        line = re.sub(r'__attribute__\s*\(\(\s*[a-z_, ]+\s*\)\)\s*', '', line)
+        # line = re.sub(r'__attribute__\s*\(\(\s*[a-z_, ]+\s*\(\s*[a-zA-Z0-9_, "\.]+\s*\)\s*\)\)\s*', '', line)
+        # line = re.sub(r'__attribute__\s*\(\(\s*[a-z_, ]+\s*\(\s*sizeof\s*\([a-z ]+\)\s*\)\s*\)\)\s*', '', line)
+        # line = re.sub(r'__attribute__\s*\(\(\s*[a-z_, ]+\s*\(\s*\([0-9]+\)\s*<<\s*\([0-9]+\)\s*\)\s*\)\)\s*', '', line)
+        line = re.sub(r'__attribute__\s*\(\(.*\)\)\s*', '', line)
+        if re.search(r'__attribute__\s*\(\(', line):
+            line = re.sub(r'__attribute__\s*\(\(.*', '', line)
+            in_attribute = True
+        elif in_attribute:
+            line = re.sub(r'.*\)\)', '', line)
+            in_attribute = False
+        # rewrite some GCC extensions
+        line = re.sub(r'__extension__', '', line)
+        line = re.sub(r'__restrict', 'restrict', line)
+        line = re.sub(r'__inline__', 'inline', line)
+        line = re.sub(r'__inline', 'inline', line)
+        line = re.sub(r'__const', 'const', line)
+        line = re.sub(r'__signed__', 'signed', line)
+        line = re.sub(r'__builtin_va_list', 'int', line)
+        # a hack for some C-standards violating code in LDV benchmarks
+        if need_struct_body and re.match(r'^\s*}\s*;\s*$', line):
+            line = 'int __dummy; ' + line
+            need_struct_body = False
+        elif need_struct_body:
+            need_struct_body = re.match(r'^\s*$', line) is not None
+        elif re.match(r'^\s*struct\s+[a-zA-Z0-9_]+\s*{\s*$', line):
+            need_struct_body = True
+        # remove inline asm
+        if re.match(r'^\s*__asm__(\s+volatile)?\s*\("([^"]|\\")*"[^;]*$', line):
+            skip_asm = True
+        elif skip_asm and re.search(r'\)\s*;\s*$', line):
+            skip_asm = False
+            line = '\n'
+        if (skip_asm or
+                re.match(r'^\s*__asm__(\s+volatile)?\s*\("([^"]|\\")*"[^;]*\)\s*;\s*$', line)):
+            line = '\n'
+        # remove asm renaming
+        line = re.sub(r'__asm__\s*\(""\s+"[a-zA-Z0-9_]+"\)', '', line)
+        prepared_content += line
+    return prepared_content
+
+
+def parse_file_with_preprocessing(file_content, machine_model, includes=[]):
+    preprocessed_content = preprocess(file_content, machine_model, includes)
+    ast = parser.parse(preprocessed_content)
     return ast
 
 
-def preprocess(filename, includes=[]):
-    preprocessed_filename = '.'.join(filename.split('/')[-1].split('.')[:-1] + ['i'])
-    preprocessed_filename = get_file_path(preprocessed_filename, temp_dir=True)
-    if preprocessed_filename == filename:
-        logging.warning("Overwriting existing file " + preprocessed_filename)
+def preprocess(file_content, machine_model, includes=[]):
+    if '32' in machine_model:
+        mm_arg = '-m32'
+    elif '64' in machine_model:
+        mm_arg = '-m64'
+    else:
+        raise AssertionError("Unhandled machine model: " + machine_model)
 
-    # The defines (-D) remove gcc extensions that pycparser can't handle
     # -E : only preprocess
     # -o : output file name
+    # -xc : Use C language
+    # - : Read code from stdin
     preprocess_cmd = ['gcc',
                       '-E',
-                      '-D', '__attribute__(x)=',
-                      '-D', '__extension=',
-                      '-D', '__restrict=']
+                      '-xc',
+                      mm_arg]
     for inc in includes:
         preprocess_cmd += ['-I', inc]
-    preprocess_cmd += ['-o', preprocessed_filename,
-                       filename]
-    p = execute(preprocess_cmd)
-    return preprocessed_filename
+    final_cmd = preprocess_cmd + ['-std=c11', '-']
+    p = execute(final_cmd, err_to_output=False, input_str=file_content)
+    if p.returncode != 0:
+        final_cmd = preprocess_cmd + ['-std=c90', '-']
+        p = execute(final_cmd, err_to_output=False, input_str=file_content)
+    return p.stdout
 
 
 undefined_methods = None
@@ -438,21 +501,18 @@ def get_nondet_methods(file_content):
 
     if undefined_methods is None:
         assert not os.path.exists(file_content)
-        filename = get_file_path('temp.c', temp_dir=True)
-        with open(filename, 'w+') as outp:
-            outp.write(file_content)
         try:
-            undefined_methods = find_undefined_methods(filename)
+            undefined_methods = find_undefined_methods(file_content)
         except pycparser.plyparser.ParseError as e:
-            logging.warning("Parse error in pycparser while parsing %s", filename)
+            logging.warning("Parse failure with pycparser while parsing: %s", e)
             undefined_methods = find_nondet_methods(file_content)
     return undefined_methods
 
 
-def find_undefined_methods(filename):
+def find_undefined_methods(file_content):
     import ast_visitor
 
-    ast = parse_file_with_preprocessing(filename)
+    ast = parse_file_with_preprocessing(file_content, '32')
 
     func_decl_collector = ast_visitor.FuncDeclCollector()
     func_def_collector = ast_visitor.FuncDefCollector()
@@ -461,7 +521,7 @@ def find_undefined_methods(filename):
     function_declarations = func_decl_collector.func_decls
     func_def_collector.visit(ast)
     function_definitions = [f.name for f in func_def_collector.func_defs]
-    function_definitions += ['__VERIFIER_assume', '__VERIFIER_error', 'malloc', 'memcpy']
+    function_definitions += ['__VERIFIER_assume', '__VERIFIER_error', 'malloc', 'calloc', 'memset', 'memcpy', 'strcpy']
 
     undef_func_prepared = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
     undef_func_prepared = [_prettify(f) for f in undef_func_prepared]

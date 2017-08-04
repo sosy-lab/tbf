@@ -57,6 +57,7 @@ class BaseInputGenerator(object):
         content += "extern struct _IO_FILE *stderr;\n"
         content += self._get_error_method_dummy()
         content += utils.get_assume_method()
+        content = utils.rewrite_cproblems(content)
         return self.prepare(content)
 
     def _get_error_method_dummy(self):
