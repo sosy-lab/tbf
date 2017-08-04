@@ -93,7 +93,7 @@ class RandomTestValidator(TestValidator):
             value = line.split(':')[1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
             vector.add(value, nondet_method_name)
 
-        return vector if vector.vector else None
+        return vector
 
     def create_witness(self, filename, test_file, test_vector):
         witness = self.witness_creator.create_witness(producer=self.get_name(),

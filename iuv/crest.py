@@ -133,10 +133,7 @@ class CrestTestValidator(TestValidator):
                     value = line.strip()
                     if value:
                         test_vector.add(value)
-        if not test_vector.vector:
-            return None
-        else:
-            return test_vector
+        return test_vector
 
     def create_witness(self, filename, test_file, test_vector):
         """

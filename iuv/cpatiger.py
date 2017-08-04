@@ -101,10 +101,7 @@ class CpaTigerTestValidator(TestValidator):
                     for value in test_values:
                         test_vector.add(value)
                     vectors.append(test_vector)
-        if not vectors:
-            return None
-        else:
-            return vectors
+        return vectors
 
     def create_witness(self, filename, test_name, test_vector):
         """
@@ -149,8 +146,6 @@ class CpaTigerTestValidator(TestValidator):
         created_content = []
         empty_case_handled = False
         vectors = self.get_test_vectors(tests_file)
-        if vectors is None:
-            raise utils.InputGenerationError("No test case generated")
 
         for count, test_vector in enumerate(vectors):
             if test_vector or not empty_case_handled:
@@ -168,7 +163,7 @@ class CpaTigerTestValidator(TestValidator):
 
     def create_all_test_vectors(self, filename, visited_tests):
         vectors = self.get_test_vectors(tests_file)
-        return vectors if vectors is not None else list()
+        return vectors
 
     def create_all_witnesses(self, filename, visited_tests):
         return self._create_all_x(filename, self.create_witness, visited_tests)
