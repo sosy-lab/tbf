@@ -316,7 +316,11 @@ def get_method_head(method_name, method_type, param_types):
         if '...' in pt:
             params.append('...')
         elif pt != 'void':
-            params.append('{0} param{1}'.format(pt, idx))
+            if '{}' not in pt:
+                pt += " {}"
+            params.append(pt.format("param{}".format(idx)))
+        elif params:
+            raise AssertionError("Void type parameter in method " + method_name)
     method_head += ', '.join(params)
     method_head += ')'
     return method_head

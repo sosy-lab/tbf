@@ -922,12 +922,12 @@ def get_type(node):
     elif node_type is a.PtrDecl:
         if type(node.type) is a.FuncDecl:
             func_decl = node.type
-            m_type = get_type(func_decl.type) + '(*fp)('
+            m_type = get_type(func_decl.type) + '(*{})('
             if func_decl.args:
                 params = list()
                 for param in func_decl.args.params:
                     params.append(get_type(param))
-                ', '.join(params)
+                m_type += ', '.join(params)
             m_type += ')'
             return m_type
         else:
