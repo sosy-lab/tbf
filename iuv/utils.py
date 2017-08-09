@@ -118,6 +118,7 @@ IMPLICIT_FUNCTIONS = [
     'strxfrm'
 ]
 
+
 class MachineModel(object):
 
     def __init__(self, short_size, int_size, long_size, long_long_size, float_size, double_size, long_double_size, compile_param):
