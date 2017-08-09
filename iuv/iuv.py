@@ -192,60 +192,55 @@ def _get_validator_module(args):
 
 
 def run():
-    args = _parse_cli_args(sys.argv[1:])
-
-    filename = os.path.abspath(args.file)
-    inp_module = _get_input_generator_module(args)
-
-    old_dir = os.path.abspath('.')
-    os.chdir(utils.tmp)
-    utils.find_nondet_methods(filename, args.svcomp_nondets_only)
-    if args.run_parallel:
-        pool = ThreadPool(processes=1)
-        stop_event = Event()
-        generator_thread = pool.apply_async(inp_module.generate_input, args=(filename, stop_event))
-    else:
-        stop_event = None
-        generator_thread = None
-        inp_module.generate_input(filename)
-
-    validator_module = _get_validator_module(args)
-    validation_result = validator_module.check_inputs(filename, generator_thread)
-
-    if stop_event:
-        stop_event.set()
-
-    if generator_thread:
-        try:
-            generation_done = generator_thread.get(timeout=3)
-        except TimeoutError:
-            generation_done = False
-    else:
-        generation_done = True
-
-    if validation_result.is_positive():
-        test_name = os.path.basename(validation_result.test)
-        persistent_test = utils.get_file_path(test_name, temp_dir=False)
-        shutil.copy(validation_result.test, persistent_test)
-        for proof in validation_result.harness, validation_result.witness:
-            proof_name = os.path.basename(proof)
-            if proof_name.endswith('.harness.c'):
-                persistent_proof = utils.get_file_path('harness.c', temp_dir=False)
-            else:
-                assert proof_name.endswith('.witness.graphml')
-                persistent_proof = utils.get_file_path('witness.graphml', temp_dir=False)
-            shutil.copy(proof, persistent_proof)
-    elif not generation_done:
-        validation_result = utils.VerdictUnknown()
-
-    os.chdir(old_dir)
-    return validation_result
-
-if __name__ == '__main__':
     default_err = "Unknown error"
-    result = None
+
+    args = _parse_cli_args(sys.argv[1:])
+    validation_result = None
+    old_dir = os.path.abspath('.')
+
     try:
-        result = run()
+        filename = os.path.abspath(args.file)
+        inp_module = _get_input_generator_module(args)
+        os.chdir(utils.tmp)
+
+        utils.find_nondet_methods(filename, args.svcomp_nondets_only)
+        if args.run_parallel:
+            pool = ThreadPool(processes=1)
+            stop_event = Event()
+            generator_thread = pool.apply_async(inp_module.generate_input, args=(filename, stop_event))
+        else:
+            stop_event = None
+            generator_thread = None
+            inp_module.generate_input(filename)
+
+        validator_module = _get_validator_module(args)
+        validation_result = validator_module.check_inputs(filename, generator_thread)
+
+        if stop_event:
+            stop_event.set()
+
+        if generator_thread:
+            try:
+                generation_done = generator_thread.get(timeout=3)
+            except TimeoutError:
+                generation_done = False
+        else:
+            generation_done = True
+
+        if validation_result.is_positive():
+            test_name = os.path.basename(validation_result.test)
+            persistent_test = utils.get_file_path(test_name, temp_dir=False)
+            shutil.copy(validation_result.test, persistent_test)
+            for proof in validation_result.harness, validation_result.witness:
+                proof_name = os.path.basename(proof)
+                if proof_name.endswith('.harness.c'):
+                    persistent_proof = utils.get_file_path('harness.c', temp_dir=False)
+                else:
+                    assert proof_name.endswith('.witness.graphml')
+                    persistent_proof = utils.get_file_path('witness.graphml', temp_dir=False)
+                shutil.copy(proof, persistent_proof)
+        elif not generation_done:
+            validation_result = utils.VerdictUnknown()
 
     except utils.CompileError as e:
         logging.error("Compile error: %s", e.msg if e.msg else default_err)
@@ -254,5 +249,10 @@ if __name__ == '__main__':
     except utils.ParseError as e:
         logging.error("Parse error: %s", e.msg if e.msg else default_err)
     finally:
+        os.chdir(old_dir)
         print(utils.statistics)
-        print("\nIUV verdict:", result.verdict.upper() if result else "UNKNOWN")
+        print("\nIUV verdict:", validation_result.verdict.upper() if validation_result else "UNKNOWN")
+
+if __name__ == '__main__':
+    run()
+
