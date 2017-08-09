@@ -40,7 +40,7 @@ class InputGenerator(BaseInputGenerator):
             raise utils.InputGenerationError('No test files generated.')
         return len(files)
 
-    def prepare(self, filecontent):
+    def prepare(self, filecontent, nondet_methods_used):
         content = ''
         for line in filecontent.split('\n'):
             prepared_line = line
@@ -50,7 +50,6 @@ class InputGenerator(BaseInputGenerator):
             content += prepared_line + '\n'
         content = '#include<crest.h>\n' + content
         content += '\n'
-        nondet_methods_used = utils.get_nondet_methods(filecontent)
         for method in nondet_methods_used:  # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
@@ -139,7 +138,7 @@ class CrestTestValidator(TestValidator):
                         test_vector.add(value)
         return test_vector
 
-    def create_witness(self, filename, test_file, test_vector):
+    def create_witness(self, filename, test_file, test_vector, nondet_methods):
         """
         Creates a witness for the test file produced by crest.
         Test files produced by our version of crest specify one test value per line, without
@@ -154,7 +153,7 @@ class CrestTestValidator(TestValidator):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      nondet_methods=nondet_methods,
                                                       machine_model=self.machine_model,
                                                       error_lines=self.get_error_lines(filename))
 
@@ -164,9 +163,7 @@ class CrestTestValidator(TestValidator):
 
         return {'name': witness_file, 'content': witness}
 
-    def create_harness(self, filename, test_file, test_vector):
-        # If no inputs are defined don't create a witness
-        nondet_methods = utils.get_nondet_methods(filename)
+    def create_harness(self, filename, test_file, test_vector, nondet_methods):
         harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
                                                       error_method=utils.error_method,
                                                       test_vector=test_vector)

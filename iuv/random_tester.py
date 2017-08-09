@@ -24,10 +24,9 @@ class InputGenerator(BaseInputGenerator):
     def get_name(self):
         return name
 
-    def prepare(self, filecontent):
+    def prepare(self, filecontent, nondet_methods_used):
         content = filecontent
         content += '\n'
-        nondet_methods_used = utils.get_nondet_methods(content)
         for method in nondet_methods_used:  # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
@@ -95,11 +94,11 @@ class RandomTestValidator(TestValidator):
 
         return vector
 
-    def create_witness(self, filename, test_file, test_vector):
+    def create_witness(self, filename, test_file, test_vector, nondet_methods):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      nondet_methods=nondet_methods,
                                                       machine_model=self.machine_model,
                                                       error_lines=self.get_error_lines(filename))
 
@@ -109,8 +108,8 @@ class RandomTestValidator(TestValidator):
 
         return {'name': witness_file, 'content': witness}
 
-    def create_harness(self, filename, test_file, test_vector):
-        harness = self.harness_creator.create_harness(nondet_methods=utils.get_nondet_methods(filename),
+    def create_harness(self, filename, test_file, test_vector, nondet_methods):
+        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
                                                       error_method=utils.error_method,
                                                       test_vector=test_vector)
         test_name = os.path.basename(test_file)

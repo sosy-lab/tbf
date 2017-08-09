@@ -98,11 +98,11 @@ class TestValidator(object):
         pass
 
     @abstractmethod
-    def create_all_witnesses(self, filename, visited_tests):
+    def create_all_witnesses(self, filename, visited_tests, nondet_methods):
         pass
 
     @abstractmethod
-    def create_witness(self, filename, test_file, test_vector):
+    def create_witness(self, filename, test_file, test_vector, nondet_methods):
         pass
 
     @abstractmethod
@@ -117,11 +117,11 @@ class TestValidator(object):
 
     def perform_witness_validation(self, filename, generator_thread):
         validator = ValidationRunner(self.config.witness_validators)
-
+        nondet_methods = utils.get_nondet_methods()
         visited_tests = set()
         while generator_thread and not generator_thread.ready():
             try:
-                result = self._m(filename, validator, visited_tests)
+                result = self._m(filename, validator, visited_tests, nondet_methods)
                 if result.is_positive():
                     return result
                 sleep(0.001)  # Sleep for 1 millisecond
@@ -130,8 +130,8 @@ class TestValidator(object):
         result = self._m(filename, validator, visited_tests)
         return self.decide_final_verdict(result)
 
-    def _m(self, filename, validator, visited_tests):
-        produced_witnesses = self.create_all_witnesses(filename, visited_tests)
+    def _m(self, filename, validator, visited_tests, nondet_methods):
+        produced_witnesses = self.create_all_witnesses(filename, visited_tests, nondet_methods)
         for witness in produced_witnesses:
             logging.debug('Looking at witness %s', witness['name'])
             witness_name = witness['name']
@@ -150,7 +150,7 @@ class TestValidator(object):
             logging.info('Results for %s: %s', witness_name, str(verdicts))
             if any(['false' in v.lower() for v in verdicts]):
                 self.final_test_vector_size.value = len(witness['vector'])
-                return utils.VerdictFalse(witness['origin'], witness_name)
+                return utils.VerdictFalse(witness['origin'], witness['vector'], None, witness_name)
 
         return utils.VerdictUnknown()
 
@@ -170,11 +170,11 @@ class TestValidator(object):
         return all_vectors
 
     @abstractmethod
-    def create_all_harnesses(self, filename, visited_tests):
+    def create_all_harnesses(self, filename, visited_tests, nondet_methods):
         pass
 
     @abstractmethod
-    def create_harness(self, filename, test_file, test_vector):
+    def create_harness(self, filename, test_file, test_vector, nondet_methods):
         pass
 
     @abstractmethod
@@ -183,7 +183,6 @@ class TestValidator(object):
 
     def perform_execution_validation(self, filename, generator_thread):
         validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
-
         visited_tests = set()
         while generator_thread and not generator_thread.ready():
             try:
@@ -213,7 +212,7 @@ class TestValidator(object):
             logging.debug('Results for %s: %s', vector, str(verdicts))
             if any([v == FALSE for v in verdicts]):
                 self.final_test_vector_size.value = len(vector)
-                return utils.VerdictFalse(vector.origin)
+                return utils.VerdictFalse(vector.origin, vector)
         return utils.VerdictUnknown()
 
     def _k(self, filename, validator, visited_tests):
@@ -267,15 +266,18 @@ class TestValidator(object):
             logging.info("Witness validation says: " + str(result))
 
         if result.is_positive():
-            if result.witness is None:
+            test_vector = result.test_vector
+            if not test_vector:
                 test_vector = self.get_test_vector(result.test)
-                witness = self.create_witness(filename, result.test, test_vector)
+            if result.witness is None:
+                nondet_methods = utils.get_nondet_methods()
+                witness = self.create_witness(filename, result.test, test_vector, nondet_methods)
                 with open(witness['name'], 'w+') as outp:
                     outp.write(witness['content'])
                 result.witness = witness['name']
             if result.harness is None:
-                test_vector = self.get_test_vector(result.test)
-                harness = self.create_harness(filename, result.test, test_vector)
+                nondet_methods = utils.get_nondet_methods()
+                harness = self.create_harness(filename, result.test, test_vector, nondet_methods)
                 with open(harness['name'], 'w+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']
@@ -352,7 +354,7 @@ class ExecutionRunnerTwo(ExecutionRunner):
         return self.harness
 
     def _create_executable_harness(self, program_file):
-        nondet_methods = utils.get_nondet_methods(program_file)
+        nondet_methods = utils.get_nondet_methods()
         harness_content = self.harness_generator.create_harness(nondet_methods, utils.error_method)
         harness_file = 'harness.c'
         with open(harness_file, 'w+') as outp:

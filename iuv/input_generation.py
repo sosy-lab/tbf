@@ -46,19 +46,20 @@ class BaseInputGenerator(object):
         self.statistics.add_value('Number of generated test cases', self.number_generated_tests)
 
     @abstractmethod
-    def prepare(self, filecontent):
+    def prepare(self, filecontent, nondet_methods_used):
         pass
 
     def prepare0(self, filecontent):
         content = filecontent
+        content = utils.rewrite_cproblems(content)
+        nondet_methods_used = utils.get_nondet_methods()
         content += '\n'
         content += 'struct _IO_FILE;\ntypedef struct _IO_FILE FILE;\n'
         content += "extern struct _IO_FILE *stdin;\n"
         content += "extern struct _IO_FILE *stderr;\n"
         content += self._get_error_method_dummy()
         content += utils.get_assume_method()
-        content = utils.rewrite_cproblems(content)
-        return self.prepare(content)
+        return self.prepare(content, nondet_methods_used)
 
     def _get_error_method_dummy(self):
         return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(utils.error_string)

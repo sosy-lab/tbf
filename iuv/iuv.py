@@ -62,6 +62,12 @@ def _create_cli_arg_parser():
                                            "E.g., klee uses multi-character chars by default."
                                            "Given this argument, these values are converted to integers."
                                       )
+    input_generator_args.add_argument("--svcomp-nondets",
+                                      dest="svcomp_nondets_only",
+                                      action="store_true",
+                                      default=False,
+                                      help="only expect methods to be non-deterministic according to sv-comp guidelines")
+
     validation_args = run_args.add_argument_group('Validation')
     witness_validation_args = validation_args.add_argument_group('Witness validation')
     witness_validation_args.add_argument('--witness-validation',
@@ -193,6 +199,7 @@ def run():
 
     old_dir = os.path.abspath('.')
     os.chdir(utils.tmp)
+    utils.find_nondet_methods(filename, args.svcomp_nondets_only)
     if args.run_parallel:
         pool = ThreadPool(processes=1)
         stop_event = Event()

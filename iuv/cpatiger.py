@@ -37,11 +37,10 @@ class InputGenerator(BaseInputGenerator):
     def get_name(self):
         return name
 
-    def prepare(self, filecontent):
+    def prepare(self, filecontent, nondet_methods_used):
         content = filecontent
         content += '\n'
         content += 'extern int input();\n'
-        nondet_methods_used = utils.get_nondet_methods(filecontent)
         for method in nondet_methods_used:  # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
@@ -93,7 +92,7 @@ class CpaTigerTestValidator(TestValidator):
         vectors = list()
         with open(test, 'r') as inp:
             for line in inp.readlines():
-                processed_line  = line.strip()
+                processed_line = line.strip()
                 if processed_line.startswith('[') and processed_line.endswith(']'):
                     test_vector = utils.TestVector(test)
                     processed_line = processed_line[1:-1]
@@ -103,7 +102,7 @@ class CpaTigerTestValidator(TestValidator):
                     vectors.append(test_vector)
         return vectors
 
-    def create_witness(self, filename, test_name, test_vector):
+    def create_witness(self, filename, test_name, test_vector, nondet_methods):
         """
         Creates a witness for the test file produced by crest.
         Test files produced by our version of crest specify one test value per line, without
@@ -118,7 +117,7 @@ class CpaTigerTestValidator(TestValidator):
         witness = self.witness_creator.create_witness(producer=self.get_name(),
                                                       filename=filename,
                                                       test_vector=test_vector,
-                                                      nondet_methods=utils.get_nondet_methods(filename),
+                                                      nondet_methods=nondet_methods,
                                                       machine_model=self.machine_model,
                                                       error_lines=self.get_error_lines(filename))
 
@@ -127,9 +126,7 @@ class CpaTigerTestValidator(TestValidator):
 
         return {'name': witness_file, 'content': witness}
 
-    def create_harness(self, filename, test_name, test_vector):
-        # If no inputs are defined don't create a witness
-        nondet_methods = utils.get_nondet_methods(filename)
+    def create_harness(self, filename, test_name, test_vector, nondet_methods):
         harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
                                                       error_method=utils.error_method,
                                                       test_vector=test_vector)
@@ -140,7 +137,7 @@ class CpaTigerTestValidator(TestValidator):
 
         return {'name': harness_file, 'content': harness}
 
-    def _create_all_x(self, filename, creation_method, visited_tests=None):
+    def _create_all_x(self, filename, creation_method, nondet_methods, visited_tests=None):
         if visited_tests:
             raise utils.ConfigError("CPATiger can't create test cases in parallel to validation.")
         created_content = []
@@ -153,7 +150,7 @@ class CpaTigerTestValidator(TestValidator):
                 if not test_vector:
                     test_vector = dict()
                     empty_case_handled = True
-                new_content = creation_method(filename, testname, test_vector)
+                new_content = creation_method(filename, testname, test_vector, nondet_methods)
                 new_content['vector'] = test_vector
                 new_content['origin'] = tests_file
                 created_content.append(new_content)
@@ -165,11 +162,11 @@ class CpaTigerTestValidator(TestValidator):
         vectors = self.get_test_vectors(tests_file)
         return vectors
 
-    def create_all_witnesses(self, filename, visited_tests):
-        return self._create_all_x(filename, self.create_witness, visited_tests)
+    def create_all_witnesses(self, filename, visited_tests, nondet_methods):
+        return self._create_all_x(filename, self.create_witness, visited_tests, nondet_methods)
 
-    def create_all_harnesses(self, filename, visited_tests):
-        return self._create_all_x(filename, self.create_harness, visited_tests)
+    def create_all_harnesses(self, filename, visited_tests, nondet_methods):
+        return self._create_all_x(filename, self.create_harness, visited_tests, nondet_methods)
 
     def get_test_files(self, exclude=[]):
         return get_test_cases(exclude)

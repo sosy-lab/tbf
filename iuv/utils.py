@@ -222,9 +222,10 @@ class ExecutionResult(object):
 class Verdict(object):
     """Results of a test validation, either witness validation or test execution validation currently."""
 
-    def __init__(self, verdict, test=None, harness=None, witness=None):
+    def __init__(self, verdict, test=None, test_vector=None, harness=None, witness=None):
         self.verdict = verdict
         self.test = test
+        self.test_vector = test_vector
         self.harness = harness
         self.witness = witness
 
@@ -241,8 +242,8 @@ class VerdictTrue(Verdict):
 
 
 class VerdictFalse(Verdict):
-    def __init__(self, test, harness=None, witness=None):
-        super().__init__(FALSE, test, harness, witness)
+    def __init__(self, test, test_vector=None, harness=None, witness=None):
+        super().__init__(FALSE, test, test_vector, harness, witness)
 
 
 class VerdictUnknown(Verdict):
@@ -599,20 +600,31 @@ def preprocess(file_content, machine_model, includes=[]):
 undefined_methods = None
 
 
-def get_nondet_methods(file_content):
-    global undefined_methods
-
-    if undefined_methods is None:
-        assert not os.path.exists(file_content)
-        try:
-            undefined_methods = find_undefined_methods(file_content)
-        except pycparser.plyparser.ParseError as e:
-            logging.warning("Parse failure with pycparser while parsing: %s", e)
-            undefined_methods = find_nondet_methods(file_content)
+def get_nondet_methods():
     return undefined_methods
 
 
-def find_undefined_methods(file_content):
+def find_nondet_methods(file_content, svcomp_only):
+    global undefined_methods
+    if undefined_methods is None:
+        logging.debug("Finding undefined methods")
+        if os.path.exists(file_content):
+            with open(file_content, 'r') as inp:
+                file_content = inp.read()
+            file_content = rewrite_cproblems(file_content)
+        if not svcomp_only:
+            try:
+                undefined_methods = _find_undefined_methods(file_content)
+            except pycparser.plyparser.ParseError as e:
+                logging.warning("Parse failure with pycparser while parsing: %s", e)
+                undefined_methods = _find_nondet_methods(file_content)
+        else:
+            undefined_methods = _find_nondet_methods(file_content)
+        logging.debug("Undefined methods: %s", undefined_methods)
+    return undefined_methods
+
+
+def _find_undefined_methods(file_content):
     import ast_visitor
 
     ast = parse_file_with_preprocessing(file_content, '32')
@@ -642,7 +654,7 @@ def find_undefined_methods(file_content):
     return undefined_functions
 
 
-def find_nondet_methods(file_content):
+def _find_nondet_methods(file_content):
     if os.path.exists(file_content):
         with open(file_content, 'r') as inp:
             content = inp.read()
