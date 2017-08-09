@@ -914,6 +914,8 @@ def get_type(node):
         name += ['...']
     elif node_type is a.Struct:
         name += ['struct ' + node.name]
+    elif node_type is a.Enum:
+        name += ['enum ' + node.name]
     elif node_type is a.TypeDecl:
         name += [get_type(node.type)]
     elif node_type is a.Typename:
