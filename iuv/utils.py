@@ -281,7 +281,7 @@ def shut_down(process):
 def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, input_str=None, timelimit=None):
     log_method = logging.debug if quiet else logging.info
 
-    log_method(" ".join(command))
+    logging.info(" ".join(command))
 
     p = subprocess.Popen(command,
                          stdin=subprocess.PIPE if input_str else None,
