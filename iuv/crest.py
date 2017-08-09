@@ -65,12 +65,16 @@ class InputGenerator(BaseInputGenerator):
     def is_supported_type(self, method_type):
         return method_type in ['_Bool',
                                'long long',
+                               'long long int',
                                'long',
+                               'long int',
                                'int',
                                'short',
                                'char',
                                'unsigned long long',
+                               'unsigned long long int',
                                'unsigned long',
+                               'unsigned long int',
                                'unsigned int',
                                'unsigned short',
                                'unsigned char']
