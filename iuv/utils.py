@@ -432,9 +432,10 @@ def rewrite_cproblems(content):
             in_attribute = False
         # rewrite some GCC extensions
         line = re.sub(r'__extension__', '', line)
-        line = re.sub(r'__restrict', 'restrict', line)
-        line = re.sub(r'__inline__', 'inline', line)
-        line = re.sub(r'__inline', 'inline', line)
+        line = re.sub(r'__restrict', '', line)
+        line = re.sub(r'__restrict__', '', line)
+        line = re.sub(r'__inline__', '', line)
+        line = re.sub(r'__inline', '', line)
         line = re.sub(r'__const', 'const', line)
         line = re.sub(r'__signed__', 'signed', line)
         line = re.sub(r'__builtin_va_list', 'int', line)
