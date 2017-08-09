@@ -907,18 +907,19 @@ def get_name(node):
 
 def get_type(node):
     node_type = type(node)
+    name = []
     if node_type is a.IdentifierType:
-        return ' '.join(node.names)
+        name += node.names
     elif node_type is a.EllipsisParam:
-        return '...'
+        name += ['...']
     elif node_type is a.Struct:
-        return 'struct ' + node.name
+        name += ['struct ' + node.name]
     elif node_type is a.TypeDecl:
-        return ' '.join([get_type(node.type)] + node.quals)
+        name += [get_type(node.type)]
     elif node_type is a.Typename:
-        return get_type(node.type)
+        name += [get_type(node.type)]
     elif node_type is a.Decl:
-        return ' '.join([get_type(node.type)] + node.quals)
+        name += [get_type(node.type)]
     elif node_type is a.PtrDecl:
         if type(node.type) is a.FuncDecl:
             func_decl = node.type
@@ -929,14 +930,27 @@ def get_type(node):
                     params.append(get_type(param))
                 m_type += ', '.join(params)
             m_type += ')'
-            return m_type
+            name += [m_type]
         else:
-            return get_type(node.type) + '*'
+            name += [get_type(node.type), '*']
+    elif node_type is a.ArrayDecl:
+        a_type = get_type(node.type)
+        name += [a_type, " {}[]"]
     elif node_type is a.FuncDecl:
-        return get_type(node.type) + node.declname + '()'
+        name += [get_type(node.type), node.declname + '()']
     else:
         raise AssertionError("Unhandled node type: " + str(node_type))
-
+    try:
+        # type quals can be 'const', 'volatile', 'static'
+        if 'const' in node.quals:
+            name += ['const']
+        if 'static' in node.quals:
+            name = ['static'] + name
+        if 'volatile' in node.quals:
+            name = ['volatile'] + name
+    except AttributeError:
+        pass
+    return ' '.join(name)
 
 class FuncDefCollector(a.NodeVisitor):
 
