@@ -12,6 +12,7 @@ if [[ ! -x $PROG ]]; then
 fi
 
 while true; do
+  touch 'vector.test'
   $PROG
   mv 'vector.test' "vector${COUNT}.test"
   (( COUNT += 1 ))
