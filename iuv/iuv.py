@@ -58,7 +58,7 @@ def _create_cli_arg_parser():
                                       dest="write_integers",
                                       action='store_false',
                                       default=True,
-                                      help="always write test vector values as integer values."
+                                      help="don't write test vector values as integer values."
                                            "E.g., klee uses multi-character chars by default."
                                            "Given this argument, these values are converted to integers."
                                       )
