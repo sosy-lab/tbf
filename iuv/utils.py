@@ -410,11 +410,14 @@ def rewrite_cproblems(content):
     prepared_content = ''
     for line in [c + "\n" for c in content.split('\n')]:
         # remove C++-style comments
-        if not in_cxx_comment:
+        if in_cxx_comment:
+            if re.search(r'\*/', line):
+                line = re.sub(r'.*\*/', '', line)
+                in_cxx_comment = False
+            else:
+                line = ''
+        else:
             line = re.sub(r'/\*.*?\*/', '', line)
-        if re.search(r'\*/', line):
-            line = re.sub(r'.*\*/', '', line)
-            in_cxx_comment = False
         if re.search(r'/\*', line):
             line = re.sub(r'/\*.*', '', line)
             in_cxx_comment = True
