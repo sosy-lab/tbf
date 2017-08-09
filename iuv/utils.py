@@ -13,6 +13,105 @@ parser = pycparser.CParser()
 sym_var_prefix = '__sym_'
 
 
+IMPLICIT_FUNCTIONS = [
+    '__VERIFIER_assume',
+    '__VERIFIER_error',
+    #stdio.h
+    'fclose',
+    'clearerr',
+    'feof',
+    'ferror',
+    'fflush',
+    'fgetpos',
+    'fopen',
+    'fread',
+    'freopen',
+    'fseek',
+    'fsetpos',
+    'ftell',
+    'fwrite',
+    'remove',
+    'rename',
+    'rewind',
+    'setbuf',
+    'setvbuf',
+    'tmpfile',
+    'tmpnam',
+    'fprintf',
+    'printf',
+    'sprintf',
+    'vfprintf',
+    'vprintf',
+    'vsprintf',
+    'fscanf',
+    'scanf',
+    'sscanf',
+    'fgetc',
+    'fgets',
+    'fputc',
+    'fputs',
+    'getc',
+    'getchar',
+    'gets',
+    'putc',
+    'putchar',
+    'puts',
+    'ungetc',
+    'perror'
+    #stdlib.h
+    'atoi',
+    'atof',
+    'atol',
+    'strtod',
+    'strtol',
+    'strtoul',
+    'calloc',
+    'free',
+    'malloc',
+    'realloc',
+    'abort',
+    'atexit',
+    'exit',
+    'getenv',
+    'system',
+    'bsearch',
+    'qsort',
+    'abs',
+    'div',
+    'labs',
+    'ldiv',
+    'rand',
+    'srand',
+    'mblen',
+    'mbstowcs',
+    'mbtowc',
+    'wcstombs',
+    'wctomb',
+    #string.h
+    'memchr',
+    'memcmp',
+    'memcpy',
+    'memmove',
+    'memset',
+    'strcat',
+    'strncat',
+    'strchr',
+    'strcmp',
+    'strncmp',
+    'strcoll',
+    'strcpy',
+    'strncpy',
+    'strcspn',
+    'strerror',
+    'strlen',
+    'strpbrk',
+    'strrchr',
+    'strspn',
+    'strstr',
+    'strtok',
+    'strxfrm'
+]
+
 class MachineModel(object):
 
     def __init__(self, short_size, int_size, long_size, long_long_size, float_size, double_size, long_double_size, compile_param):
@@ -525,7 +624,7 @@ def find_undefined_methods(file_content):
     function_declarations = func_decl_collector.func_decls
     func_def_collector.visit(ast)
     function_definitions = [f.name for f in func_def_collector.func_defs]
-    function_definitions += ['__VERIFIER_assume', '__VERIFIER_error', 'malloc', 'calloc', 'memset', 'memcpy', 'strcpy']
+    function_definitions += IMPLICIT_FUNCTIONS
 
     undef_func_prepared = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
     undef_func_prepared = [_prettify(f) for f in undef_func_prepared]
