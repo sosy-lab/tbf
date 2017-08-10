@@ -1012,10 +1012,10 @@ def preprocess(file_content, machine_model, includes=[]):
                       mm_arg]
     for inc in includes:
         preprocess_cmd += ['-I', inc]
-    final_cmd = preprocess_cmd + ['-std=c11', '-lm', '-']
+    final_cmd = preprocess_cmd + ['-std=gnu11', '-lm', '-']
     p = execute(final_cmd, err_to_output=False, input_str=file_content, quiet=True)
     if p.returncode != 0:
-        final_cmd = preprocess_cmd + ['-std=c90', '-lm', '-']
+        final_cmd = preprocess_cmd + ['-std=gnu90', '-lm', '-']
         p = execute(final_cmd, err_to_output=False, input_str=file_content, quiet=True)
     return p.stdout
 

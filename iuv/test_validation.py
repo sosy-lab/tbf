@@ -290,7 +290,7 @@ class ExecutionRunner(object):
     def __init__(self, machine_model):
         self.machine_model = machine_model
 
-    def _get_compile_cmd(self, program_file, harness_file, output_file, c_version='c11'):
+    def _get_compile_cmd(self, program_file, harness_file, output_file, c_version='gnu11'):
         if '32' in self.machine_model:
             mm_arg = '-m32'
         elif '64' in self.machine_model:
@@ -318,7 +318,7 @@ class ExecutionRunner(object):
         compile_result = utils.execute(compile_cmd, quiet=True)
 
         if compile_result.returncode != 0:
-            compile_cmd = self._get_compile_cmd(program_file, harness_file, output_file, 'c90')
+            compile_cmd = self._get_compile_cmd(program_file, harness_file, output_file, 'gnu90')
             compile_result = utils.execute(compile_cmd, quiet=True)
 
             if compile_result.returncode != 0:
