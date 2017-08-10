@@ -944,7 +944,7 @@ def get_type(node):
         raise AssertionError("Unhandled node type: " + str(node_type))
     try:
         # type quals can be 'const', 'volatile', 'static'
-        if 'const' in node.quals:
+        if 'const' in node.quals and node_type is not a.Decl:
             name += ['const']
         if 'static' in node.quals:
             name = ['static'] + name
