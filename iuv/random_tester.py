@@ -61,7 +61,7 @@ class InputGenerator(BaseInputGenerator):
             machinem_arg = "-m64"
         else:
             raise AssertionError("Unknown machine model: " + self.machine_model)
-        compile_cmd = ['gcc', machinem_arg, '-I', include_dir, '-o', compiled_file, generator_harness, filename]
+        compile_cmd = ['gcc', machinem_arg, '-I', include_dir, '-o', compiled_file, generator_harness, filename, '-lm']
         input_generation_cmd = [random_runner, compiled_file]
 
         return [compile_cmd, input_generation_cmd]

@@ -304,7 +304,8 @@ class ExecutionRunner(object):
                 '-D__alias__(x)=',
                 '-o', output_file,
                 '-include', program_file,
-                harness_file]
+                harness_file,
+                '-lm']
 
         return cmd
 
@@ -391,7 +392,7 @@ class KleeReplayRunner(object):
 
         klee_prepared_file = utils.get_prepared_name(program_file, klee.name)
         if not self.executable:
-            compile_cmd = ["gcc", "-L", klee.lib_dir, "-o", self.executable_name, klee_prepared_file, "-lkleeRuntest"]
+            compile_cmd = ["gcc", "-L", klee.lib_dir, "-o", self.executable_name, klee_prepared_file, "-lkleeRuntest", '-lm']
             utils.execute(compile_cmd)
             self.executable = self.executable_name
 
