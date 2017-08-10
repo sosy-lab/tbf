@@ -910,6 +910,8 @@ def get_type(node):
     name = []
     if node_type is a.IdentifierType:
         name += node.names
+    elif node_type is a.Union:
+        name += ['union', node.name]
     elif node_type is a.EllipsisParam:
         name += ['...']
     elif node_type is a.Struct:
