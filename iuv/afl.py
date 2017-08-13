@@ -65,6 +65,7 @@ class InputGenerator(BaseInputGenerator):
     def get_run_env(self):
         env = utils.get_env()
         env['AFL_PATH'] = bin_dir
+        env['AFL_SKIP_CPUFREQ'] = 'true'
         return env
 
     def prepare(self, filecontent, nondet_methods_used):
