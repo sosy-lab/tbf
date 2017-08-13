@@ -576,7 +576,10 @@ IMPLICIT_FUNCTIONS = [
 
 class MachineModel(object):
 
-    def __init__(self, short_size, int_size, long_size, long_long_size, float_size, double_size, long_double_size, compile_param):
+    def __init__(self, wordsize, name, short_size, int_size, long_size, long_long_size, float_size, double_size, long_double_size, compile_param):
+        assert wordsize == 32 or wordsize == 64
+        self._wordsize = wordsize
+        self._name = name
         self.model = {
             'short': short_size,
             'int': int_size,
@@ -586,29 +589,51 @@ class MachineModel(object):
             'double': double_size,
             'long double': long_double_size
         }
-        self.compile_param = compile_param
+        self._compile_param = compile_param
 
     @property
     def short_size(self):
         return self.model['short']
+
     @property
     def int_size(self):
         return self.model['int']
+
     @property
     def long_size(self):
         return self.model['long']
+
     @property
     def long_long_size(self):
         return self.model['long long']
+
     @property
     def float_size(self):
         return self.model['float']
+
     @property
     def double_size(self):
         return self.model['double']
+
     @property
     def long_double_size(self):
         return self.model['long double']
+
+    @property
+    def compile_parameter(self):
+        return self._compile_param
+
+    @property
+    def is_64(self):
+        return self._wordsize == 64
+
+    @property
+    def is_32(self):
+        return self._wordsize == 32
+
+    @property
+    def name(self):
+        return self._name
 
     def get_size(self, data_type):
         if 'short' in data_type:
@@ -627,9 +652,6 @@ class MachineModel(object):
             return self.int_size
         else:
             raise AssertionError("Unhandled data type: " + data_type)
-
-    def get_compile_parameter(self):
-        return self.compile_param
 
 
 class TestCase(object):
@@ -826,9 +848,9 @@ def get_machine_model(witness_file):
         for line in inp.readlines():
             if 'architecture' in line:
                 if '32' in line:
-                    return '32bit'
+                    return MACHINE_MODEL_32
                 elif '64' in line:
-                    return '64bit'
+                    return MACHINE_MODEL_64
                 else:
                     raise AssertionError('Unknown architecture in witness line: ' + line)
 
@@ -843,12 +865,12 @@ def import_tool(tool_name):
 
 def get_cpachecker_options(witness_file):
     machine_model = get_machine_model(witness_file)
-    if '32' in machine_model:
+    if machine_model.is_32:
         machine_model = '-32'
-    elif '64' in machine_model:
+    elif machine_model.is_64:
         machine_model = '-64'
     else:
-        raise AssertionError('Unknown machine model: ' + machine_model)
+        raise AssertionError('Unknown machine model: ' + machine_model.name)
 
     return [
         '-setprop', 'witness.checkProgramHash=false',
@@ -1058,12 +1080,7 @@ def parse_file_with_preprocessing(file_content, machine_model, includes=[]):
 
 
 def preprocess(file_content, machine_model, includes=[]):
-    if '32' in machine_model:
-        mm_arg = '-m32'
-    elif '64' in machine_model:
-        mm_arg = '-m64'
-    else:
-        raise AssertionError("Unhandled machine model: " + machine_model)
+    mm_arg = machine_model.compile_parameter
 
     # -E : only preprocess
     # -o : output file name
@@ -1113,7 +1130,7 @@ def find_nondet_methods(file_content, svcomp_only):
 def _find_undefined_methods(file_content):
     import ast_visitor
 
-    ast = parse_file_with_preprocessing(file_content, '32')
+    ast = parse_file_with_preprocessing(file_content, MACHINE_MODEL_32)
 
     func_decl_collector = ast_visitor.FuncDeclCollector()
     func_def_collector = ast_visitor.FuncDefCollector()
@@ -1359,8 +1376,8 @@ UNKNOWN = 'unknown'
 TRUE = 'true'
 ERROR = 'error'
 
-MACHINE_MODEL_32 = MachineModel(2, 4, 4, 8, 4, 8, 12, '-m32')
-MACHINE_MODEL_64 = MachineModel(2, 4, 8, 8, 4, 8, 16, '-m64')
+MACHINE_MODEL_32 = MachineModel(32, "32 bit linux", 2, 4, 4, 8, 4, 8, 12, '-m32')
+MACHINE_MODEL_64 = MachineModel(64, "64 bit linux", 2, 4, 8, 8, 4, 8, 16, '-m64')
 
 statistics = StatisticsPool()
 

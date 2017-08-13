@@ -29,7 +29,7 @@ def get_test_cases(exclude=[]):
 
 class InputGenerator(BaseInputGenerator):
 
-    def __init__(self, timelimit=0, log_verbose=False, machine_model='32bit'):
+    def __init__(self, timelimit=0, log_verbose=False, machine_model=utils.MACHINE_MODEL_32):
         super().__init__(timelimit, machine_model)
         self.log_verbose = log_verbose
 

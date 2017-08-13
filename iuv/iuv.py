@@ -18,7 +18,7 @@ from multiprocessing.context import TimeoutError
 
 from test_validation import ValidationConfig
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 __VERSION__ = 0.1
 
@@ -149,7 +149,13 @@ def _parse_cli_args(argv):
     args = parser.parse_args(argv)
     if not args.machine_model:
         logging.warning("No machine model specified. Assuming 32 bit")
-        args.machine_model = '32bit'
+        args.machine_model = utils.MACHINE_MODEL_32
+    elif '32' in args.machine_model:
+        args.machine_model = utils.MACHINE_MODEL_32
+    elif '64' in args.machine_model:
+        args.machine_model = utils.MACHINE_MODEL_64
+    else:
+        raise AssertionError("Unhandled machine model arg: " + args.machine_model)
     return args
 
 

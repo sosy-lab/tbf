@@ -59,12 +59,7 @@ class InputGenerator(BaseInputGenerator):
     def create_input_generation_cmds(self, filename):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1])
         compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
-        if '32' in self.machine_model:
-            machinem_arg = "-m32"
-        elif '64' in self.machine_model:
-            machinem_arg = "-m64"
-        else:
-            raise AssertionError("Unknown machine model: " + self.machine_model)
+        machinem_arg = self.machine_model.compile_parameter
         compile_cmd = ['gcc', '-std=gnu11', machinem_arg, '-I', include_dir, '-o', compiled_file, generator_harness, filename, '-lm']
         input_generation_cmd = [random_runner, compiled_file]
 

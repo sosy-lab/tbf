@@ -332,13 +332,7 @@ class ExecutionRunner(object):
         self.machine_model = machine_model
 
     def _get_compile_cmd(self, program_file, harness_file, output_file, c_version='gnu11'):
-        if '32' in self.machine_model:
-            mm_arg = '-m32'
-        elif '64' in self.machine_model:
-            mm_arg = '-m64'
-        else:
-            raise AssertionError("Unhandled machine model: ", self.machine_model)
-
+        mm_arg = self.machine_model.compile_parameter
         cmd = ['gcc']
         cmd += ['-std={}'.format(c_version),
                 mm_arg,
@@ -546,9 +540,9 @@ class UAutomizerValidator(Validator):
 
     def _get_cmd(self, program_file, witness_file):
         machine_model = utils.get_machine_model(witness_file)
-        if '32' in machine_model:
+        if machine_model.is_32:
             machine_model = '32bit'
-        elif '64' in machine_model:
+        elif machine_model.is_64:
             machine_model = '64bit'
         else:
             raise AssertionError("Unhandled machine model: " + machine_model)
@@ -584,12 +578,7 @@ class FShellW2t(Validator):
 
     def _get_cmd(self, program_file, witness_file):
         machine_model = utils.get_machine_model(witness_file)
-        if '32' in machine_model:
-            machine_model = '-m32'
-        elif '64' in machine_model:
-            machine_model = '-m64'
-        else:
-            raise AssertionError('Unhandled machine model: ' + machine_model)
+        machine_model = machine_model.compile_parameter
 
         return [self.executable,
                 '--propertyfile', utils.spec_file,

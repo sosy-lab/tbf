@@ -28,7 +28,7 @@ def get_test_cases(exclude=[], directory=tests_dir):
 
 class InputGenerator(BaseInputGenerator):
 
-    def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew'], machine_model='32bit'):
+    def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew'], machine_model=utils.MACHINE_MODEL_32):
         super().__init__(timelimit, machine_model)
         self.log_verbose = log_verbose
         if type(search_heuristic) is not list:
@@ -73,12 +73,12 @@ class InputGenerator(BaseInputGenerator):
         return method_head + method_body
 
     def create_input_generation_cmds(self, filename):
-        if '32' in self.machine_model:
+        if self.machine_model.is_32:
             mm_args = ['-arch', 'i386']
-        elif '64' in self.machine_model:
+        elif self.machine_model.is_64:
             mm_args = ['-arch', 'x86_64']
         else:
-            raise AssertionError("Unhandled machine model: " + self.machine_model)
+            raise AssertionError("Unhandled machine model: " + self.machine_model.name)
 
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
         compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
