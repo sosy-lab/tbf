@@ -81,8 +81,8 @@ class TestValidator(object):
         self.final_test_vector_size = utils.Constant()
         self.statistics.add_value("Size of successful test vector", self.final_test_vector_size)
 
-    def get_error_lines(self, filename):
-        with open(filename, 'r') as inp:
+    def get_error_lines(self, program_file):
+        with open(program_file, 'r') as inp:
             content = inp.readlines()
 
         err_lines = list()
@@ -98,16 +98,57 @@ class TestValidator(object):
         pass
 
     @abstractmethod
-    def create_all_witnesses(self, filename, visited_tests, nondet_methods):
+    def get_test_cases(self, exclude):
         pass
 
-    @abstractmethod
-    def create_witness(self, filename, test_file, test_vector, nondet_methods):
-        pass
+    def create_all_witnesses(self, program_file, visited_tests):
+        created_content = []
+        new_test_cases = self.get_test_cases(visited_tests)
+        nondet_methods = utils.get_nondet_methods()
+        if len(new_test_cases) > 0:
+            logging.info("Looking at %s test cases", len(new_test_cases))
+        empty_case_handled = False
+        for test_case in new_test_cases:
+            logging.debug('Looking at test case %s', test_case)
+            test_name = test_case.name
+            assert test_name not in visited_tests
+            visited_tests.add(test_name)
+            test_vector = self.get_test_vector(test_case.content)
+            if test_vector or not empty_case_handled:
+                if not test_vector:
+                    test_vector = utils.TestVector(test_case.name, test_case.origin)
+                    empty_case_handled = True
+                new_content = self.create_witness(program_file, test_case.name, test_vector, nondet_methods)
+                new_content['vector'] = test_vector
+                new_content['origin'] = test_case
+                created_content.append(new_content)
+            else:
+                logging.info("Test vector was not generated for %s", test_case)
+        return created_content
 
-    @abstractmethod
-    def get_test_files(self, visited_tests):
-        pass
+    def create_witness(self, program_file, test_name, test_vector, nondet_methods):
+        """
+        Creates a witness for the test file produced by crest.
+        Test files produced by our version of crest specify one test value per line, without
+        any mention of the variable the value is assigned to.
+        Because of this, we have to build a fancy witness automaton of the following format:
+        For each test value specified in the test file, there is one precessor and one
+        successor state. These two states are connected by one transition for each
+        call to a CREST_x(..) function. Each of these transitions has the assumption,
+        that the variable specified in the corresponding CREST_x(..) function has the current
+        test value.
+        """
+        witness = self.witness_creator.create_witness(producer=self.get_name(),
+                                                      program_file=program_file,
+                                                      test_vector=test_vector,
+                                                      nondet_methods=nondet_methods,
+                                                      machine_model=self.machine_model,
+                                                      error_lines=self.get_error_lines(program_file))
+
+        witness_file = test_name + ".witness.graphml"
+        witness_file = utils.get_file_path(witness_file)
+
+        return {'name': witness_file, 'content': witness}
 
     def decide_final_verdict(self, final_result):
         if final_result.is_positive() or not self.naive_verification:
@@ -115,23 +156,22 @@ class TestValidator(object):
         else:
             return utils.VerdictTrue()
 
-    def perform_witness_validation(self, filename, generator_thread):
+    def perform_witness_validation(self, program_file, generator_thread):
         validator = ValidationRunner(self.config.witness_validators)
-        nondet_methods = utils.get_nondet_methods()
         visited_tests = set()
         while generator_thread and not generator_thread.ready():
             try:
-                result = self._m(filename, validator, visited_tests, nondet_methods)
+                result = self._m(program_file, validator, visited_tests)
                 if result.is_positive():
                     return result
                 sleep(0.001)  # Sleep for 1 millisecond
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
-        result = self._m(filename, validator, visited_tests)
+        result = self._m(program_file, validator, visited_tests)
         return self.decide_final_verdict(result)
 
-    def _m(self, filename, validator, visited_tests, nondet_methods):
-        produced_witnesses = self.create_all_witnesses(filename, visited_tests, nondet_methods)
+    def _m(self, program_file, validator, visited_tests):
+        produced_witnesses = self.create_all_witnesses(program_file, visited_tests)
         for witness in produced_witnesses:
             logging.debug('Looking at witness %s', witness['name'])
             witness_name = witness['name']
@@ -142,7 +182,7 @@ class TestValidator(object):
             self.timer_witness_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(filename, witness_name)
+                verdicts = validator.run(program_file, witness_name)
             finally:
                 self.timer_witness_validation.stop()
                 self.timer_validation.stop()
@@ -154,56 +194,57 @@ class TestValidator(object):
 
         return utils.VerdictUnknown()
 
-    def create_all_test_vectors(self, filename, visited_tests):
+    def create_all_test_vectors(self, program_file, visited_tests):
         all_vectors = list()
-        new_test_files = self.get_test_files(visited_tests)
-        if len(new_test_files) > 0:
-            logging.info("Looking at %s test files", len(new_test_files))
-        for test_file in new_test_files:
-            logging.debug('Looking at test case %s', test_file)
-            test_name = utils.get_file_name(test_file)
+        new_test_cases = self.get_test_cases(visited_tests)
+        if len(new_test_cases) > 0:
+            logging.info("Looking at %s test files", len(new_test_cases))
+        for test_case in new_test_cases:
+            logging.debug('Looking at test case %s', test_case)
+            test_name = test_case.name
             assert test_name not in visited_tests
-            assert os.path.exists(test_file)
+            assert os.path.exists(test_case.origin)
             visited_tests.add(test_name)
-            test_vector = self.get_test_vector(test_file)
+            test_vector = self.get_test_vector(test_case)
             all_vectors.append(test_vector)
         return all_vectors
 
-    @abstractmethod
-    def create_all_harnesses(self, filename, visited_tests, nondet_methods):
-        pass
+    def create_harness(self, program_file, test_name, test_vector, nondet_methods):
+        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
+                                                      error_method=utils.error_method,
+                                                      test_vector=test_vector)
+        harness_file = test_name + '.harness.c'
+        harness_file = utils.get_file_path(harness_file)
+
+        return {'name': harness_file, 'content': harness}
 
     @abstractmethod
-    def create_harness(self, filename, test_file, test_vector, nondet_methods):
+    def get_test_vector(self, test_case):
         pass
 
-    @abstractmethod
-    def get_test_vector(self, test_file):
-        pass
-
-    def perform_execution_validation(self, filename, generator_thread):
+    def perform_execution_validation(self, program_file, generator_thread):
         validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
         visited_tests = set()
         while generator_thread and not generator_thread.ready():
             try:
-                result = self._hs(filename, validator, visited_tests)
+                result = self._hs(program_file, validator, visited_tests)
                 if result.is_positive():
                     return result
                 sleep(0.001)  # Sleep for 1 millisecond
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
 
-        result = self._hs(filename, validator, visited_tests)
+        result = self._hs(program_file, validator, visited_tests)
         return self.decide_final_verdict(result)
 
-    def _hs(self, filename, validator, visited_tests):
-        test_vectors = self.create_all_test_vectors(filename, visited_tests)
+    def _hs(self, program_file, validator, visited_tests):
+        test_vectors = self.create_all_test_vectors(program_file, visited_tests)
 
         for vector in test_vectors:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(filename, vector)
+                verdicts = validator.run(program_file, vector)
             finally:
                 self.timer_execution_validation.stop()
                 self.timer_validation.stop()
@@ -215,14 +256,14 @@ class TestValidator(object):
                 return utils.VerdictFalse(vector.origin, vector)
         return utils.VerdictUnknown()
 
-    def _k(self, filename, validator, visited_tests):
-        test_files = self.get_test_files(visited_tests)
+    def _k(self, program_file, validator, visited_tests):
+        test_cases = self.get_test_cases(visited_tests)
 
-        for test in test_files:
+        for test in test_cases:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(filename, test)
+                verdicts = validator.run(program_file, test)
             finally:
                 self.timer_execution_validation.stop()
                 self.timer_validation.stop()
@@ -230,39 +271,39 @@ class TestValidator(object):
 
             logging.debug('Results for %s: %s', test, str(verdicts))
             if any([v == FALSE for v in verdicts]):
-                return utils.VerdictFalse(test)
+                return utils.VerdictFalse(test.name)
         return utils.VerdictUnknown()
 
-    def perform_klee_replay_validation(self, filename, generator_thread):
+    def perform_klee_replay_validation(self, program_file, generator_thread):
         validator = KleeReplayRunner(self.config.machine_model)
 
         visited_tests = set()
         while generator_thread and not generator_thread.ready():
             try:
-                result = self._k(filename, validator, visited_tests)
+                result = self._k(program_file, validator, visited_tests)
                 if result.is_positive():
                     return result
                 sleep(0.001)  # Sleep for 1 millisecond
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
 
-        result = self._k(filename, validator, visited_tests)
+        result = self._k(program_file, validator, visited_tests)
         return self.decide_final_verdict(result)
 
-    def check_inputs(self, filename, generator_thread=None):
-        logging.debug('Checking inputs for file %s', filename)
+    def check_inputs(self, program_file, generator_thread=None):
+        logging.debug('Checking inputs for file %s', program_file)
         result = utils.VerdictUnknown()
 
         if self.config.use_klee_replay:
-            result = self.perform_klee_replay_validation(filename, generator_thread)
+            result = self.perform_klee_replay_validation(program_file, generator_thread)
             logging.info("Klee-replay validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_execution:
-            result = self.perform_execution_validation(filename, generator_thread)
+            result = self.perform_execution_validation(program_file, generator_thread)
             logging.info("Execution validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_witness_validation:
-            result = self.perform_witness_validation(filename, generator_thread)
+            result = self.perform_witness_validation(program_file, generator_thread)
             logging.info("Witness validation says: " + str(result))
 
         if result.is_positive():
@@ -271,13 +312,13 @@ class TestValidator(object):
                 test_vector = self.get_test_vector(result.test)
             if result.witness is None:
                 nondet_methods = utils.get_nondet_methods()
-                witness = self.create_witness(filename, result.test, test_vector, nondet_methods)
+                witness = self.create_witness(program_file, result.test, test_vector, nondet_methods)
                 with open(witness['name'], 'w+') as outp:
                     outp.write(witness['content'])
                 result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
-                harness = self.create_harness(filename, result.test, test_vector, nondet_methods)
+                harness = self.create_harness(program_file, result.test, test_vector, nondet_methods)
                 with open(harness['name'], 'w+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']
@@ -387,7 +428,7 @@ class KleeReplayRunner(object):
         if os.path.exists(self.executable_name):
             os.remove(self.executable_name)
 
-    def run(self, program_file, test_file):
+    def run(self, program_file, test_case):
         import klee
 
         klee_prepared_file = utils.get_prepared_name(program_file, klee.name)
@@ -400,7 +441,7 @@ class KleeReplayRunner(object):
             return [ERROR]
 
         curr_env = utils.get_env()
-        curr_env['KTEST_FILE'] = test_file
+        curr_env['KTEST_FILE'] = test_case.origin
 
         result = utils.execute([self.executable], env=curr_env, err_to_output=False)
 

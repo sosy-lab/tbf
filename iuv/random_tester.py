@@ -1,5 +1,4 @@
 import os
-import logging
 import glob
 import utils
 from input_generation import BaseInputGenerator
@@ -11,9 +10,14 @@ generator_harness = os.path.abspath("./random/random_tester.c")
 random_runner = os.path.abspath("./random/run.sh")
 
 
-def get_test_files(exclude=[], directory=utils.tmp):
+def get_test_cases(exclude=[], directory=utils.tmp):
     all_tests = [t for t in glob.glob(directory + '/vector[0-9]*.test')]
-    return [t for t in all_tests if utils.get_file_name(t) not in exclude]
+    tcs = list()
+    for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
+        with open(t, 'r') as inp:
+            content = inp.read()
+        tcs.append(utils.TestCase(utils.get_file_name(t), t, content))
+    return tcs
 
 
 class InputGenerator(BaseInputGenerator):
@@ -67,7 +71,7 @@ class InputGenerator(BaseInputGenerator):
         return [compile_cmd, input_generation_cmd]
 
     def get_test_count(self):
-        files = get_test_files()
+        files = get_test_cases()
         if not files:
             raise utils.InputGenerationError('No test files generated.')
         return len(files)
@@ -83,10 +87,10 @@ class RandomTestValidator(TestValidator):
         return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
 
     def get_test_vector(self, test):
-        with open(test, 'r') as inp:
-            test_info = inp.readlines()
-        vector = utils.TestVector(test)
+        test_info = [t for t in test.content.split('\n') if t]
+        vector = utils.TestVector(test.name, test.origin)
         for idx, line in enumerate(test_info):
+            print(line)
             var_name = line.split(':')[0].strip()  # Line format is var: value
             nondet_method_name = utils.get_corresponding_method_name(var_name)
             value = line.split(':')[1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
@@ -94,62 +98,7 @@ class RandomTestValidator(TestValidator):
 
         return vector
 
-    def create_witness(self, filename, test_file, test_vector, nondet_methods):
-        witness = self.witness_creator.create_witness(producer=self.get_name(),
-                                                      filename=filename,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=nondet_methods,
-                                                      machine_model=self.machine_model,
-                                                      error_lines=self.get_error_lines(filename))
-
-        test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
-        witness_file = test_name + ".witness.graphml"
-        witness_file = utils.get_file_path(witness_file)
-
-        return {'name': witness_file, 'content': witness}
-
-    def create_harness(self, filename, test_file, test_vector, nondet_methods):
-        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
-                                                      error_method=utils.error_method,
-                                                      test_vector=test_vector)
-        test_name = os.path.basename(test_file)
-        harness_file = test_name + '.harness.c'
-        harness_file = utils.get_file_path(harness_file)
-
-        return {'name': harness_file, 'content': harness}
-
-    def _create_all_x(self, filename, creator_method, visited_tests):
-        created_content = []
-        new_test_files = get_test_files(visited_tests)
-        if len(new_test_files) > 0:
-            logging.info("Looking at %s test files", len(new_test_files))
-        empty_case_handled = False
-        for test_file in new_test_files:
-            logging.debug('Looking at test case %s', test_file)
-            test_name = utils.get_file_name(test_file)
-            assert test_name not in visited_tests
-            assert os.path.exists(test_file)
-            visited_tests.add(test_name)
-            test_vector = self.get_test_vector(test_file)
-            if test_vector or not empty_case_handled:
-                if not test_vector:
-                    test_vector = dict()
-                    empty_case_handled = True
-                new_content = creator_method(filename, test_file, test_vector)
-                new_content['vector'] = test_vector
-                new_content['origin'] = test_file
-                created_content.append(new_content)
-            else:
-                logging.info("Test vector was not generated for %s", test_file)
-        return created_content
-
-    def create_all_witnesses(self, filename, visited_tests):
-        return self._create_all_x(filename, self.create_witness, visited_tests)
-
-    def create_all_harnesses(self, filename, visited_tests):
-        return self._create_all_x(filename, self.create_harness, visited_tests)
-
-    def get_test_files(self, exclude=[]):
-        return get_test_files(exclude)
+    def get_test_cases(self, exclude=[]):
+        return get_test_cases(exclude)
 
 

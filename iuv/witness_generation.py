@@ -8,7 +8,7 @@ class WitnessCreator(object):
     def __init__(self):
         self._node_id_counter = -1
 
-    def _create_witness_header(self, filename):
+    def _create_witness_header(self, program_file):
         graphml = ET.Element('graphml')
         graphml.set('xmlns', 'http://graphml.graphdrawing.org/xmlns')
         graphml.set('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
@@ -19,7 +19,7 @@ class WitnessCreator(object):
         key.set('for', 'edge')
         key.set('id', 'originfile')
         default_key = ET.SubElement(key, 'default')
-        default_key.text = filename
+        default_key.text = program_file
 
         return graphml
 
@@ -58,7 +58,7 @@ class WitnessCreator(object):
 
         return edge
 
-    def _create_graph_head(self, producer, filename, machine_model):
+    def _create_graph_head(self, producer, program_file, machine_model):
         graph = ET.Element('graph')
         graph.set('edgedefault', 'directed')
 
@@ -70,8 +70,8 @@ class WitnessCreator(object):
         #graph.append(self._create_data_element('testfile', test_file))
         #timestamp = utils.get_time()
         #graph.append(self._create_data_element('creationtime', timestamp))
-        graph.append(self._create_data_element('programfile', filename))
-        filehash = utils.get_hash(filename)
+        graph.append(self._create_data_element('programfile', program_file))
+        filehash = utils.get_hash(program_file)
         graph.append(self._create_data_element('programhash', filehash))
         graph.append(self._create_data_element('architecture', machine_model))
 
@@ -119,15 +119,15 @@ class WitnessCreator(object):
 
         return graph
 
-    def _create_graph(self, producer, filename, test_vector, nondet_methods, machine_model, error_lines):
-        graph = self._create_graph_head(producer, filename, machine_model)
+    def _create_graph(self, producer, program_file, test_vector, nondet_methods, machine_model, error_lines):
+        graph = self._create_graph_head(producer, program_file, machine_model)
         return self._create_automaton(graph, test_vector, nondet_methods, error_lines)
 
-    def create_witness(self, producer, filename, test_vector, nondet_methods, machine_model, error_lines):
+    def create_witness(self, producer, program_file, test_vector, nondet_methods, machine_model, error_lines):
         self._reset_node_id()
-        witness = self._create_witness_header(filename)
+        witness = self._create_witness_header(program_file)
         nondet_method_names = [m['name'] for m in nondet_methods]
-        graph = self._create_graph(producer, filename, test_vector, nondet_method_names, machine_model, error_lines)
+        graph = self._create_graph(producer, program_file, test_vector, nondet_method_names, machine_model, error_lines)
         witness.append(graph)
 
         xml_string = ET.tostring(witness, 'utf-8')

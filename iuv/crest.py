@@ -12,9 +12,14 @@ name = 'crest'
 test_name_pattern = re.compile('input[0-9]+$')
 
 
-def get_test_files(exclude=[]):
+def get_test_cases(exclude=[]):
     all_tests = [t for t in os.listdir('.') if test_name_pattern.match(utils.get_file_name(t))]
-    return [t for t in all_tests if utils.get_file_name(t) not in exclude]
+    tcs = list()
+    for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
+        with open(t, 'r') as inp:
+            content = inp.read()
+        tcs.append(utils.TestCase(utils.get_file_name(t), t, content))
+    return tcs
 
 
 class InputGenerator(BaseInputGenerator):
@@ -35,7 +40,7 @@ class InputGenerator(BaseInputGenerator):
         return self._run_env
 
     def get_test_count(self):
-        files = get_test_files()
+        files = get_test_cases()
         if not files:
             raise utils.InputGenerationError('No test files generated.')
         return len(files)
@@ -126,83 +131,13 @@ class CrestTestValidator(TestValidator):
     def get_name(self):
         return name
 
-    def _convert_to_hex(self, dec_value):
-        return utils.convert_dec_to_hex(dec_value)
-
     def get_test_vector(self, test):
-        test_vector = utils.TestVector(test)
-        with open(test, 'r') as inp:
-            for line in inp.readlines():
-                    value = line.strip()
-                    if value:
-                        test_vector.add(value)
+        test_vector = utils.TestVector(test.name, test.origin)
+        for line in test.content.split('\n'):
+            value = line.strip()
+            if value:
+                test_vector.add(value)
         return test_vector
 
-    def create_witness(self, filename, test_file, test_vector, nondet_methods):
-        """
-        Creates a witness for the test file produced by crest.
-        Test files produced by our version of crest specify one test value per line, without
-        any mention of the variable the value is assigned to.
-        Because of this, we have to build a fancy witness automaton of the following format:
-        For each test value specified in the test file, there is one precessor and one
-        successor state. These two states are connected by one transition for each
-        call to a CREST_x(..) function. Each of these transitions has the assumption,
-        that the variable specified in the corresponding CREST_x(..) function has the current
-        test value.
-        """
-        witness = self.witness_creator.create_witness(producer=self.get_name(),
-                                                      filename=filename,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=nondet_methods,
-                                                      machine_model=self.machine_model,
-                                                      error_lines=self.get_error_lines(filename))
-
-        test_name = os.path.basename(test_file)
-        witness_file = test_name + ".witness.graphml"
-        witness_file = utils.get_file_path(witness_file)
-
-        return {'name': witness_file, 'content': witness}
-
-    def create_harness(self, filename, test_file, test_vector, nondet_methods):
-        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
-                                                      error_method=utils.error_method,
-                                                      test_vector=test_vector)
-        test_name = os.path.basename(test_file)
-        harness_file = test_name + '.harness.c'
-        harness_file = utils.get_file_path(harness_file)
-
-        return {'name': harness_file, 'content': harness}
-
-    def _create_all_x(self, filename, creation_method, visited_tests):
-        created_content = []
-        new_test_files = get_test_files(visited_tests)
-        if len(new_test_files) > 0:
-            logging.info("Looking at %s test file(s)", len(new_test_files))
-        empty_case_handled = False
-        for test_file in new_test_files:
-            logging.debug("Looking at test case %s", test_file)
-            test_name = utils.get_file_name(test_file)
-            assert test_name not in visited_tests
-            assert os.path.exists(test_file)
-            visited_tests.add(test_name)
-            test_vector = self.get_test_vector(test_file)
-            if test_vector or not empty_case_handled:
-                if not test_vector:
-                    empty_case_handled = True
-                    test_vector = utils.TestVector(test_file)
-                new_content = creation_method(filename, test_file, test_vector)
-                new_content['vector'] = test_vector
-                new_content['origin'] = test_file
-                created_content.append(new_content)
-            else:
-                logging.debug("Test vector was not generated for %s", test_file)
-        return created_content
-
-    def create_all_witnesses(self, filename, visited_tests):
-        return self._create_all_x(filename, self.create_witness, visited_tests)
-
-    def create_all_harnesses(self, filename, visited_tests):
-        return self._create_all_x(filename, self.create_harness, visited_tests)
-
-    def get_test_files(self, exclude=[]):
-        return get_test_files(exclude)
+    def get_test_cases(self, exclude=[]):
+        return get_test_cases(exclude)

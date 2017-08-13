@@ -14,9 +14,16 @@ klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
 
 
-def get_test_files(exclude=[], directory=tests_dir):
+def get_test_cases(exclude=[], directory=tests_dir):
     all_tests = [t for t in glob.glob(directory + '/*.ktest')]
-    return [t for t in all_tests if utils.get_file_name(t) not in exclude]
+    tcs = list()
+    for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
+        print(t)
+        file_name = utils.get_file_name(t)
+        with open(t, mode='rb') as inp:
+            content = inp.read()
+        tcs.append(utils.TestCase(file_name, t, content))
+    return tcs
 
 
 class InputGenerator(BaseInputGenerator):
@@ -87,7 +94,7 @@ class InputGenerator(BaseInputGenerator):
         return [compile_cmd, input_generation_cmd]
 
     def get_test_count(self):
-        files = get_test_files()
+        files = get_test_cases()
         if not files:
             raise utils.InputGenerationError('No test files generated.')
         return len(files)
@@ -102,19 +109,11 @@ class KleeTestValidator(TestValidator):
         assert 'object' in test_info_line
         return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
 
-    def _convert_to_hex(self, value):
-        refined_value = value[1:-1] # remove wrapping ''
-        hex_value = '0x'
-        for numbers in refined_value.split('\\x'):
-            hex_value += numbers
-        logging.debug("Converted value %s to hex value %s", value, hex_value)
-        return hex_value
-
     def get_test_vector(self, test):
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool')]
-        exec_output = utils.execute(ktest_tool + [test], err_to_output=False, quiet=True)
+        exec_output = utils.execute(ktest_tool + [test.origin], err_to_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')
-        vector = utils.TestVector(test)
+        vector = utils.TestVector(test.name, test.origin)
         last_number = -1
         last_nondet_method = None
         last_value = None
@@ -143,61 +142,6 @@ class KleeTestValidator(TestValidator):
 
         return vector
 
-    def create_witness(self, filename, test_file, test_vector, nondet_methods):
-        witness = self.witness_creator.create_witness(producer=self.get_name(),
-                                                      filename=filename,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=nondet_methods,
-                                                      machine_model=self.machine_model,
-                                                      error_lines=self.get_error_lines(filename))
-
-        test_name = '.'.join(os.path.basename(test_file).split('.')[:-1])
-        witness_file = test_name + ".witness.graphml"
-        witness_file = utils.get_file_path(witness_file)
-
-        return {'name': witness_file, 'content': witness}
-
-    def create_harness(self, filename, test_file, test_vector, nondet_methods):
-        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
-                                                      error_method=utils.error_method,
-                                                      test_vector=test_vector)
-        test_name = os.path.basename(test_file)
-        harness_file = test_name + '.harness.c'
-        harness_file = utils.get_file_path(harness_file)
-
-        return {'name': harness_file, 'content': harness}
-
-    def _create_all_x(self, filename, creator_method, visited_tests, directory):
-        created_content = []
-        new_test_files = get_test_files(visited_tests, directory)
-        if len(new_test_files) > 0:
-            logging.info("Looking at %s test files", len(new_test_files))
-        empty_case_handled = False
-        for test_file in new_test_files:
-            logging.debug('Looking at test case %s', test_file)
-            test_name = utils.get_file_name(test_file)
-            assert test_name not in visited_tests
-            assert os.path.exists(test_file)
-            visited_tests.add(test_name)
-            test_vector = self.get_test_vector(test_file)
-            if test_vector or not empty_case_handled:
-                if not test_vector:
-                    test_vector = utils.TestVector(test_file)
-                    empty_case_handled = True
-                new_content = creator_method(filename, test_file, test_vector)
-                new_content['vector'] = test_vector
-                new_content['origin'] = test_file
-                created_content.append(new_content)
-            else:
-                logging.info("Test vector was not generated for %s", test_file)
-        return created_content
-
-    def create_all_witnesses(self, filename, visited_tests, directory=tests_dir):
-        return self._create_all_x(filename, self.create_witness, visited_tests, directory)
-
-    def create_all_harnesses(self, filename, visited_tests, directory=tests_dir):
-        return self._create_all_x(filename, self.create_harness, visited_tests, directory)
-
-    def get_test_files(self, exclude=[]):
-        return get_test_files(exclude)
+    def get_test_cases(self, exclude=[]):
+        return get_test_cases(exclude)
 

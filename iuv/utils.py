@@ -632,6 +632,29 @@ class MachineModel(object):
         return self.compile_param
 
 
+class TestCase(object):
+
+    def __init__(self, name, origin_file, content):
+        self._name = name
+        self._origin = origin_file
+        self._content = content
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def origin(self):
+        return self._origin
+
+    @property
+    def content(self):
+        return self._content
+
+    def __str__(self):
+        return self.name + "(" + self.origin + ")"
+
+
 class ConfigError(Exception):
 
     def __init__(self, msg=None, cause=None):
@@ -715,7 +738,8 @@ class VerdictUnknown(Verdict):
 
 class TestVector(object):
 
-    def __init__(self, origin_file):
+    def __init__(self, name, origin_file):
+        self.name = name
         self.origin = origin_file
         self.vector = list()
 
@@ -896,7 +920,7 @@ def get_input_vector(test_vector, escape_newline=False):
         newline = '\n'
     for item in test_vector.vector:
         input_vector += item['value'] + newline
-    logging.debug("Input for test %s: %s", test_vector.origin, [l for l in input_vector.split('\n')])
+    logging.debug("Input for test %s: %s", test_vector.name, [l for l in input_vector.split('\n')])
     return input_vector
 
 

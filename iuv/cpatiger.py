@@ -16,9 +16,13 @@ name = 'CPATiger'
 def get_test_cases(exclude=[]):
     if os.path.exists(tests_file):
         with open(tests_file, 'r') as inp:
-            tests = [l for l in inp.readlines()
+            tests = [l.strip() for l in inp.readlines()
                      if l.strip().startswith('[') and l.strip().endswith(']')]
-        return [t for t in tests if t not in exclude]
+        tests = [t for i, t in enumerate(tests) if str(i) not in exclude]
+        tcs = list()
+        for i, t in enumerate(tests):
+            tcs.append(utils.TestCase(str(i), tests_file, t))
+        return tcs
     else:
         return []
 
@@ -85,88 +89,18 @@ class InputGenerator(BaseInputGenerator):
 
 class CpaTigerTestValidator(TestValidator):
 
+    def get_test_vector(self, test):
+        assert len(test.content.split('\n')) == 1
+        assert test.content.startswith('[') and test.content.endswith(']')
+        test_vector = utils.TestVector(test.name, test.origin)
+        processed_line = test.content[1:-1]
+        test_values = processed_line.split(', ')
+        for value in test_values:
+            test_vector.add(value)
+        return test_vector
+
     def get_name(self):
         return name
 
-    def get_test_vectors(self, test):
-        vectors = list()
-        with open(test, 'r') as inp:
-            for line in inp.readlines():
-                processed_line = line.strip()
-                if processed_line.startswith('[') and processed_line.endswith(']'):
-                    test_vector = utils.TestVector(test)
-                    processed_line = processed_line[1:-1]
-                    test_values = processed_line.split(', ')
-                    for value in test_values:
-                        test_vector.add(value)
-                    vectors.append(test_vector)
-        return vectors
-
-    def create_witness(self, filename, test_name, test_vector, nondet_methods):
-        """
-        Creates a witness for the test file produced by crest.
-        Test files produced by our version of crest specify one test value per line, without
-        any mention of the variable the value is assigned to.
-        Because of this, we have to build a fancy witness automaton of the following format:
-        For each test value specified in the test file, there is one precessor and one
-        successor state. These two states are connected by one transition for each
-        call to a CREST_x(..) function. Each of these transitions has the assumption,
-        that the variable specified in the corresponding CREST_x(..) function has the current
-        test value.
-        """
-        witness = self.witness_creator.create_witness(producer=self.get_name(),
-                                                      filename=filename,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=nondet_methods,
-                                                      machine_model=self.machine_model,
-                                                      error_lines=self.get_error_lines(filename))
-
-        witness_file = test_name + ".witness.graphml"
-        witness_file = utils.get_file_path(witness_file)
-
-        return {'name': witness_file, 'content': witness}
-
-    def create_harness(self, filename, test_name, test_vector, nondet_methods):
-        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
-                                                      error_method=utils.error_method,
-                                                      test_vector=test_vector)
-
-
-        harness_file = test_name + '.harness.c'
-        harness_file = utils.get_file_path(harness_file)
-
-        return {'name': harness_file, 'content': harness}
-
-    def _create_all_x(self, filename, creation_method, nondet_methods, visited_tests=None):
-        if visited_tests:
-            raise utils.ConfigError("CPATiger can't create test cases in parallel to validation.")
-        created_content = []
-        empty_case_handled = False
-        vectors = self.get_test_vectors(tests_file)
-
-        for count, test_vector in enumerate(vectors):
-            if test_vector or not empty_case_handled:
-                testname = 'test{0}'.format(count)
-                if not test_vector:
-                    test_vector = dict()
-                    empty_case_handled = True
-                new_content = creation_method(filename, testname, test_vector, nondet_methods)
-                new_content['vector'] = test_vector
-                new_content['origin'] = tests_file
-                created_content.append(new_content)
-            else:
-                logging.debug("Test vector was not generated", )
-        return created_content
-
-    def create_all_test_vectors(self, filename, visited_tests):
-        vectors = self.get_test_vectors(tests_file)
-        return vectors
-
-    def create_all_witnesses(self, filename, visited_tests, nondet_methods):
-        return self._create_all_x(filename, self.create_witness, visited_tests, nondet_methods)
-
-    def create_all_harnesses(self, filename, visited_tests, nondet_methods):
-        return self._create_all_x(filename, self.create_harness, visited_tests, nondet_methods)
-
-    def get_test_files(self, exclude=[]):
+    def get_test_cases(self, exclude=[]):
         return get_test_cases(exclude)
