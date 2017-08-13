@@ -86,5 +86,5 @@ class AflTestValidator(BaseTestValidator):
     def get_test_vector(self, test_case):
         vector = utils.TestVector(test_case.name, test_case.origin)
         for line in test_case.content.split(b'\n'):
-            vector.add(test_case.content)
+            vector.add(line)
         return vector
