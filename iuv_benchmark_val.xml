@@ -1,85 +1,31 @@
 <?xml version="1.0"?>
 <!DOCTYPE benchmark PUBLIC "+/IDN sosy-lab.org/DTD BenchExec benchmark 1.0/EN" "http:/www.sosy-lab.org/benchexec/benchmark-1.0.dtd">
-<benchmark tool="iuv" timelimit="900s" hardtimelimit="950s" cpuCores="8" memlimit="15GB">
+<benchmark tool="iuv" timelimit="900s" hardtimelimit="950s" cpuCores="2" memlimit="15GB">
 
   <option name="--naive-verification" />
+  <resultfiles>**witness.graphml</resultfiles>
 
-  <rundefinition name='klee_ex'>
-    <option name='-i'>klee</option>
-    <option name="--execution" />
-    <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='klee_ex_ig-timelimit'>
-    <option name="-i">klee</option>
-    <option name="--execution" />
-    <option name="--ig-timelimit">600</option>
-    <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='crest_ex_cfg'>
-    <option name='-i'>crest</option>
-    <option name="--strategy">cfg</option>
-    <option name="--execution" />
-    <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='crest_ex_dfs'>
-    <option name='-i'>crest</option>
-    <option name="--strategy">dfs</option>
-    <option name="--execution" />
-    <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='crest_ex_ppc'>
-    <option name='-i'>crest</option>
-    <option name="--strategy">ppc</option>
-    <option name="--execution" />
-    <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='crest_ex_ppccaching'>
-    <option name='-i'>crest</option>
-    <option name="--strategy">cfg_ppcWCaching</option>
-    <option name="--execution" />
-    <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='crest_ex_hybrid'>
-    <option name='-i'>crest</option>
-    <option name="--strategy">hybrid</option>
-    <option name="--execution" />
-    <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
-  <rundefinition name='random_ex'>
-    <option name="-i">random</option>
-    <option name="--execution" />
-    <resultfiles>**/harness.c</resultfiles>
-  </rundefinition>
   <rundefinition name='klee_cpachecker'>
     <option name='-i'>klee</option>
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
-    <resultfiles>**/witness.graphml</resultfiles>
   </rundefinition>
   <rundefinition name='crest_cpachecker'>
     <option name='-i'>crest</option>
+    <option name="--strategy">cfg_ppcWCaching</option>
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
-    <resultfiles>**/witness.graphml</resultfiles>
-  </rundefinition>
-  <rundefinition name="cpatiger_ex">
-    <option name="-i">cpatiger</option>
-    <option name="--execution" />
-    <option name="--no-parallel" />
-    <resultfiles>**/harness.c</resultfiles>
   </rundefinition>
   <rundefinition name="cpatiger_cpachecker">
     <option name="-i">cpatiger</option>
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
     <option name="--no-parallel" />
-    <resultfiles>**/witness.graphml</resultfiles>
   </rundefinition>
   <rundefinition name='random_cpachecker'>
     <option name="-i">random</option>
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
-    <resultfiles>**/witness.graphml</resultfiles>
   </rundefinition>
 
   <tasks name="ReachSafety-ArraysReach">
