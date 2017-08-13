@@ -796,7 +796,7 @@ def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, 
                          stdin=subprocess.PIPE if input_str else None,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT if err_to_output else subprocess.PIPE,
-                         universal_newlines=True,
+                         universal_newlines=False,
                          env=env
                          )
 
@@ -815,13 +815,17 @@ def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, 
         output, err_output = p.communicate()
     else:
         try:
+            if input_str and type(input_str) is not bytes:
+                input_str = input_str.encode()
             output, err_output = p.communicate(input=input_str, timeout=timelimit if timelimit else None)
             returncode = p.poll()
         except subprocess.TimeoutExpired:
             logging.info("Timeout of %s s expired. Killing process.", timelimit)
             returncode = shut_down(p)
-
+    # Decode output, but we can't decode error output, since it may contain undecodable bytes.
+    output = output.decode() if output else ''
     log_method(output)
+    logging.debug(err_output)
 
     return ExecutionResult(returncode, output, err_output)
 
@@ -941,8 +945,13 @@ def get_input_vector(test_vector, escape_newline=False):
     else:
         newline = '\n'
     for item in test_vector.vector:
+        if type(item['value']) is bytes and type(newline) is not bytes:
+            newline = newline.encode()
+            input_vector = input_vector.encode()
         input_vector += item['value'] + newline
-    logging.debug("Input for test %s: %s", test_vector.name, [l for l in input_vector.split('\n')])
+
+    logging.debug("Input for test %s:", test_vector.name)
+    logging.debug([l for l in input_vector.split(newline)][:-1])
     return input_vector
 
 
@@ -959,7 +968,7 @@ def convert_dec_to_hex(dec_value, byte_number=None):
         hex_value = "0x" + necessary_padding * '0' + pure_hex
     elif len(pure_hex) % 2 > 0:
         hex_value = "0x0" + pure_hex
-    return hex_value
+    return hex_valuex
 
 
 class Stopwatch(object):
@@ -1386,7 +1395,7 @@ if not os.path.exists(output_dir):
 
 
 def found_err(run_result):
-    return run_result.stderr and error_string in run_result.stderr
+    return run_result.stderr and error_string.encode() in run_result.stderr
 
 
 def get_prepared_name(filename, tool_name):

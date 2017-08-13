@@ -310,16 +310,17 @@ class TestValidator(object):
             test_vector = result.test_vector
             if not test_vector:
                 test_vector = self.get_test_vector(result.test)
-            if result.witness is None:
-                nondet_methods = utils.get_nondet_methods()
-                witness = self.create_witness(program_file, result.test, test_vector, nondet_methods)
-                with open(witness['name'], 'w+') as outp:
-                    outp.write(witness['content'])
-                result.witness = witness['name']
+            # This currently won't work with AFL due to its string-style input
+            #if result.witness is None:
+            #    nondet_methods = utils.get_nondet_methods()
+            #    witness = self.create_witness(program_file, result.test, test_vector, nondet_methods)
+            #    with open(witness['name'], 'w+') as outp:
+            #        outp.write(witness['content'])
+            #    result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
                 harness = self.create_harness(program_file, result.test, test_vector, nondet_methods)
-                with open(harness['name'], 'w+') as outp:
+                with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']
 
@@ -393,7 +394,7 @@ class ExecutionRunnerTwo(ExecutionRunner):
         nondet_methods = utils.get_nondet_methods()
         harness_content = self.harness_generator.create_harness(nondet_methods, utils.error_method)
         harness_file = 'harness.c'
-        with open(harness_file, 'w+') as outp:
+        with open(harness_file, 'wb+') as outp:
             outp.write(harness_content)
         return self.compile(program_file, harness_file)
 

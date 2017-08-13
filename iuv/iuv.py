@@ -5,6 +5,7 @@ import os
 import logging
 import argparse
 
+import afl
 import cpatiger
 import klee
 import crest
@@ -37,7 +38,7 @@ def _create_cli_arg_parser():
                                       dest="input_generator",
                                       action="store",
                                       required=True,
-                                      choices=['klee', 'crest', 'cpatiger', 'random'],
+                                      choices=['afl', 'klee', 'crest', 'cpatiger', 'random'],
                                       help="input generator to use"
                                       )
 
@@ -162,6 +163,9 @@ def _parse_cli_args(argv):
 def _get_input_generator_module(args):
     input_generator = args.input_generator.lower()
 
+    if input_generator == 'afl':
+        return afl.InputGenerator(args.ig_timelimit, args.machine_model)
+
     if input_generator == 'klee':
         if args.strategy:
             return klee.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy, machine_model=args.machine_model)
@@ -185,7 +189,9 @@ def _get_input_generator_module(args):
 def _get_validator_module(args):
     validator = args.input_generator.lower()
     validation_config = ValidationConfig(args)
-    if validator == 'klee':
+    if validator == 'afl':
+        return afl.AflTestValidator(validation_config)
+    elif validator == 'klee':
         return klee.KleeTestValidator(validation_config)
     elif validator == 'crest':
         return crest.CrestTestValidator(validation_config)
@@ -238,13 +244,14 @@ def run():
             persistent_test = utils.get_file_path(test_name, temp_dir=False)
             shutil.copy(validation_result.test, persistent_test)
             for proof in validation_result.harness, validation_result.witness:
-                proof_name = os.path.basename(proof)
-                if proof_name.endswith('.harness.c'):
-                    persistent_proof = utils.get_file_path('harness.c', temp_dir=False)
-                else:
-                    assert proof_name.endswith('.witness.graphml')
-                    persistent_proof = utils.get_file_path('witness.graphml', temp_dir=False)
-                shutil.copy(proof, persistent_proof)
+                if proof is not None:
+                    proof_name = os.path.basename(proof)
+                    if proof_name.endswith('.harness.c'):
+                        persistent_proof = utils.get_file_path('harness.c', temp_dir=False)
+                    else:
+                        assert proof_name.endswith('.witness.graphml')
+                        persistent_proof = utils.get_file_path('witness.graphml', temp_dir=False)
+                    shutil.copy(proof, persistent_proof)
         elif not generation_done:
             validation_result = utils.VerdictUnknown()
 
