@@ -7,8 +7,9 @@ import argparse
 
 import afl
 import cpatiger
-import klee
 import crest
+import fshell
+import klee
 import random_tester
 import utils
 import shutil
@@ -38,7 +39,7 @@ def _create_cli_arg_parser():
                                       dest="input_generator",
                                       action="store",
                                       required=True,
-                                      choices=['afl', 'klee', 'crest', 'cpatiger', 'random'],
+                                      choices=['afl', 'fshell', 'klee', 'crest', 'cpatiger', 'random'],
                                       help="input generator to use"
                                       )
 
@@ -166,11 +167,15 @@ def _get_input_generator_module(args):
     if input_generator == 'afl':
         return afl.InputGenerator(args.ig_timelimit, args.machine_model, args.log_verbose)
 
-    if input_generator == 'klee':
+    elif input_generator == 'fshell':
+        return fshell.InputGenerator(args.ig_timelimit, args.machine_model, args.log_verbose)
+
+    elif input_generator == 'klee':
         if args.strategy:
             return klee.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy, machine_model=args.machine_model)
         else:
             return klee.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
+
     elif input_generator == 'crest':
         if args.strategy:
             if len(args.strategy) != 1:
@@ -193,6 +198,8 @@ def _get_validator_module(args):
     validation_config = ValidationConfig(args)
     if validator == 'afl':
         return afl.AflTestValidator(validation_config)
+    elif validator == "fshell":
+        return fshell.FshellTestValidator(validation_config)
     elif validator == 'klee':
         return klee.KleeTestValidator(validation_config)
     elif validator == 'crest':
