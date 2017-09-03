@@ -20,7 +20,7 @@ from multiprocessing.context import TimeoutError
 
 from test_validation import ValidationConfig
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 __VERSION__ = "0.1-dev"
 
