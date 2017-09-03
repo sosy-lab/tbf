@@ -4,7 +4,7 @@ import utils
 class HarnessCreator(object):
 
     def _get_vector_read_method(self):
-        return b"""char * read_bytes(unsigned int type_size, char * __inp_var) {
+        return b"""char * read_bytes(char * __inp_var) {
     unsigned int input_length = strlen(__inp_var)-1;
     /* Remove '\\n' at end of input */
     if (__inp_var[input_length] == '\\n') {
@@ -16,17 +16,23 @@ class HarnessCreator(object):
 
     unsigned long long intVal = strtoull(__inp_var, &parseEnd, 0);
     if (*parseEnd != 0) {
-      long double floatVal = strtold(__inp_var, &parseEnd);
+      long long sintVal = strtoll(__inp_var, &parseEnd, 0);
       if (*parseEnd != 0) {
-        fprintf(stderr, "Can't parse input: '%s' (failing at '%s')\\n", __inp_var, parseEnd);
-        abort();
+        long double floatVal = strtold(__inp_var, &parseEnd);
+        if (*parseEnd != 0) {
+          fprintf(stderr, "Can't parse input: '%s' (failing at '%s')\\n", __inp_var, parseEnd);
+          abort();
 
+        } else {
+          memcpy(value_pointer, &floatVal, 16);
+        }
       } else {
-        memcpy(value_pointer, &floatVal, 16);
+        memcpy(value_pointer, &sintVal, 8);
       }
     } else {
-        memcpy(value_pointer, &intVal, 8);
+      memcpy(value_pointer, &intVal, 8);
     }
+
     return value_pointer;
 }\n\n"""
 
@@ -73,8 +79,7 @@ class HarnessCreator(object):
             definitions += utils.get_method_head(method['name'], method['type'], method['params']).encode()
             definitions += b' {\n'
             if method['type'] != 'void':
-                definitions += "    unsigned int type_size = sizeof({0});\n".format(method['type']).encode()
-                definitions += "    unsigned int inp_size = type_size * 2 + 4;\n".encode()
+                definitions += "    unsigned int inp_size = 3000;\n".encode()
                 definitions += "    char * inp_var = malloc(inp_size);\n".encode()
                 if test_vector is None:  # Build generic harness
                     definitions += "    fgets(inp_var, inp_size, stdin);\n".encode()
@@ -90,7 +95,7 @@ class HarnessCreator(object):
                     definitions += b"    }\n"
                     definitions += b"    access_counter++;\n"
 
-                definitions += b''.join([b'    return *((', method['type'].encode(), b' *) read_bytes(type_size, inp_var));\n'])
+                definitions += b''.join([b'    return *((', method['type'].encode(), b' *) read_bytes(inp_var));\n'])
             definitions += b'}\n\n'
         return definitions
 
