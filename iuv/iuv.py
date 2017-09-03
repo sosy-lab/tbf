@@ -22,7 +22,7 @@ from test_validation import ValidationConfig
 
 logging.basicConfig(level=logging.DEBUG)
 
-__VERSION__ = 0.1
+__VERSION__ = "0.1-dev"
 
 ast = None
 
