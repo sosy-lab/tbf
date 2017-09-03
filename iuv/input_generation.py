@@ -29,9 +29,10 @@ class BaseInputGenerator(object):
     def failed(result):
         return result.returncode < 0
 
-    def __init__(self, timelimit, machine_model):
+    def __init__(self, timelimit, machine_model, log_verbose):
         self.machine_model = machine_model
         self.timelimit = int(timelimit) if timelimit else 0
+        self.log_verbose = log_verbose
         self.statistics = utils.statistics.new('Input Generator ' + self.get_name())
 
         self.timer_file_access = utils.Stopwatch()
@@ -88,7 +89,7 @@ class BaseInputGenerator(object):
 
             cmds = self.create_input_generation_cmds(file_to_analyze)
             for cmd in cmds:
-                result = utils.execute(cmd, env=self.get_run_env(), quiet=True, err_to_output=True, stop_flag=stop_flag, timelimit=self.timelimit)
+                result = utils.execute(cmd, env=self.get_run_env(), quiet=not self.log_verbose, err_to_output=True, stop_flag=stop_flag, timelimit=self.timelimit)
                 if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
                     logging.error("Generating input failed at command %s", ' '.join(cmd))
             # May throw an InputGenerationError if no test cases were generated

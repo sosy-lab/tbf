@@ -25,7 +25,7 @@ def get_test_cases(exclude=[]):
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self, timelimit=None, log_verbose=False, search_heuristic='ppc', machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(timelimit, machine_model)
+        super().__init__(timelimit, machine_model, log_verbose)
         self.log_verbose = log_verbose
 
         self._run_env = utils.get_env_with_path_added(bin_dir)

@@ -29,7 +29,7 @@ def get_test_cases(exclude=[], directory=tests_dir):
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew'], machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(timelimit, machine_model)
+        super().__init__(timelimit, machine_model, log_verbose)
         self.log_verbose = log_verbose
         if type(search_heuristic) is not list:
             self.search_heuristic = list(search_heuristic)

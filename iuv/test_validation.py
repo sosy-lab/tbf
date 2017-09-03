@@ -355,7 +355,7 @@ class ExecutionRunner(object):
 
         if compile_result.returncode != 0:
             compile_cmd = self._get_compile_cmd(program_file, harness_file, output_file, 'gnu90')
-            compile_result = utils.execute(compile_cmd, quiet=True)
+            compile_result = utils.execute(compile_cmd, quiet=True, err_to_output=False)
 
             if compile_result.returncode != 0:
                 raise utils.CompileError("Compilation failed for harness {}".format(harness_file))

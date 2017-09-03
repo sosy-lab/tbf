@@ -164,7 +164,7 @@ def _get_input_generator_module(args):
     input_generator = args.input_generator.lower()
 
     if input_generator == 'afl':
-        return afl.InputGenerator(args.ig_timelimit, args.machine_model)
+        return afl.InputGenerator(args.ig_timelimit, args.machine_model, args.log_verbose)
 
     if input_generator == 'klee':
         if args.strategy:
@@ -178,8 +178,10 @@ def _get_input_generator_module(args):
             return crest.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy[0], machine_model=args.machine_model)
         else:
             return crest.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
+
     elif input_generator == 'cpatiger':
         return cpatiger.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
+
     elif input_generator == 'random':
         return random_tester.InputGenerator(args.ig_timelimit, machine_model=args.machine_model)
     else:
