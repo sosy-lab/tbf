@@ -308,7 +308,7 @@ class TestValidator(object):
 
         if result.is_positive():
             test_vector = result.test_vector
-            if not test_vector:
+            if test_vector is None:
                 test_vector = self.get_test_vector(result.test)
             # This currently won't work with AFL due to its string-style input
             #if result.witness is None:
