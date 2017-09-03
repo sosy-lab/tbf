@@ -113,7 +113,7 @@ class TestValidator(object):
             test_name = test_case.name
             assert test_name not in visited_tests
             visited_tests.add(test_name)
-            test_vector = self.get_test_vector(test_case.content)
+            test_vector = self.get_test_vector(test_case)
             if test_vector or not empty_case_handled:
                 if not test_vector:
                     test_vector = utils.TestVector(test_case.name, test_case.origin)
@@ -319,7 +319,7 @@ class TestValidator(object):
             #    result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
-                harness = self.create_harness(program_file, result.test, test_vector, nondet_methods)
+                harness = self.create_harness(program_file, result.test.name, test_vector, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']
