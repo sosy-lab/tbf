@@ -120,7 +120,7 @@ class TestValidator(object):
                     empty_case_handled = True
                 new_content = self.create_witness(program_file, test_case.name, test_vector, nondet_methods)
                 new_content['vector'] = test_vector
-                new_content['origin'] = test_case
+                new_content['origin'] = test_case.origin
                 created_content.append(new_content)
             else:
                 logging.info("Test vector was not generated for %s", test_case)
@@ -271,7 +271,7 @@ class TestValidator(object):
 
             logging.debug('Results for %s: %s', test, str(verdicts))
             if any([v == FALSE for v in verdicts]):
-                return utils.VerdictFalse(test.name)
+                return utils.VerdictFalse(test)
         return utils.VerdictUnknown()
 
     def perform_klee_replay_validation(self, program_file, generator_thread):
@@ -319,7 +319,7 @@ class TestValidator(object):
             #    result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
-                harness = self.create_harness(program_file, result.test.name, test_vector, nondet_methods)
+                harness = self.create_harness(program_file, result.test, test_vector, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']
