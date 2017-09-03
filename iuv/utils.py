@@ -635,6 +635,10 @@ class MachineModel(object):
     def name(self):
         return self._name
 
+    @property
+    def witness_key(self):
+        return str(self._wordsize) + "bit"
+
     def get_size(self, data_type):
         if 'short' in data_type:
             return self.short_size

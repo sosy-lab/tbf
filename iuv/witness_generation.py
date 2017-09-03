@@ -73,7 +73,7 @@ class WitnessCreator(object):
         graph.append(self._create_data_element('programfile', program_file))
         filehash = utils.get_hash(program_file)
         graph.append(self._create_data_element('programhash', filehash))
-        graph.append(self._create_data_element('architecture', machine_model))
+        graph.append(self._create_data_element('architecture', machine_model.witness_key))
 
         return graph
 
