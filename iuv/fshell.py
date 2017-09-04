@@ -2,7 +2,6 @@ import os
 import utils
 from input_generation import BaseInputGenerator
 from test_validation import TestValidator
-from harness_generation import HarnessCreator
 
 name = "fshell"
 fshell_dir = os.path.abspath("./fshell")
