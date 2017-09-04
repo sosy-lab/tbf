@@ -24,8 +24,6 @@ logging.basicConfig(level=logging.INFO)
 
 __VERSION__ = "0.1-dev"
 
-ast = None
-
 
 def _create_cli_arg_parser():
     parser = argparse.ArgumentParser(description='Toolchain for test-input using verifier', add_help=False)
@@ -117,6 +115,13 @@ def _create_cli_arg_parser():
                                     action="store_const",
                                     const="64bit",
                                     help="Use 64 bit machine model")
+
+    run_args.add_argument('--timelimit',
+                          dest="timelimit",
+                          action="store",
+                          default=None,
+                          help="timelimit to use"
+                          )
 
     run_args.add_argument('--verbose', '-v',
                           dest="log_verbose",
@@ -212,10 +217,9 @@ def _get_validator_module(args):
         raise AssertionError('Unhandled validator: ' + validator)
 
 
-def run():
+def run(args):
     default_err = "Unknown error"
 
-    args = _parse_cli_args(sys.argv[1:])
     validation_result = None
     old_dir = os.path.abspath('.')
 
@@ -272,9 +276,16 @@ def run():
         logging.error("Parse error: %s", e.msg if e.msg else default_err)
     finally:
         os.chdir(old_dir)
-        print(utils.statistics)
         print("\nIUV verdict:", validation_result.verdict.upper() if validation_result else "UNKNOWN")
 
 if __name__ == '__main__':
-    run()
+    args = _parse_cli_args(sys.argv[1:])
 
+    pool = ThreadPool(processes=1)
+    try:
+        running_thread = pool.apply_async(run, args=[args])
+        running_thread.get(float(args.timelimit) if args.timelimit else None)
+    except TimeoutError as e:
+        logging.error("Timeout error.\n")
+    finally:
+        print(utils.statistics)
