@@ -42,6 +42,7 @@ class InputGenerator(BaseInputGenerator):
         input_gen_cmd = [os.path.join(bin_dir, 'afl-fuzz'),
                          '-i', testcase_dir,
                          '-o', findings_dir,
+                         '--',
                          os.path.abspath(instrumented_program)]
         return [compile_cmd, input_gen_cmd]
 
@@ -65,6 +66,7 @@ class InputGenerator(BaseInputGenerator):
     def get_run_env(self):
         env = utils.get_env()
         env['AFL_PATH'] = bin_dir
+        env['AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = 'true'
         env['AFL_SKIP_CPUFREQ'] = 'true'
         return env
 
