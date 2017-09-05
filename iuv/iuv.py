@@ -290,12 +290,17 @@ if __name__ == '__main__':
     running_thread = utils.Thread(target=run, args=(args, stop_event))
     try:
         running_thread.start()
-        while args.timelimit and running_thread.is_alive() and timeout_watch.curr_s() < args.timelimit:
+        while running_thread.is_alive() and (not args.timelimit or timeout_watch.curr_s() < args.timelimit):
             sleep(0.1)
     finally:
         timeout_watch.stop()
-        if timeout_watch.sum() >= args.timelimit:
+        if args.timelimit and timeout_watch.sum() >= args.timelimit:
             logging.error("Timeout error.\n")
+        else:
+            logging.info("Time taken: " + str(timeout_watch.sum()))
         stop_event.set()
-        running_thread.join()
+        try:
+            running_thread.join(5)
+        except TimeoutError:
+            logging.warning("Timeout error when waiting for main thread")
 

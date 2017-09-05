@@ -10,6 +10,7 @@ from struct import unpack
 import codecs
 
 from threading import Thread
+from math import floor
 import signal
 
 parser = pycparser.CParser()
@@ -996,7 +997,7 @@ class Stopwatch(object):
     def curr_s(self):
         """ Return current time in seconds """
         assert self._current_start
-        return int(round(self._process(time.perf_counter() - self._current_start), 0))
+        return int(floor(self._process(time.perf_counter() - self._current_start)))
 
     def _process(self, value):
         return round(value, 3)
