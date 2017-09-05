@@ -254,9 +254,9 @@ def run(args, stop_all_event=None):
             generation_done = False
 
         if validation_result.is_positive():
-            test_name = os.path.basename(validation_result.test)
+            test_name = os.path.basename(validation_result.test.origin)
             persistent_test = utils.get_file_path(test_name, temp_dir=False)
-            shutil.copy(validation_result.test, persistent_test)
+            shutil.copy(validation_result.test.origin, persistent_test)
             for proof in validation_result.harness, validation_result.witness:
                 if proof is not None:
                     proof_name = os.path.basename(proof)

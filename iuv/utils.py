@@ -756,8 +756,8 @@ class VerdictTrue(Verdict):
 
 
 class VerdictFalse(Verdict):
-    def __init__(self, test, test_vector=None, harness=None, witness=None):
-        super().__init__(FALSE, test, test_vector, harness, witness)
+    def __init__(self, test_origin, test_vector=None, harness=None, witness=None):
+        super().__init__(FALSE, test_origin, test_vector, harness, witness)
 
 
 class VerdictUnknown(Verdict):

@@ -271,7 +271,7 @@ class TestValidator(object):
             logging.debug('Results for %s: %s', vector, str(verdicts))
             if any([v == FALSE for v in verdicts]):
                 self.final_test_vector_size.value = len(vector)
-                return utils.VerdictFalse(vector.origin, vector)
+                return utils.VerdictFalse(vector, vector)
         return utils.VerdictUnknown()
 
     def _k(self, program_file, validator, visited_tests):
@@ -339,7 +339,7 @@ class TestValidator(object):
             #    result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
-                harness = self.create_harness(program_file, result.test, test_vector, nondet_methods)
+                harness = self.create_harness(program_file, result.test.origin, test_vector, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']
