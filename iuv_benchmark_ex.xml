@@ -2,7 +2,6 @@
 <!DOCTYPE benchmark PUBLIC "+/IDN sosy-lab.org/DTD BenchExec benchmark 1.0/EN" "http:/www.sosy-lab.org/benchexec/benchmark-1.0.dtd">
 <benchmark tool="iuv" timelimit="900s" hardtimelimit="950s" cpuCores="2" memlimit="15GB">
 
-  <option name="--naive-verification" />
     <resultfiles>**harness.c</resultfiles>
 
   <rundefinition name='klee_ex'>
@@ -30,6 +29,10 @@
   </rundefinition>
   <rundefinition name='afl_ex'>
     <option name='-i'>afl</option>
+    <option name="--execution" />
+  </rundefinition>
+  <rundefinition name='fshell_ex'>
+    <option name='-i'>fshell</option>
     <option name="--execution" />
   </rundefinition>
     
