@@ -33,15 +33,17 @@ class BaseInputGenerator(object):
         self.machine_model = machine_model
         self.timelimit = int(timelimit) if timelimit else 0
         self.log_verbose = log_verbose
-        self.statistics = utils.statistics.new('Input Generator ' + self.get_name())
+        self.statistics = utils.Statistics("Input Generator " + self.get_name())
 
         self.timer_file_access = utils.Stopwatch()
         self.timer_prepare = utils.Stopwatch()
         self.timer_input_gen = utils.Stopwatch()
+        self.timer_generator = utils.Stopwatch()
 
         self.number_generated_tests = utils.Constant()
 
-        self.statistics.add_value('Time for input generation', self.timer_input_gen)
+        self.statistics.add_value('Time for full input generation', self.timer_input_gen)
+        self.statistics.add_value('Time for test case generator', self.timer_generator)
         self.statistics.add_value('Time for controlled file accesses', self.timer_file_access)
         self.statistics.add_value('Time for file preparation', self.timer_prepare)
         self.statistics.add_value('Number of generated test cases', self.number_generated_tests)
@@ -65,7 +67,7 @@ class BaseInputGenerator(object):
     def _get_error_method_dummy(self):
         return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit(42); }}\n'.format(utils.error_string)
 
-    def generate_input(self, filename, stop_flag=None):
+    def generate_input(self, filename, stop_flag):
         default_err = "Unknown error"
         self.timer_input_gen.start()
         try:
@@ -89,15 +91,18 @@ class BaseInputGenerator(object):
 
             cmds = self.create_input_generation_cmds(file_to_analyze)
             for cmd in cmds:
+                self.timer_generator.start()
                 result = utils.execute(cmd, env=self.get_run_env(), quiet=not self.log_verbose, err_to_output=True, stop_flag=stop_flag, timelimit=self.timelimit)
+                self.timer_generator.stop()
                 if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
                     logging.error("Generating input failed at command %s", ' '.join(cmd))
-            # May throw an InputGenerationError if no test cases were generated
+
             try:
                 self.number_generated_tests.value = self.get_test_count()
+                return True
             except utils.InputGenerationError as e:
                 logging.warning(e.msg)
-            return True
+                return False
 
         except utils.CompileError as e:
             logging.error("Compile error: %s", e.msg if e.msg else default_err)
@@ -111,3 +116,9 @@ class BaseInputGenerator(object):
 
         finally:
             self.timer_input_gen.stop()
+            for n, s in self.statistics.stats:
+                if type(s) is utils.Stopwatch and s.is_running():
+                    s.stop()
+
+    def get_statistics(self):
+        return self.statistics

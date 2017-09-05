@@ -63,7 +63,7 @@ class TestValidator(object):
         # it is a function definition/declaration.
         self.error_method_pattern = re.compile('((?!void).)*(void.*\S.*)?__VERIFIER_error\(\) *;.*')
 
-        self.statistics = utils.statistics.new('Test Validator ' + self.get_name())
+        self.statistics = utils.Statistics('Test Validator ' + self.get_name())
         self.timer_validation = utils.Stopwatch()
         self.statistics.add_value('Time for validation', self.timer_validation)
         self.timer_witness_validation = utils.Stopwatch()
@@ -75,11 +75,17 @@ class TestValidator(object):
         self.counter_size_harnesses = utils.Counter()
         self.statistics.add_value('Total size of harnesses', self.counter_size_harnesses)
 
+        self.timer_vector_gen = utils.Stopwatch()
+        self.statistics.add_value("Time for test vector generation", self.timer_vector_gen)
         self.counter_handled_test_cases = utils.Counter()
         self.statistics.add_value('Number of looked-at test cases', self.counter_handled_test_cases)
 
         self.final_test_vector_size = utils.Constant()
         self.statistics.add_value("Size of successful test vector", self.final_test_vector_size)
+
+
+    def get_statistics(self):
+        return self.statistics
 
     def get_error_lines(self, program_file):
         with open(program_file, 'r') as inp:
@@ -156,10 +162,11 @@ class TestValidator(object):
         else:
             return utils.VerdictTrue()
 
-    def perform_witness_validation(self, program_file, generator_thread):
+    def perform_witness_validation(self, program_file, generator_thread, stop_event):
         validator = ValidationRunner(self.config.witness_validators)
         visited_tests = set()
-        while generator_thread and not generator_thread.ready():
+        result = list()
+        while generator_thread and generator_thread.is_alive() and not stop_event.is_set():
             try:
                 result = self._m(program_file, validator, visited_tests)
                 if result.is_positive():
@@ -167,7 +174,8 @@ class TestValidator(object):
                 sleep(0.001)  # Sleep for 1 millisecond
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
-        result = self._m(program_file, validator, visited_tests)
+        if not stop_event.is_set():
+            result = self._m(program_file, validator, visited_tests)
         return self.decide_final_verdict(result)
 
     def _m(self, program_file, validator, visited_tests):
@@ -186,6 +194,7 @@ class TestValidator(object):
             finally:
                 self.timer_witness_validation.stop()
                 self.timer_validation.stop()
+
             self.counter_handled_test_cases.inc()
             logging.info('Results for %s: %s', witness_name, str(verdicts))
             if any(['false' in v.lower() for v in verdicts]):
@@ -219,13 +228,21 @@ class TestValidator(object):
         return {'name': harness_file, 'content': harness}
 
     @abstractmethod
-    def get_test_vector(self, test_case):
+    def _get_test_vector(self, test_case):
         pass
 
-    def perform_execution_validation(self, program_file, generator_thread):
+    def get_test_vector(self, test_case):
+        self.timer_vector_gen.start()
+        try:
+            return self._get_test_vector(test_case)
+        finally:
+            self.timer_vector_gen.stop()
+
+    def perform_execution_validation(self, program_file, generator_thread, stop_event):
         validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
         visited_tests = set()
-        while generator_thread and not generator_thread.ready():
+        result = list()
+        while generator_thread and generator_thread.is_alive() and not stop_event.is_set():
             try:
                 result = self._hs(program_file, validator, visited_tests)
                 if result.is_positive():
@@ -234,7 +251,8 @@ class TestValidator(object):
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
 
-        result = self._hs(program_file, validator, visited_tests)
+        if not stop_event.is_set():
+            result = self._hs(program_file, validator, visited_tests)
         return self.decide_final_verdict(result)
 
     def _hs(self, program_file, validator, visited_tests):
@@ -274,11 +292,12 @@ class TestValidator(object):
                 return utils.VerdictFalse(test)
         return utils.VerdictUnknown()
 
-    def perform_klee_replay_validation(self, program_file, generator_thread):
+    def perform_klee_replay_validation(self, program_file, generator_thread, stop_event):
         validator = KleeReplayRunner(self.config.machine_model)
 
         visited_tests = set()
-        while generator_thread and not generator_thread.ready():
+        result = list()
+        while generator_thread and generator_thread.is_alive() and not stop_event.is_set():
             try:
                 result = self._k(program_file, validator, visited_tests)
                 if result.is_positive():
@@ -287,23 +306,24 @@ class TestValidator(object):
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
 
-        result = self._k(program_file, validator, visited_tests)
+        if not stop_event.is_set():
+            result = self._k(program_file, validator, visited_tests)
         return self.decide_final_verdict(result)
 
-    def check_inputs(self, program_file, generator_thread=None):
+    def check_inputs(self, program_file, generator_thread, stop_event):
         logging.debug('Checking inputs for file %s', program_file)
         result = utils.VerdictUnknown()
 
         if self.config.use_klee_replay:
-            result = self.perform_klee_replay_validation(program_file, generator_thread)
+            result = self.perform_klee_replay_validation(program_file, generator_thread, stop_event)
             logging.info("Klee-replay validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_execution:
-            result = self.perform_execution_validation(program_file, generator_thread)
+            result = self.perform_execution_validation(program_file, generator_thread, stop_event)
             logging.info("Execution validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_witness_validation:
-            result = self.perform_witness_validation(program_file, generator_thread)
+            result = self.perform_witness_validation(program_file, generator_thread, stop_event)
             logging.info("Witness validation says: " + str(result))
 
         if result.is_positive():

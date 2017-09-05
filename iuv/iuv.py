@@ -14,9 +14,9 @@ import random_tester
 import utils
 import shutil
 
-from threading import Event
-from multiprocessing.pool import ThreadPool
+from threading import Event, Thread
 from multiprocessing.context import TimeoutError
+from time import sleep
 
 from test_validation import ValidationConfig
 
@@ -154,6 +154,7 @@ def _create_cli_arg_parser():
 def _parse_cli_args(argv):
     parser = _create_cli_arg_parser()
     args = parser.parse_args(argv)
+    args.timelimit = float(args.timelimit) if args.timelimit else None
     if not args.machine_model:
         logging.warning("No machine model specified. Assuming 32 bit")
         args.machine_model = utils.MACHINE_MODEL_32
@@ -193,7 +194,7 @@ def _get_input_generator_module(args):
         return cpatiger.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
 
     elif input_generator == 'random':
-        return random_tester.InputGenerator(args.ig_timelimit, machine_model=args.machine_model)
+        return random_tester.InputGenerator(args.ig_timelimit, args.machine_model, args.log_verbose)
     else:
         raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 
@@ -217,40 +218,40 @@ def _get_validator_module(args):
         raise AssertionError('Unhandled validator: ' + validator)
 
 
-def run(args):
+def run(args, stop_all_event=None):
     default_err = "Unknown error"
 
-    validation_result = None
-    old_dir = os.path.abspath('.')
+    validation_result = utils.VerdictUnknown()
 
+    filename = os.path.abspath(args.file)
+    inp_module = _get_input_generator_module(args)
+    validator_module = _get_validator_module(args)
+
+    if args.run_parallel:
+        generator_thread = Thread(target=inp_module.generate_input, args=(filename, stop_all_event))
+    else:
+        generator_thread = utils.SyncThread(target=inp_module.generate_input, args=(filename, stop_all_event), stop_event=stop_all_event)
+
+    old_dir = os.path.abspath('.')
     try:
-        filename = os.path.abspath(args.file)
-        inp_module = _get_input_generator_module(args)
         os.chdir(utils.tmp)
 
         utils.find_nondet_methods(filename, args.svcomp_nondets_only)
-        if args.run_parallel:
-            pool = ThreadPool(processes=1)
-            stop_event = Event()
-            generator_thread = pool.apply_async(inp_module.generate_input, args=(filename, stop_event))
-        else:
-            stop_event = None
-            generator_thread = None
-            inp_module.generate_input(filename)
+        if stop_all_event.is_set():
+            return
 
-        validator_module = _get_validator_module(args)
-        validation_result = validator_module.check_inputs(filename, generator_thread)
+        generator_thread.start()
 
-        if stop_event:
-            stop_event.set()
+        if stop_all_event.is_set():
+            return
 
-        if generator_thread:
-            try:
-                generation_done = generator_thread.get(timeout=3)
-            except TimeoutError:
-                generation_done = False
-        else:
+        validation_result = validator_module.check_inputs(filename, generator_thread, stop_all_event)
+
+        try:
+            generator_thread.join(timeout=3)
             generation_done = True
+        except TimeoutError:
+            generation_done = False
 
         if validation_result.is_positive():
             test_name = os.path.basename(validation_result.test)
@@ -276,16 +277,25 @@ def run(args):
         logging.error("Parse error: %s", e.msg if e.msg else default_err)
     finally:
         os.chdir(old_dir)
-        print("\nIUV verdict:", validation_result.verdict.upper() if validation_result else "UNKNOWN")
+        print(inp_module.get_statistics())
+        print(validator_module.get_statistics())
+        print("\nIUV verdict:", validation_result.verdict.upper())
 
 if __name__ == '__main__':
+    timeout_watch = utils.Stopwatch()
+    timeout_watch.start()
     args = _parse_cli_args(sys.argv[1:])
 
-    pool = ThreadPool(processes=1)
+    stop_event = Event()
+    running_thread = utils.Thread(target=run, args=(args, stop_event))
     try:
-        running_thread = pool.apply_async(run, args=[args])
-        running_thread.get(float(args.timelimit) if args.timelimit else None)
-    except TimeoutError as e:
-        logging.error("Timeout error.\n")
+        running_thread.start()
+        while args.timelimit and running_thread.is_alive() and timeout_watch.curr_s() < args.timelimit:
+            sleep(0.1)
     finally:
-        print(utils.statistics)
+        timeout_watch.stop()
+        if timeout_watch.sum() >= args.timelimit:
+            logging.error("Timeout error.\n")
+        stop_event.set()
+        running_thread.join()
+

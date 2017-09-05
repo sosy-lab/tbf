@@ -117,7 +117,7 @@ class FshellTestValidator(TestValidator):
     def get_name(self):
         return name
 
-    def get_test_vector(self, test):
+    def _get_test_vector(self, test):
         vector = utils.TestVector(test.name, test.origin)
         for tv in test.content:
             vector.add(tv)

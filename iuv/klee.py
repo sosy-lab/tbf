@@ -109,7 +109,7 @@ class KleeTestValidator(TestValidator):
         assert 'object' in test_info_line
         return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
 
-    def get_test_vector(self, test):
+    def _get_test_vector(self, test):
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool')]
         exec_output = utils.execute(ktest_tool + [test.origin], err_to_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')

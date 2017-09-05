@@ -9,6 +9,9 @@ import re
 from struct import unpack
 import codecs
 
+from threading import Thread
+import signal
+
 parser = pycparser.CParser()
 sym_var_prefix = '__sym_'
 
@@ -780,13 +783,8 @@ class TestVector(object):
 
 
 def shut_down(process):
-    process.terminate()
-    returncode = None
-    try:
-        returncode = process.wait(timeout=4)
-    except subprocess.TimeoutExpired:
-        logging.info("Wasn't able to shut down process within timeout. Trying to kill it.")
-        process.kill()
+    process.send_signal(signal.SIGKILL)
+    returncode = process.wait()
 
     return returncode
 
@@ -972,7 +970,7 @@ def convert_dec_to_hex(dec_value, byte_number=None):
         hex_value = "0x" + necessary_padding * '0' + pure_hex
     elif len(pure_hex) % 2 > 0:
         hex_value = "0x0" + pure_hex
-    return hex_valuex
+    return hex_value
 
 
 class Stopwatch(object):
@@ -991,6 +989,9 @@ class Stopwatch(object):
         time_elapsed = self._process(end_time - self._current_start)
         self._current_start = None
         self._intervals.append(time_elapsed)
+
+    def is_running(self):
+        return self._current_start is not None
 
     def curr_s(self):
         """ Return current time in seconds """
@@ -1392,8 +1393,6 @@ ERROR = 'error'
 MACHINE_MODEL_32 = MachineModel(32, "32 bit linux", 2, 4, 4, 8, 4, 8, 12, '-m32')
 MACHINE_MODEL_64 = MachineModel(64, "64 bit linux", 2, 4, 8, 8, 4, 8, 16, '-m64')
 
-statistics = StatisticsPool()
-
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 
@@ -1406,3 +1405,13 @@ def get_prepared_name(filename, tool_name):
     prepared_name = '.'.join(os.path.basename(filename).split('.')[:-1] + [tool_name, 'c'])
     prepared_name = get_file_path(prepared_name, temp_dir=True)
     return prepared_name
+
+
+class SyncThread(Thread):
+
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, stop_event=None, *, daemon=None):
+        super().__init__(group, target, name, args, kwargs, daemon=daemon)
+        self.stop_event = stop_event
+
+    def start(self):
+        super().start()

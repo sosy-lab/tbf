@@ -131,7 +131,7 @@ class CrestTestValidator(TestValidator):
     def get_name(self):
         return name
 
-    def get_test_vector(self, test):
+    def _get_test_vector(self, test):
         test_vector = utils.TestVector(test.name, test.origin)
         for line in test.content.split('\n'):
             value = line.strip()
