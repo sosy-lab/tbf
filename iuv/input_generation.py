@@ -97,13 +97,7 @@ class BaseInputGenerator(object):
                 if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
                     logging.error("Generating input failed at command %s", ' '.join(cmd))
 
-            try:
-                self.number_generated_tests.value = self.get_test_count()
-                return True
-            except utils.InputGenerationError as e:
-                logging.warning(e.msg)
-                return False
-
+            return True
         except utils.CompileError as e:
             logging.error("Compile error: %s", e.msg if e.msg else default_err)
             return False
@@ -119,6 +113,11 @@ class BaseInputGenerator(object):
             for n, s in self.statistics.stats:
                 if type(s) is utils.Stopwatch and s.is_running():
                     s.stop()
+            try:
+                self.number_generated_tests.value = self.get_test_count()
+            except utils.InputGenerationError as e:
+                logging.warning(e.msg)
+                return False
 
     def get_statistics(self):
         return self.statistics
