@@ -447,9 +447,27 @@ class KleeReplayRunner(object):
         import klee
 
         klee_prepared_file = utils.get_prepared_name(program_file, klee.name)
+        c_version = 'gnu11'
         if not self.executable:
-            compile_cmd = ["gcc", "-L", klee.lib_dir, "-o", self.executable_name, klee_prepared_file, "-lkleeRuntest", '-lm']
-            utils.execute(compile_cmd)
+            compile_cmd = ['gcc']
+            compile_cmd += ['-std={}'.format(c_version),
+                            "-L", klee.lib_dir,
+                            '-D__alias__(x)=',
+                            '-o', self.executable_name,
+                            klee_prepared_file,
+                            '-lkleeRuntest',
+                            '-lm']
+            result = utils.execute(compile_cmd)
+            if result.returncode != 0:
+                c_version = 'gnu90'
+                compile_cmd = ['gcc']
+                compile_cmd += ['-std={}'.format(c_version),
+                                "-L", klee.lib_dir,
+                                '-D__alias__(x)=',
+                                '-o', self.executable_name,
+                                klee_prepared_file,
+                                '-lkleeRuntest',
+                                '-lm']
             self.executable = self.executable_name
 
         if not os.path.exists(self.executable_name):
