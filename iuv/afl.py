@@ -7,7 +7,7 @@ from harness_generation import HarnessCreator
 
 bin_dir = os.path.abspath('./afl/bin')
 findings_dir = utils.get_file_path('findings', temp_dir=True)
-name = 'AFL-fuzz'
+name = 'afl-fuzz'
 
 
 def get_test_name(test_file):

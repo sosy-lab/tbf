@@ -4,7 +4,7 @@ import utils
 from input_generation import BaseInputGenerator
 from test_validation import TestValidator
 
-name = "random-testing"
+name = "prtest"
 include_dir = os.path.abspath("./random/include")
 generator_harness = os.path.abspath("./random/random_tester.c")
 random_runner = os.path.abspath("./random/run.sh")

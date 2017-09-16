@@ -10,7 +10,7 @@ binary = os.path.join(binary_dir, 'cpa.sh')
 tests_dir = os.path.join(utils.tmp, 'output')
 tests_file = os.path.join(tests_dir, 'testsuite.txt')
 input_method = 'input'
-name = 'CPATiger'
+name = 'cpatiger'
 
 
 def get_test_cases(exclude=[]):

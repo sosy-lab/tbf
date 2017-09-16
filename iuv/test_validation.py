@@ -331,12 +331,12 @@ class TestValidator(object):
             if test_vector is None:
                 test_vector = self.get_test_vector(result.test)
             # This currently won't work with AFL due to its string-style input
-            #if result.witness is None:
-            #    nondet_methods = utils.get_nondet_methods()
-            #    witness = self.create_witness(program_file, result.test, test_vector, nondet_methods)
-            #    with open(witness['name'], 'w+') as outp:
-            #        outp.write(witness['content'])
-            #    result.witness = witness['name']
+            if result.witness is None and 'afl' not in self.get_name().lower():
+                nondet_methods = utils.get_nondet_methods()
+                witness = self.create_witness(program_file, result.test.origin, test_vector, nondet_methods)
+                with open(witness['name'], 'w+') as outp:
+                    outp.write(witness['content'])
+                result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
                 harness = self.create_harness(program_file, result.test.origin, test_vector, nondet_methods)

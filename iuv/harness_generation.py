@@ -4,7 +4,7 @@ import utils
 class HarnessCreator(object):
 
     def _get_vector_read_method(self):
-        return b"""char * read_bytes(char * __inp_var) {
+        return b"""char * parse_inp(char * __inp_var) {
     unsigned int input_length = strlen(__inp_var)-1;
     /* Remove '\\n' at end of input */
     if (__inp_var[input_length] == '\\n') {
@@ -68,7 +68,7 @@ class HarnessCreator(object):
     def _get_error_definition(self, method_name):
         definition = 'void {0}() {{\n'.format(method_name)
         definition += '    fprintf(stderr, \"{0}\\n\");\n'.format(utils.error_string)
-        definition += '    exit(42);\n}\n\n'
+        definition += '    exit(1);\n}\n\n'
         return definition.encode()
 
     def _get_nondet_method_definitions(self, nondet_methods, test_vector):
@@ -95,7 +95,7 @@ class HarnessCreator(object):
                     definitions += b"    }\n"
                     definitions += b"    access_counter++;\n"
 
-                definitions += b''.join([b'    return *((', method['type'].encode(), b' *) read_bytes(inp_var));\n'])
+                definitions += b''.join([b'    return *((', method['type'].encode(), b' *) parse_inp(inp_var));\n'])
             definitions += b'}\n\n'
         return definitions
 

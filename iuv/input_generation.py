@@ -65,7 +65,7 @@ class BaseInputGenerator(object):
         return self.prepare(content, nondet_methods_used)
 
     def _get_error_method_dummy(self):
-        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit(42); }}\n'.format(utils.error_string)
+        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit(1); }}\n'.format(utils.error_string)
 
     def generate_input(self, filename, stop_flag):
         default_err = "Unknown error"
