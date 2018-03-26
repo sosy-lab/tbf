@@ -1,7 +1,7 @@
 # Test-based falsifier (TBF)
 
 To run TBF, run
-`./run_iuv -i TEST_GENERATOR [--execution|--validators cpachecker --witness_validators] FILE`
+`./run_iuv -i TEST_GENERATOR [--execution|--validators cpachecker --witness-validation] FILE`
 from the repository's root directory,
 where `TEST_GENERATOR` is one of `{afl, crest, cpatiger, fshell, klee, random}`.
 

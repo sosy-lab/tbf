@@ -339,7 +339,7 @@ class TestValidator(object):
                 result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
-                harness = self.create_harness(program_file, result.test.origin, test_vector, nondet_methods)
+                harness = self.create_harness(program_file, result.test_vector.origin, test_vector, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']
