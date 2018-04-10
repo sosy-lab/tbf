@@ -110,6 +110,12 @@ class KleeTestValidator(TestValidator):
         return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
 
     def _get_test_vector(self, test):
+        def _get_value(single_line):
+            var_name = single_line.split(':')[2].strip()
+            prefix_end = var_name.find("'")
+            var_name = var_name[prefix_end+1:-1]
+            return var_name
+
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool')]
         exec_output = utils.execute(ktest_tool + [test.origin], err_to_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')
@@ -124,14 +130,17 @@ class KleeTestValidator(TestValidator):
                 var_number = int(self._get_var_number(line))
                 assert var_number > last_number
                 last_number = var_number
-                var_name = line.split(':')[2][2:-1]  # [1:-1] to cut the surrounding ''
-                assert last_nondet_method is None
+                var_name = _get_value(line)
+                assert last_nondet_method is None, \
+                        "Last nondet method already or still assigned: %s" % last_nondet_method
+                assert "'" not in var_name, \
+                        "Variable name contains \"'\": %s" % var_name
                 last_nondet_method = utils.get_corresponding_method_name(var_name)
             elif 'data:' in line:
                 #assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
                 assert last_nondet_method is not None
-                value = line.split(':')[-1].strip()  # is in C multichar notation, e.g. '\x00\x00' (WITH the ''!)
+                value = _get_value(line)
                 value, = utils.convert_to_int(value, last_nondet_method)
                 assert last_value is None
                 last_value = str(value)

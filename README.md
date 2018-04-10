@@ -7,7 +7,7 @@ to create executable tests that uncover bugs in the programs.
 
 ## Requirements
 
-  - Python 3.6 or later
+  - Python 3.4 or later
 
 ## Running TBF
 

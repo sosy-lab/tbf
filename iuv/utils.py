@@ -1225,11 +1225,15 @@ def _prettify(func_def):
 
 
 def get_sym_var_name(method_name):
-    return sym_var_prefix + method_name
+    name = sym_var_prefix + method_name
+    logging.debug("Getting sym var name for method %s: %s", method_name, name)
+    return name
 
 
 def get_corresponding_method_name(sym_var_name):
-    return sym_var_name[len(sym_var_prefix):]
+    name = sym_var_name[len(sym_var_prefix):]
+    logging.debug("Getting method name for %s: %s", sym_var_name, name)
+    return name
 
 
 def convert_to_int(value, method_name):
@@ -1237,7 +1241,10 @@ def convert_to_int(value, method_name):
     if type(value) is str and value.startswith('\'') and value.endswith('\''):
         value = value[1:-1]
     value = codecs.decode(value, 'unicode_escape').encode('latin1')
-    corresponding_method = [m for m in undefined_methods if m['name'] == method_name][0]
+    corresponding_method_singleton_list = [m for m in undefined_methods if m['name'] == method_name]
+    if len(corresponding_method_singleton_list) == 0:
+        raise AssertionError("Didn't find {} in list of undefined methods: {}".format(method_name, undefined_methods))
+    corresponding_method = corresponding_method_singleton_list[0]
     # The type of the symbolic variable may be different from the method return type,
     # but must be ultimately cast to the method return type,
     # so this is fine - unless we have undefined behavior prior to this point due to a downcast of the variable type.
@@ -1275,6 +1282,7 @@ def convert_to_int(value, method_name):
     else:
         logging.debug('Converting type %s using type unsigned long ', value_type)
         data_format += 'Q'
+    logging.debug("Converting value %s according to data format %s", value, data_format)
     return unpack(data_format, value)
 
 
