@@ -1107,6 +1107,7 @@ def rewrite_cproblems(content):
 
 def parse_file_with_preprocessing(file_content, machine_model, includes=[]):
     preprocessed_content = preprocess(file_content, machine_model, includes)
+    preprocessed_content = rewrite_cproblems(preprocessed_content)
     ast = parser.parse(preprocessed_content)
     return ast
 
@@ -1146,7 +1147,6 @@ def find_nondet_methods(file_content, svcomp_only):
         if os.path.exists(file_content):
             with open(file_content, 'r') as inp:
                 file_content = inp.read()
-            file_content = rewrite_cproblems(file_content)
         if not svcomp_only:
             try:
                 undefined_methods = _find_undefined_methods(file_content)
