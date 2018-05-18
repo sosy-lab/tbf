@@ -574,7 +574,24 @@ IMPLICIT_FUNCTIONS = [
     'fesetenv',
     'feholdexcept',
     'feupdateenv',
-    'fetestexcept'
+    'fetestexcept',
+    '__underflow',
+    '__uflow',
+    '__overflow',
+    '_IO_getc',
+    '_IO_putc',
+    '_IO_feof',
+    '_IO_ferror',
+    '_IO_peekc_locked',
+    '_IO_flockfile',
+    '_IO_funlockfile',
+    '_IO_ftrylockfile',
+    '_IO_vfscanf',
+    '_IO_fprintf',
+    '_IO_padn',
+    '_IO_seekoff',
+    '_IO_seekpos',
+    '_IO_free_backup_area'
 ] + GCC_BUILTINS + ['__' + g for g in GCC_BUILTINS] + ["__builtin__" + g for g in GCC_BUILTINS]
 
 
