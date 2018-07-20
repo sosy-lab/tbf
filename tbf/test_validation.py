@@ -1,12 +1,12 @@
 from abc import abstractmethod, ABCMeta
-import witness_generation as wit_gen
-import harness_generation as harness_gen
+import tbf.witness_generation as wit_gen
+import tbf.harness_generation as harness_gen
 import logging
-import utils
+import tbf.utils as utils
 import os
 from time import sleep
 import re
-from utils import TRUE, FALSE, UNKNOWN, ERROR
+from tbf.utils import TRUE, FALSE, UNKNOWN, ERROR
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 

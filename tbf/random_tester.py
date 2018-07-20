@@ -1,8 +1,8 @@
 import os
 import glob
-import utils
-from input_generation import BaseInputGenerator
-from test_validation import TestValidator
+import tbf.utils as utils
+from tbf.input_generation import BaseInputGenerator
+from tbf.test_validation import TestValidator
 
 name = "prtest"
 include_dir = os.path.abspath("./random/include")

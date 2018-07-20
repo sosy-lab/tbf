@@ -1,8 +1,10 @@
 import unittest
-import utils
+import tbf.utils as utils
 
 method_name = '__VERIFIER_nondet_int'
 bool_method_name = '__VERIFIER_nondet_bool'
+
+
 class TestUtils(unittest.TestCase):
 
     @classmethod

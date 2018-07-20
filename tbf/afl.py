@@ -1,9 +1,9 @@
-from input_generation import BaseInputGenerator
-from test_validation import TestValidator as BaseTestValidator
+from tbf.input_generation import BaseInputGenerator
+from tbf.test_validation import TestValidator as BaseTestValidator
 import os
-import utils
+import tbf.utils as utils
 import glob
-from harness_generation import HarnessCreator
+from tbf.harness_generation import HarnessCreator
 
 bin_dir = os.path.abspath('./afl/bin')
 findings_dir = utils.get_file_path('findings', temp_dir=True)

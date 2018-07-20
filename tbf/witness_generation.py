@@ -1,6 +1,6 @@
 from xml.etree import ElementTree as ET
 import xml.dom.minidom as minidom
-import utils
+import tbf.utils as utils
 
 
 class WitnessCreator(object):

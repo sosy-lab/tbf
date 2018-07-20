@@ -1160,7 +1160,7 @@ def find_nondet_methods(file_content, svcomp_only):
 
 
 def _find_undefined_methods(file_content):
-    import ast_visitor
+    import tbf.ast_visitor as ast_visitor
 
     ast = parse_file_with_preprocessing(file_content, MACHINE_MODEL_32)
 
@@ -1230,7 +1230,7 @@ def _get_return_type(verifier_nondet_method):
 
 
 def _prettify(func_def):
-    import ast_visitor
+    import tbf.ast_visitor as ast_visitor
     name = ast_visitor.get_name(func_def)
     return_type = ast_visitor.get_type(func_def.type)
     params = list()

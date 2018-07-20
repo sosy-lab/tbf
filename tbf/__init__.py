@@ -5,20 +5,20 @@ import os
 import logging
 import argparse
 
-import afl
-import cpatiger
-import crest
-import fshell
-import klee
-import random_tester
-import utils
+import tbf.afl as afl
+import tbf.cpatiger as cpatiger
+import tbf.crest as crest
+import tbf.fshell as fshell
+import tbf.klee as klee
+import tbf.random_tester as random_tester
+import tbf.utils as utils
 import shutil
 
 from threading import Event, Thread
 from multiprocessing.context import TimeoutError
 from time import sleep
 
-from test_validation import ValidationConfig
+from tbf.test_validation import ValidationConfig
 
 logging.basicConfig(level=logging.INFO)
 
@@ -281,7 +281,8 @@ def run(args, stop_all_event=None):
         print(validator_module.get_statistics())
         print("\nTBF verdict:", validation_result.verdict.upper())
 
-if __name__ == '__main__':
+
+def main():
     timeout_watch = utils.Stopwatch()
     timeout_watch.start()
     args = _parse_cli_args(sys.argv[1:])
@@ -304,3 +305,6 @@ if __name__ == '__main__':
         except TimeoutError:
             logging.warning("Timeout error when waiting for main thread")
 
+
+if __name__ == '__main__':
+    main()

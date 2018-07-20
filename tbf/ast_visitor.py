@@ -2,7 +2,7 @@ from abc import abstractmethod, ABCMeta
 
 from pycparser import c_generator
 from pycparser import c_ast as a
-from utils import ParseError, error_method
+from tbf.utils import ParseError, error_method
 
 import re
 
