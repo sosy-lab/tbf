@@ -12,7 +12,7 @@ to create executable tests that uncover bugs in the programs.
 ## Running TBF
 
 To run TBF, run
-`./run_iuv -i TEST_GENERATOR [--execution|--validators cpachecker --witness-validation] FILE`
+`./run_tbf -i TEST_GENERATOR [--execution|--validators cpachecker --witness-validation] FILE`
 from the repository's root directory,
 where `TEST_GENERATOR` is one of `{afl, crest, cpatiger, fshell, klee, random}`.
 

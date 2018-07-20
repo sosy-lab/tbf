@@ -279,7 +279,7 @@ def run(args, stop_all_event=None):
         os.chdir(old_dir)
         print(inp_module.get_statistics())
         print(validator_module.get_statistics())
-        print("\nIUV verdict:", validation_result.verdict.upper())
+        print("\nTBF verdict:", validation_result.verdict.upper())
 
 if __name__ == '__main__':
     timeout_watch = utils.Stopwatch()

@@ -28,11 +28,10 @@ from benchexec.model import SOFTTIMELIMIT
 class Tool(benchexec.tools.template.BaseTool):
     """
     Tool info for TBF (Test-based falsifier) .
-    'iuv' was its early-phase project name.
     """
 
     REQUIRED_PATHS = [
-                "iuv",
+                "tbf",
                 "klee",
                 "crest",
                 "cpatiger",
@@ -40,12 +39,12 @@ class Tool(benchexec.tools.template.BaseTool):
                 "afl",
                 "fshell",
                 "lib",
-                "run_iuv",
+                "run_tbf",
                 "ReachSafety.prp"
     ] + ['validators/cpachecker/' + p for p in cpachecker.Tool.REQUIRED_PATHS]
 
     def executable(self):
-        return util.find_executable('run_iuv')
+        return util.find_executable('run_tbf')
 
     def version(self, executable):
         stdout = self._version_from_tool(executable)
@@ -53,7 +52,7 @@ class Tool(benchexec.tools.template.BaseTool):
 
 
     def name(self):
-        return 'IUV'
+        return 'TBF'
 
 
     def determine_result(self, returncode, returnsignal, output, isTimeout):
@@ -72,9 +71,9 @@ class Tool(benchexec.tools.template.BaseTool):
                     return "TIMEOUT"
                 else:
                     return "ERROR ({0})".format(returncode)
-            elif line.startswith('IUV') and 'FALSE' in line:
+            elif line.startswith('TBF') and 'FALSE' in line:
                 return result.RESULT_FALSE_REACH
-            elif line.startswith('IUV') and 'TRUE' in line:
+            elif line.startswith('TBF') and 'TRUE' in line:
                 return result.RESULT_TRUE_PROP
         return result.RESULT_UNKNOWN
 
