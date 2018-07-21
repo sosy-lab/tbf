@@ -762,6 +762,10 @@ class Verdict(object):
         self.witness = witness
 
     def is_positive(self):
+        """
+        Returns whether the verdict is positive, i.e., whether a target was found.
+        :return: true if the verdict represents that a target was found, false otherwise
+        """
         return self.verdict == FALSE
 
     def __str__(self):
