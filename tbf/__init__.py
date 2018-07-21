@@ -156,7 +156,7 @@ def _parse_cli_args(argv):
     args = parser.parse_args(argv)
     args.timelimit = float(args.timelimit) if args.timelimit else None
     if not args.machine_model:
-        logging.warning("No machine model specified. Assuming 32 bit")
+        logging.info("No machine model specified. Assuming 32 bit")
         args.machine_model = utils.MACHINE_MODEL_32
     elif '32' in args.machine_model:
         args.machine_model = utils.MACHINE_MODEL_32

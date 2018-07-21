@@ -116,7 +116,7 @@ class BaseInputGenerator(object):
             try:
                 self.number_generated_tests.value = self.get_test_count()
             except utils.InputGenerationError as e:
-                logging.warning(e.msg)
+                logging.error(e.msg)
                 return False
 
     def get_statistics(self):
