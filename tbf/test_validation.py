@@ -162,11 +162,11 @@ class TestValidator(object):
         else:
             return utils.VerdictTrue()
 
-    def perform_witness_validation(self, program_file, generator_thread, stop_event):
+    def perform_witness_validation(self, program_file, is_ready_func, stop_event):
         validator = ValidationRunner(self.config.witness_validators)
         visited_tests = set()
         result = list()
-        while generator_thread and generator_thread.is_alive() and not stop_event.is_set():
+        while not is_ready_func() and not stop_event.is_set():
             try:
                 result = self._m(program_file, validator, visited_tests)
                 if result.is_positive():
@@ -238,11 +238,11 @@ class TestValidator(object):
         finally:
             self.timer_vector_gen.stop()
 
-    def perform_execution_validation(self, program_file, generator_thread, stop_event):
+    def perform_execution_validation(self, program_file, is_ready_func, stop_event):
         validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
         visited_tests = set()
         result = list()
-        while generator_thread and generator_thread.is_alive() and not stop_event.is_set():
+        while not is_ready_func() and not stop_event.is_set():
             try:
                 result = self._hs(program_file, validator, visited_tests)
                 if result.is_positive():
@@ -292,12 +292,12 @@ class TestValidator(object):
                 return utils.VerdictFalse(test)
         return utils.VerdictUnknown()
 
-    def perform_klee_replay_validation(self, program_file, generator_thread, stop_event):
+    def perform_klee_replay_validation(self, program_file, is_ready_func, stop_event):
         validator = KleeReplayRunner(self.config.machine_model)
 
         visited_tests = set()
         result = list()
-        while generator_thread and generator_thread.is_alive() and not stop_event.is_set():
+        while not is_ready_func() and not stop_event.is_set():
             try:
                 result = self._k(program_file, validator, visited_tests)
                 if result.is_positive():
@@ -310,20 +310,20 @@ class TestValidator(object):
             result = self._k(program_file, validator, visited_tests)
         return self.decide_final_verdict(result)
 
-    def check_inputs(self, program_file, generator_thread, stop_event):
+    def check_inputs(self, program_file, is_ready_func, stop_event):
         logging.debug('Checking inputs for file %s', program_file)
         result = utils.VerdictUnknown()
 
         if self.config.use_klee_replay:
-            result = self.perform_klee_replay_validation(program_file, generator_thread, stop_event)
+            result = self.perform_klee_replay_validation(program_file, is_ready_func, stop_event)
             logging.info("Klee-replay validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_execution:
-            result = self.perform_execution_validation(program_file, generator_thread, stop_event)
+            result = self.perform_execution_validation(program_file, is_ready_func, stop_event)
             logging.info("Execution validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_witness_validation:
-            result = self.perform_witness_validation(program_file, generator_thread, stop_event)
+            result = self.perform_witness_validation(program_file, is_ready_func, stop_event)
             logging.info("Witness validation says: " + str(result))
 
         if result.is_positive():

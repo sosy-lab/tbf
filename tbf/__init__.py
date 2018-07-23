@@ -15,6 +15,7 @@ import tbf.utils as utils
 import shutil
 
 from threading import Event, Thread
+from multiprocessing.pool import ThreadPool
 from multiprocessing.context import TimeoutError
 from time import sleep
 
@@ -178,7 +179,8 @@ def _get_input_generator_module(args):
 
     elif input_generator == 'klee':
         if args.strategy:
-            return klee.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy, machine_model=args.machine_model)
+            return klee.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy,
+                                       machine_model=args.machine_model)
         else:
             return klee.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
 
@@ -186,7 +188,8 @@ def _get_input_generator_module(args):
         if args.strategy:
             if len(args.strategy) != 1:
                 raise utils.ConfigError("Crest requires exactly one strategy. Given strategies: " + args.strategy)
-            return crest.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy[0], machine_model=args.machine_model)
+            return crest.InputGenerator(args.ig_timelimit, args.log_verbose, args.strategy[0],
+                                        machine_model=args.machine_model)
         else:
             return crest.InputGenerator(args.ig_timelimit, args.log_verbose, machine_model=args.machine_model)
 
@@ -227,28 +230,42 @@ def run(args, stop_all_event=None):
     inp_module = _get_input_generator_module(args)
     validator_module = _get_validator_module(args)
 
-    if args.run_parallel:
-        generator_thread = Thread(target=inp_module.generate_input, args=(filename, stop_all_event))
-    else:
-        generator_thread = utils.SyncThread(target=inp_module.generate_input, args=(filename, stop_all_event), stop_event=stop_all_event)
-
     old_dir = os.path.abspath('.')
     try:
         os.chdir(utils.tmp)
 
         utils.find_nondet_methods(filename, args.svcomp_nondets_only)
+        assert not stop_all_event.is_set(), "Stop event is already set before starting input generation"
+
+        generator_pool = ThreadPool(processes=1)
+        # Define the methods for running input generation and validation in parallel/sequentially
+        if args.run_parallel:
+            generator_function = generator_pool.apply_async
+
+            def get_generation_result(res): return res.get(3)
+
+            def is_ready0(r): return r.ready()
+        else:
+            generator_function = generator_pool.apply
+
+            def get_generation_result(res): return res
+
+            def is_ready0(r): return True
+
+        generation_result = generator_function(inp_module.generate_input, args=(filename, stop_all_event))
+
+        # We can't use a def here because we pass this function to a different function,
+        # in which the def wouldn't be defined
+        is_ready = lambda: is_ready0(generation_result)
+
         if stop_all_event.is_set():
+            logging.info("Stop-all event is set, returning from execution")
             return
 
-        generator_thread.start()
-
-        if stop_all_event.is_set():
-            return
-
-        validation_result = validator_module.check_inputs(filename, generator_thread, stop_all_event)
+        validation_result = validator_module.check_inputs(filename, is_ready, stop_all_event)
 
         try:
-            generator_thread.join(timeout=3)
+            generation_success = get_generation_result(generation_result)
             generation_done = True
         except TimeoutError:
             generation_done = False
@@ -288,7 +305,7 @@ def main():
     args = _parse_cli_args(sys.argv[1:])
 
     stop_event = Event()
-    running_thread = utils.Thread(target=run, args=(args, stop_event))
+    running_thread = Thread(target=run, args=(args, stop_event))
     try:
         running_thread.start()
         while running_thread.is_alive() and (not args.timelimit or timeout_watch.curr_s() < args.timelimit):

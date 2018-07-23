@@ -1435,13 +1435,3 @@ def get_prepared_name(filename, tool_name):
     prepared_name = '.'.join(os.path.basename(filename).split('.')[:-1] + [tool_name, 'c'])
     prepared_name = get_file_path(prepared_name, temp_dir=True)
     return prepared_name
-
-
-class SyncThread(Thread):
-
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, stop_event=None, *, daemon=None):
-        super().__init__(group, target, name, args, kwargs, daemon=daemon)
-        self.stop_event = stop_event
-
-    def start(self):
-        super().start()
