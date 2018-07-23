@@ -27,7 +27,7 @@ class BaseInputGenerator(object):
 
     @staticmethod
     def failed(result):
-        return result.returncode < 0
+        return result.returncode != 0
 
     def __init__(self, timelimit, machine_model, log_verbose):
         self.machine_model = machine_model
@@ -95,7 +95,8 @@ class BaseInputGenerator(object):
                 result = utils.execute(cmd, env=self.get_run_env(), quiet=not self.log_verbose, err_to_output=True, stop_flag=stop_flag, timelimit=self.timelimit)
                 self.timer_generator.stop()
                 if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
-                    logging.error("Generating input failed at command %s", ' '.join(cmd))
+                    logging.error("Generating input failed at command: %s", ' '.join(cmd))
+                    return False
 
             return True
         except utils.CompileError as e:
