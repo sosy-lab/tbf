@@ -138,6 +138,19 @@ def _create_cli_arg_parser():
                           help="do not run input generation and tests in parallel"
                           )
 
+    run_args.add_argument('--keep-files',
+                          dest='keep_files',
+                          action='store_true',
+                          default=False,
+                          help="keep all created intermediate files (prepared C files, created inputs, etc.)"
+                          )
+
+    run_args.add_argument('--stats',
+                          dest='print_stats',
+                          action='store_true',
+                          default=False,
+                          help="print statistics on stdout")
+
     run_args.add_argument("file",
                           type=str,
                           help="file to verify"
@@ -230,7 +243,7 @@ def run(args, stop_all_event=None):
     inp_module = _get_input_generator_module(args)
     validator_module = _get_validator_module(args)
 
-    old_dir = os.path.abspath('.')
+    old_dir_abs = os.path.abspath('.')
     try:
         os.chdir(utils.tmp)
 
@@ -295,10 +308,27 @@ def run(args, stop_all_event=None):
     except FileNotFoundError as e:
         logging.error("File not found: %s", e.filename)
     finally:
-        os.chdir(old_dir)
-        print(inp_module.get_statistics())
-        print(validator_module.get_statistics())
-        print("\nTBF verdict:", validation_result.verdict.upper())
+        os.chdir(old_dir_abs)
+
+        statistics = str(inp_module.get_statistics()) + "\n\n" \
+                     + str(validator_module.get_statistics())
+        verdict_str = "\nTBF verdict: " + validation_result.verdict.upper()
+        with open(utils.get_file_path('Statistics.txt', temp_dir=False), 'w+') as stats:
+            stats.write(statistics)
+            stats.write('\n')
+            stats.write(verdict_str)
+
+        if args.print_stats:
+            print("Statistics:")
+            print(statistics)
+        print(verdict_str)
+
+        if args.keep_files:
+            created_dir = utils.get_file_path('created_files', temp_dir=False)
+            logging.info("Moving created files to %s", created_dir)
+            shutil.move(utils.tmp, created_dir)
+        else:
+            shutil.rmtree(utils.tmp)
 
 
 def main():
