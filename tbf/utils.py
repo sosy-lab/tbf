@@ -1144,13 +1144,12 @@ def get_nondet_methods():
     return undefined_methods
 
 
-def find_nondet_methods(file_content, svcomp_only):
+def find_nondet_methods(filename, svcomp_only):
     global undefined_methods
     if undefined_methods is None:
         logging.debug("Finding undefined methods")
-        if os.path.exists(file_content):
-            with open(file_content, 'r') as inp:
-                file_content = inp.read()
+        with open(filename, 'r') as inp:
+            file_content = inp.read()
         if not svcomp_only:
             try:
                 undefined_methods = _find_undefined_methods(file_content)

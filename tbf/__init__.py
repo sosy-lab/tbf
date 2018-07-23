@@ -292,6 +292,8 @@ def run(args, stop_all_event=None):
         logging.error("Input generation error: %s", e.msg if e.msg else default_err)
     except utils.ParseError as e:
         logging.error("Parse error: %s", e.msg if e.msg else default_err)
+    except FileNotFoundError as e:
+        logging.error("File not found: %s", e.filename)
     finally:
         os.chdir(old_dir)
         print(inp_module.get_statistics())
