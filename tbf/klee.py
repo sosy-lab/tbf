@@ -16,7 +16,11 @@ name = 'klee'
 
 class InputGenerator(BaseInputGenerator):
 
-    def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew'], machine_model=utils.MACHINE_MODEL_32):
+    def __init__(self,
+                 timelimit=0,
+                 log_verbose=False,
+                 search_heuristic=['random-path', 'nurs:covnew'],
+                 machine_model=utils.MACHINE_MODEL_32):
         super().__init__(timelimit, machine_model, log_verbose)
         self.log_verbose = log_verbose
         if type(search_heuristic) is not list:
@@ -35,7 +39,8 @@ class InputGenerator(BaseInputGenerator):
     def prepare(self, filecontent, nondet_methods_used):
         content = filecontent
         content += '\n'
-        for method in nondet_methods_used:  # append method definition at end of file content
+        for method in nondet_methods_used:
+            # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
         return content
@@ -48,13 +53,15 @@ class InputGenerator(BaseInputGenerator):
 
     def _create_nondet_method(self, method_name, method_type, param_types):
         var_name = utils.get_sym_var_name(method_name)
-        method_head = utils.get_method_head(method_name, method_type, param_types)
+        method_head = utils.get_method_head(method_name, method_type,
+                                            param_types)
         method_body = ['{']
         if method_type != 'void':
-            method_body += ['{0} {1};'.format(method_type, var_name),
-                            'klee_make_symbolic(&{0}, sizeof({0}), \"{0}\");'.format(var_name),
-                            'return {0};'.format(var_name)
-                            ]
+            method_body += [
+                '{0} {1};'.format(method_type, var_name),
+                'klee_make_symbolic(&{0}, sizeof({0}), \"{0}\");'.format(
+                    var_name), 'return {0};'.format(var_name)
+            ]
         method_body = '\n    '.join(method_body)
         method_body += '\n}\n'
 
@@ -66,11 +73,16 @@ class InputGenerator(BaseInputGenerator):
         elif self.machine_model.is_64:
             mm_args = ['-arch', 'x86_64']
         else:
-            raise AssertionError("Unhandled machine model: " + self.machine_model.name)
+            raise AssertionError("Unhandled machine model: " +
+                                 self.machine_model.name)
 
-        compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1] + ['bc'])
+        compiled_file = '.'.join(
+            os.path.basename(filename).split('.')[:-1] + ['bc'])
         compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
-        compile_cmd = ['clang'] + mm_args + ['-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file, filename]
+        compile_cmd = ['clang'] + mm_args + [
+            '-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file,
+            filename
+        ]
         input_generation_cmd = ['klee']
         if self.timelimit > 0:
             input_generation_cmd += ['-max-time', str(self.timelimit)]
@@ -84,12 +96,15 @@ class InputGenerator(BaseInputGenerator):
     def get_test_cases(self, exclude=(), directory=tests_dir):
         all_tests = [t for t in glob.glob(directory + '/*.ktest')]
         tcs = list()
-        for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
+        for t in [
+                t for t in all_tests if utils.get_file_name(t) not in exclude
+        ]:
             file_name = utils.get_file_name(t)
             with open(t, mode='rb') as inp:
                 content = inp.read()
             tcs.append(utils.TestCase(file_name, t, content))
         return tcs
+
 
 class KleeTestValidator(TestValidator):
 
@@ -98,17 +113,20 @@ class KleeTestValidator(TestValidator):
 
     def _get_var_number(self, test_info_line):
         assert 'object' in test_info_line
-        return test_info_line.split(':')[0].split(' ')[-1]  # Object number should be at end, e.g. 'object  1: ...'
+        return test_info_line.split(':')[0].split(' ')[
+            -1]  # Object number should be at end, e.g. 'object  1: ...'
 
     def _get_test_vector(self, test):
+
         def _get_value(single_line):
             var_name = single_line.split(':')[2].strip()
             prefix_end = var_name.find("'")
-            var_name = var_name[prefix_end+1:-1]
+            var_name = var_name[prefix_end + 1:-1]
             return var_name
 
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool')]
-        exec_output = utils.execute(ktest_tool + [test.origin], err_to_output=False, quiet=True)
+        exec_output = utils.execute(
+            ktest_tool + [test.origin], err_to_output=False, quiet=True)
         test_info = exec_output.stdout.split('\n')
         vector = utils.TestVector(test.name, test.origin)
         last_number = -1
@@ -126,7 +144,8 @@ class KleeTestValidator(TestValidator):
                         "Last nondet method already or still assigned: %s" % last_nondet_method
                 assert "'" not in var_name, \
                         "Variable name contains \"'\": %s" % var_name
-                last_nondet_method = utils.get_corresponding_method_name(var_name)
+                last_nondet_method = utils.get_corresponding_method_name(
+                    var_name)
             elif 'data:' in line:
                 #assert len(line.split(':')) == 3
                 var_number = self._get_var_number(line)
@@ -141,4 +160,3 @@ class KleeTestValidator(TestValidator):
                 last_value = None
 
         return vector
-

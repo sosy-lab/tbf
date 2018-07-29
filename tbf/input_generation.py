@@ -42,11 +42,16 @@ class BaseInputGenerator(object):
 
         self.number_generated_tests = utils.Constant()
 
-        self.statistics.add_value('Time for full input generation', self.timer_input_gen)
-        self.statistics.add_value('Time for test case generator', self.timer_generator)
-        self.statistics.add_value('Time for controlled file accesses', self.timer_file_access)
-        self.statistics.add_value('Time for file preparation', self.timer_prepare)
-        self.statistics.add_value('Number of generated test cases', self.number_generated_tests)
+        self.statistics.add_value('Time for full input generation',
+                                  self.timer_input_gen)
+        self.statistics.add_value('Time for test case generator',
+                                  self.timer_generator)
+        self.statistics.add_value('Time for controlled file accesses',
+                                  self.timer_file_access)
+        self.statistics.add_value('Time for file preparation',
+                                  self.timer_prepare)
+        self.statistics.add_value('Number of generated test cases',
+                                  self.number_generated_tests)
 
     @abstractmethod
     def prepare(self, filecontent, nondet_methods_used):
@@ -65,7 +70,8 @@ class BaseInputGenerator(object):
         return self.prepare(content, nondet_methods_used)
 
     def _get_error_method_dummy(self):
-        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit(1); }}\n'.format(utils.error_string)
+        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit(1); }}\n'.format(
+            utils.error_string)
 
     def generate_input(self, filename, stop_flag):
         default_err = "Unknown error"
@@ -79,7 +85,8 @@ class BaseInputGenerator(object):
             self.timer_file_access.stop()
 
             if os.path.exists(file_to_analyze):
-                logging.warning("Prepared file already exists. Not preparing again.")
+                logging.warning(
+                    "Prepared file already exists. Not preparing again.")
             else:
                 self.timer_prepare.start()
                 prepared_content = self.prepare0(filecontent)
@@ -92,10 +99,18 @@ class BaseInputGenerator(object):
             cmds = self.create_input_generation_cmds(file_to_analyze)
             for cmd in cmds:
                 self.timer_generator.start()
-                result = utils.execute(cmd, env=self.get_run_env(), quiet=False, err_to_output=True, stop_flag=stop_flag, timelimit=self.timelimit)
+                result = utils.execute(
+                    cmd,
+                    env=self.get_run_env(),
+                    quiet=False,
+                    err_to_output=True,
+                    stop_flag=stop_flag,
+                    timelimit=self.timelimit)
                 self.timer_generator.stop()
-                if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
-                    logging.error("Generating input failed at command: %s", ' '.join(cmd))
+                if BaseInputGenerator.failed(
+                        result) and stop_flag and not stop_flag.is_set():
+                    logging.error("Generating input failed at command: %s",
+                                  ' '.join(cmd))
                     return False
 
             return True
@@ -103,7 +118,8 @@ class BaseInputGenerator(object):
             logging.error("Compile error: %s", e.msg if e.msg else default_err)
             return False
         except utils.InputGenerationError as e:
-            logging.error("Input generation error: %s", e.msg if e.msg else default_err)
+            logging.error("Input generation error: %s", e.msg
+                          if e.msg else default_err)
             return False
         except utils.ParseError as e:
             logging.error("Parse error: %s", e.msg if e.msg else default_err)

@@ -45,7 +45,12 @@ class WitnessCreator(object):
     def _reset_node_id(self):
         self._node_id_counter = -1
 
-    def _create_edge(self, source, target, assumption=None, startline=None, assumption_scope=None):
+    def _create_edge(self,
+                     source,
+                     target,
+                     assumption=None,
+                     startline=None,
+                     assumption_scope=None):
         edge = ET.Element('edge')
         edge.set('source', source)
         edge.set('target', target)
@@ -54,7 +59,8 @@ class WitnessCreator(object):
         if assumption:
             edge.append(self._create_data_element('assumption', assumption))
         if assumption_scope:
-            edge.append(self._create_data_element('assumption.scope', assumption_scope))
+            edge.append(
+                self._create_data_element('assumption.scope', assumption_scope))
 
         return edge
 
@@ -63,21 +69,28 @@ class WitnessCreator(object):
         graph.set('edgedefault', 'directed')
 
         # Create data elements that describe witness
-        graph.append(self._create_data_element('witness-type', 'violation_witness'))
+        graph.append(
+            self._create_data_element('witness-type', 'violation_witness'))
         graph.append(self._create_data_element('sourcecodelang', 'C'))
         graph.append(self._create_data_element('producer', producer))
-        graph.append(self._create_data_element('specification', 'CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )'))
+        graph.append(
+            self._create_data_element(
+                'specification',
+                'CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )'))
         #graph.append(self._create_data_element('testfile', test_file))
         #timestamp = utils.get_time()
         #graph.append(self._create_data_element('creationtime', timestamp))
         graph.append(self._create_data_element('programfile', program_file))
         filehash = utils.get_hash(program_file)
         graph.append(self._create_data_element('programhash', filehash))
-        graph.append(self._create_data_element('architecture', machine_model.witness_key))
+        graph.append(
+            self._create_data_element('architecture',
+                                      machine_model.witness_key))
 
         return graph
 
-    def _create_automaton(self, graph, test_vector, nondet_methods, error_lines):
+    def _create_automaton(self, graph, test_vector, nondet_methods,
+                          error_lines):
         # Create entry node
         previous_node = self._create_node(entry=True)
 
@@ -91,12 +104,17 @@ class WitnessCreator(object):
             if instantiation['name']:
                 possible_methods = [instantiation['name']]
             else:
-                possible_methods = sorted(nondet_methods)  # Sort just so the witness always looks the same
+                possible_methods = sorted(
+                    nondet_methods
+                )  # Sort just so the witness always looks the same
 
             for nondet_method in possible_methods:
                 assumption = '\\result == ' + instantiation['value'] + ';'
-                new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), assumption)
-                new_edge.append(self._create_data_element('assumption.resultfunction', nondet_method))
+                new_edge = self._create_edge(
+                    previous_node.get('id'), target_node.get('id'), assumption)
+                new_edge.append(
+                    self._create_data_element('assumption.resultfunction',
+                                              nondet_method))
                 graph.append(new_edge)
             previous_node = target_node
 
@@ -104,7 +122,10 @@ class WitnessCreator(object):
         target_node = self._create_node(violation=True)
         graph.append(target_node)
         for error_line in error_lines:
-            new_edge = self._create_edge(previous_node.get('id'), target_node.get('id'), startline=error_line)
+            new_edge = self._create_edge(
+                previous_node.get('id'),
+                target_node.get('id'),
+                startline=error_line)
             graph.append(new_edge)
 
         # Add transition to sink node if an additional nondet call is performed
@@ -113,21 +134,29 @@ class WitnessCreator(object):
         graph.append(sink_node)
         for nondet_method in nondet_methods:
             assumption = '\\result == 0;'  # dummy assumption
-            new_edge = self._create_edge(previous_node.get('id'), sink_node.get('id'), assumption)
-            new_edge.append(self._create_data_element('assumption.resultfunction', nondet_method))
+            new_edge = self._create_edge(
+                previous_node.get('id'), sink_node.get('id'), assumption)
+            new_edge.append(
+                self._create_data_element('assumption.resultfunction',
+                                          nondet_method))
             graph.append(new_edge)
 
         return graph
 
-    def _create_graph(self, producer, program_file, test_vector, nondet_methods, machine_model, error_lines):
+    def _create_graph(self, producer, program_file, test_vector, nondet_methods,
+                      machine_model, error_lines):
         graph = self._create_graph_head(producer, program_file, machine_model)
-        return self._create_automaton(graph, test_vector, nondet_methods, error_lines)
+        return self._create_automaton(graph, test_vector, nondet_methods,
+                                      error_lines)
 
-    def create_witness(self, producer, program_file, test_vector, nondet_methods, machine_model, error_lines):
+    def create_witness(self, producer, program_file, test_vector,
+                       nondet_methods, machine_model, error_lines):
         self._reset_node_id()
         witness = self._create_witness_header(program_file)
         nondet_method_names = [m['name'] for m in nondet_methods]
-        graph = self._create_graph(producer, program_file, test_vector, nondet_method_names, machine_model, error_lines)
+        graph = self._create_graph(producer, program_file, test_vector,
+                                   nondet_method_names, machine_model,
+                                   error_lines)
         witness.append(graph)
 
         xml_string = ET.tostring(witness, 'utf-8')

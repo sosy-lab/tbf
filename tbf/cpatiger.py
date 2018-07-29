@@ -14,7 +14,10 @@ name = 'cpatiger'
 
 class InputGenerator(BaseInputGenerator):
 
-    def __init__(self, timelimit=0, log_verbose=False, machine_model=utils.MACHINE_MODEL_32):
+    def __init__(self,
+                 timelimit=0,
+                 log_verbose=False,
+                 machine_model=utils.MACHINE_MODEL_32):
         super().__init__(timelimit, machine_model, log_verbose)
 
         self._run_env = utils.get_env_with_path_added(binary_dir)
@@ -44,7 +47,9 @@ class InputGenerator(BaseInputGenerator):
         method_head = utils.get_method_head(method_name, 'int', param_types)
         method_body = ['{']
         if method_type != 'void':
-            method_body += ['return ({0}) {1}();'.format(method_type, input_method)]
+            method_body += [
+                'return ({0}) {1}();'.format(method_type, input_method)
+            ]
         method_body = '\n    '.join(method_body)
         method_body += '\n}\n'
 
@@ -60,10 +65,10 @@ class InputGenerator(BaseInputGenerator):
         input_generation_cmd = [binary]
         if self.timelimit > 0:
             input_generation_cmd += ['-timelimit', str(self.timelimit)]
-        input_generation_cmd += ['-tiger-variants',
-                                 '-outputpath', tests_dir,
-                                 '-spec', utils.spec_file,
-                                 filename]
+        input_generation_cmd += [
+            '-tiger-variants', '-outputpath', tests_dir, '-spec',
+            utils.spec_file, filename
+        ]
 
         return [input_generation_cmd]
 
@@ -71,8 +76,11 @@ class InputGenerator(BaseInputGenerator):
         tests_file = os.path.join(directory, 'testsuite.txt')
         if os.path.exists(tests_file):
             with open(tests_file, 'r') as inp:
-                tests = [l.strip() for l in inp.readlines()
-                         if l.strip().startswith('[') and l.strip().endswith(']')]
+                tests = [
+                    l.strip()
+                    for l in inp.readlines()
+                    if l.strip().startswith('[') and l.strip().endswith(']')
+                ]
             tests = [t for i, t in enumerate(tests) if str(i) not in exclude]
             tcs = list()
             for i, t in enumerate(tests):
@@ -80,6 +88,7 @@ class InputGenerator(BaseInputGenerator):
             return tcs
         else:
             return []
+
 
 class CpaTigerTestValidator(TestValidator):
 

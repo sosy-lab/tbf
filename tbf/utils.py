@@ -592,12 +592,15 @@ IMPLICIT_FUNCTIONS = [
     '_IO_seekoff',
     '_IO_seekpos',
     '_IO_free_backup_area'
-] + GCC_BUILTINS + ['__' + g for g in GCC_BUILTINS] + ["__builtin__" + g for g in GCC_BUILTINS]
+] + GCC_BUILTINS + ['__' + g for g in GCC_BUILTINS
+                   ] + ["__builtin__" + g for g in GCC_BUILTINS]
 
 
 class MachineModel(object):
 
-    def __init__(self, wordsize, name, short_size, int_size, long_size, long_long_size, float_size, double_size, long_double_size, compile_param):
+    def __init__(self, wordsize, name, short_size, int_size, long_size,
+                 long_long_size, float_size, double_size, long_double_size,
+                 compile_param):
         assert wordsize == 32 or wordsize == 64
         self._wordsize = wordsize
         self._name = name
@@ -754,7 +757,12 @@ class ExecutionResult(object):
 class Verdict(object):
     """Results of a test validation, either witness validation or test execution validation currently."""
 
-    def __init__(self, verdict, test=None, test_vector=None, harness=None, witness=None):
+    def __init__(self,
+                 verdict,
+                 test=None,
+                 test_vector=None,
+                 harness=None,
+                 witness=None):
         self.verdict = verdict
         self.test = test
         self.test_vector = test_vector
@@ -773,16 +781,23 @@ class Verdict(object):
 
 
 class VerdictTrue(Verdict):
+
     def __init__(self):
         super().__init__(TRUE)
 
 
 class VerdictFalse(Verdict):
-    def __init__(self, test_origin, test_vector=None, harness=None, witness=None):
+
+    def __init__(self,
+                 test_origin,
+                 test_vector=None,
+                 harness=None,
+                 witness=None):
         super().__init__(FALSE, test_origin, test_vector, harness, witness)
 
 
 class VerdictUnknown(Verdict):
+
     def __init__(self):
         super().__init__(UNKNOWN)
 
@@ -811,18 +826,24 @@ def shut_down(process):
     return returncode
 
 
-def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, input_str=None, timelimit=None):
+def execute(command,
+            quiet=False,
+            env=None,
+            err_to_output=True,
+            stop_flag=None,
+            input_str=None,
+            timelimit=None):
     log_cmd = logging.debug if quiet else logging.info
 
     log_cmd(" ".join(command))
 
-    p = subprocess.Popen(command,
-                         stdin=subprocess.PIPE if input_str else None,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT if err_to_output else subprocess.PIPE,
-                         universal_newlines=False,
-                         env=env
-                         )
+    p = subprocess.Popen(
+        command,
+        stdin=subprocess.PIPE if input_str else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT if err_to_output else subprocess.PIPE,
+        universal_newlines=False,
+        env=env)
 
     output = None
     err_output = None
@@ -831,7 +852,8 @@ def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, 
         stopwatch.start()
         returncode = p.poll()
         while returncode is None:
-            if stop_flag.is_set() or (timelimit and stopwatch.curr_s() > timelimit):
+            if stop_flag.is_set() or (timelimit and
+                                      stopwatch.curr_s() > timelimit):
                 returncode = shut_down(p)
             else:
                 time.sleep(0.001)
@@ -841,7 +863,8 @@ def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, 
         try:
             if input_str and type(input_str) is not bytes:
                 input_str = input_str.encode()
-            output, err_output = p.communicate(input=input_str, timeout=timelimit if timelimit else None)
+            output, err_output = p.communicate(
+                input=input_str, timeout=timelimit if timelimit else None)
             returncode = p.poll()
         except subprocess.TimeoutExpired:
             logging.info("Timeout of %s s expired. Killing process.", timelimit)
@@ -880,7 +903,8 @@ def get_machine_model(witness_file):
                 elif '64' in line:
                     return MACHINE_MODEL_64
                 else:
-                    raise AssertionError('Unknown architecture in witness line: ' + line)
+                    raise AssertionError(
+                        'Unknown architecture in witness line: ' + line)
 
 
 def import_tool(tool_name):
@@ -900,6 +924,7 @@ def get_cpachecker_options(witness_file):
     else:
         raise AssertionError('Unknown machine model: ' + machine_model.name)
 
+    # yapf: disable
     return [
         '-setprop', 'witness.checkProgramHash=false',
         '-disable-java-assertions',
@@ -917,6 +942,7 @@ def get_cpachecker_options(witness_file):
         '-witness', witness_file,
         machine_model,
         '-spec', spec_file]
+    # yapf: enable
 
 
 def get_file_path(filename, temp_dir=True):
@@ -986,9 +1012,10 @@ def convert_dec_to_hex(dec_value, byte_number=None):
     if byte_number is not None:
         pure_hex = hex_value[2:]
         hex_size = len(pure_hex)
-        necessary_padding = byte_number*2 - hex_size
+        necessary_padding = byte_number * 2 - hex_size
         if necessary_padding < 0:
-            raise AssertionError("Value " + hex_value + " doesn't fit byte number " + byte_number)
+            raise AssertionError("Value " + hex_value +
+                                 " doesn't fit byte number " + byte_number)
         hex_value = "0x" + necessary_padding * '0' + pure_hex
     elif len(pure_hex) % 2 > 0:
         hex_value = "0x0" + pure_hex
@@ -1003,7 +1030,8 @@ class Stopwatch(object):
 
     def start(self):
         assert not self._current_start
-        self._current_start = time.perf_counter()  # We have to count sleep time because of other processes we wait on!
+        # We have to count sleep time because of other processes we wait on!
+        self._current_start = time.perf_counter()
 
     def stop(self):
         end_time = time.perf_counter()
@@ -1018,7 +1046,8 @@ class Stopwatch(object):
     def curr_s(self):
         """ Return current time in seconds """
         assert self._current_start
-        return int(floor(self._process(time.perf_counter() - self._current_start)))
+        return int(
+            floor(self._process(time.perf_counter() - self._current_start)))
 
     def _process(self, value):
         return round(value, 3)
@@ -1028,7 +1057,8 @@ class Stopwatch(object):
         return self._process(val)
 
     def avg(self):
-        val = sum(self._intervals) / len(self._intervals) if len(self._intervals) else 0
+        val = sum(self._intervals) / len(self._intervals) if len(
+            self._intervals) else 0
         return self._process(val)
 
     def min(self):
@@ -1042,7 +1072,8 @@ class Stopwatch(object):
     def __str__(self):
         str_rep = "{0} (s)".format(self.sum())
         if len(self._intervals) > 1:
-            str_rep += " (Avg.: {0} s, Min.: {1} s, Max.: {2} s)".format(self.avg(), self.min(), self.max())
+            str_rep += " (Avg.: {0} s, Min.: {1} s, Max.: {2} s)".format(
+                self.avg(), self.min(), self.max())
         return str_rep
 
 
@@ -1100,8 +1131,9 @@ def rewrite_cproblems(content):
         elif skip_asm and re.search(r'\)\s*;\s*$', line):
             skip_asm = False
             line = '\n'
-        if (skip_asm or
-                re.match(r'^\s*__asm__(\s+volatile)?\s*\("([^"]|\\")*"[^;]*\)\s*;\s*$', line)):
+        if (skip_asm or re.match(
+                r'^\s*__asm__(\s+volatile)?\s*\("([^"]|\\")*"[^;]*\)\s*;\s*$',
+                line)):
             line = '\n'
         # remove asm renaming
         line = re.sub(r'__asm__\s*\(""\s+"[a-zA-Z0-9_]+"\)', '', line)
@@ -1123,17 +1155,16 @@ def preprocess(file_content, machine_model, includes=[]):
     # -o : output file name
     # -xc : Use C language
     # - : Read code from stdin
-    preprocess_cmd = ['gcc',
-                      '-E',
-                      '-xc',
-                      mm_arg]
+    preprocess_cmd = ['gcc', '-E', '-xc', mm_arg]
     for inc in includes:
         preprocess_cmd += ['-I', inc]
     final_cmd = preprocess_cmd + ['-std=gnu11', '-lm', '-']
-    p = execute(final_cmd, err_to_output=False, input_str=file_content, quiet=False)
+    p = execute(
+        final_cmd, err_to_output=False, input_str=file_content, quiet=False)
     if p.returncode != 0:
         final_cmd = preprocess_cmd + ['-std=gnu90', '-lm', '-']
-        p = execute(final_cmd, err_to_output=False, input_str=file_content, quiet=False)
+        p = execute(
+            final_cmd, err_to_output=False, input_str=file_content, quiet=False)
     return p.stdout
 
 
@@ -1154,7 +1185,8 @@ def find_nondet_methods(filename, svcomp_only):
             try:
                 undefined_methods = _find_undefined_methods(file_content)
             except pycparser.plyparser.ParseError as e:
-                logging.warning("Parse failure with pycparser while parsing: %s", e)
+                logging.warning(
+                    "Parse failure with pycparser while parsing: %s", e)
                 undefined_methods = _find_nondet_methods(file_content)
         else:
             undefined_methods = _find_nondet_methods(file_content)
@@ -1176,7 +1208,10 @@ def _find_undefined_methods(file_content):
     function_definitions = [f.name for f in func_def_collector.func_defs]
     function_definitions += IMPLICIT_FUNCTIONS
 
-    undef_func_prepared = [f for f in function_declarations if ast_visitor.get_name(f) not in function_definitions]
+    undef_func_prepared = [
+        f for f in function_declarations
+        if ast_visitor.get_name(f) not in function_definitions
+    ]
     undef_func_prepared = [_prettify(f) for f in undef_func_prepared]
 
     # List every undefined, but declared function only once.
@@ -1203,7 +1238,11 @@ def _find_nondet_methods(file_content):
     functions = list()
     for method_name in method_names:
         method_type = _get_return_type(method_name)
-        functions.append({'name': method_name, 'type': method_type, 'params': []})
+        functions.append({
+            'name': method_name,
+            'type': method_type,
+            'params': []
+        })
     return functions
 
 
@@ -1261,9 +1300,13 @@ def convert_to_int(value, method_name):
     if type(value) is str and value.startswith('\'') and value.endswith('\''):
         value = value[1:-1]
     value = codecs.decode(value, 'unicode_escape').encode('latin1')
-    corresponding_method_singleton_list = [m for m in undefined_methods if m['name'] == method_name]
+    corresponding_method_singleton_list = [
+        m for m in undefined_methods if m['name'] == method_name
+    ]
     if len(corresponding_method_singleton_list) == 0:
-        raise AssertionError("Didn't find {} in list of undefined methods: {}".format(method_name, undefined_methods))
+        raise AssertionError(
+            "Didn't find {} in list of undefined methods: {}".format(
+                method_name, undefined_methods))
     corresponding_method = corresponding_method_singleton_list[0]
     # The type of the symbolic variable may be different from the method return type,
     # but must be ultimately cast to the method return type,
@@ -1300,9 +1343,11 @@ def convert_to_int(value, method_name):
     elif value_type == 'long' or value_type == 'signed long':
         data_format += 'q'
     else:
-        logging.debug('Converting type %s using type unsigned long ', value_type)
+        logging.debug('Converting type %s using type unsigned long ',
+                      value_type)
         data_format += 'Q'
-    logging.debug("Converting value %s according to data format %s", value, data_format)
+    logging.debug("Converting value %s according to data format %s", value,
+                  data_format)
     return unpack(data_format, value)
 
 
@@ -1334,7 +1379,8 @@ def get_format_specifier(method_type):
     elif 'int' in method_type or 'long' in method_type or 'short' in method_type or 'char' in method_type:
         specifier += 'd'
     else:
-        logging.debug('Using type unsigned long to read stdin for type %s', method_type)
+        logging.debug('Using type unsigned long to read stdin for type %s',
+                      method_type)
         specifier = '%lu'
     return specifier
 
@@ -1419,8 +1465,10 @@ UNKNOWN = 'unknown'
 TRUE = 'true'
 ERROR = 'error'
 
-MACHINE_MODEL_32 = MachineModel(32, "32 bit linux", 2, 4, 4, 8, 4, 8, 12, '-m32')
-MACHINE_MODEL_64 = MachineModel(64, "64 bit linux", 2, 4, 8, 8, 4, 8, 16, '-m64')
+MACHINE_MODEL_32 = MachineModel(32, "32 bit linux", 2, 4, 4, 8, 4, 8, 12,
+                                '-m32')
+MACHINE_MODEL_64 = MachineModel(64, "64 bit linux", 2, 4, 8, 8, 4, 8, 16,
+                                '-m64')
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
@@ -1431,6 +1479,7 @@ def found_err(run_result):
 
 
 def get_prepared_name(filename, tool_name):
-    prepared_name = '.'.join(os.path.basename(filename).split('.')[:-1] + [tool_name, 'c'])
+    prepared_name = '.'.join(
+        os.path.basename(filename).split('.')[:-1] + [tool_name, 'c'])
     prepared_name = get_file_path(prepared_name, temp_dir=True)
     return prepared_name

@@ -23,23 +23,32 @@ class ValidationConfig(object):
         self.use_klee_replay = False
         if args.klee_replay_validation:
             if args.input_generator != "klee":
-                raise utils.ConfigError("Klee-replay only works with klee as tester")
+                raise utils.ConfigError(
+                    "Klee-replay only works with klee as tester")
             else:
                 logging.warning(
-                    "Klee-replay only supports the machine architecture! Machine model specified not respected.")
+                    "Klee-replay only supports the machine architecture! Machine model specified not respected."
+                )
                 self.use_klee_replay = True
 
         if self.witness_validators and not self.use_witness_validation:
-            raise utils.ConfigError("Validators specified but no witness validation used (--witness-validation).")
+            raise utils.ConfigError(
+                "Validators specified but no witness validation used (--witness-validation)."
+            )
         elif self.use_witness_validation and not self.witness_validators:
-            logging.warning("Witness validation used and no validator specified. Only generating witnesses.")
+            logging.warning(
+                "Witness validation used and no validator specified. Only generating witnesses."
+            )
         elif self.witness_validators:
             for validator in self.witness_validators:
                 if validator.lower() not in valid_validators:
-                    raise utils.ConfigError("Validator not in list of known validators:"
-                                            "{0} not in {1}".format(validator, valid_validators))
+                    raise utils.ConfigError(
+                        "Validator not in list of known validators:"
+                        "{0} not in {1}".format(validator, valid_validators))
         elif not self.use_witness_validation and not self.use_execution and not self.use_klee_replay:
-            raise utils.ConfigError("No validation technique specified. Specify --execution or --witness-validation .")
+            raise utils.ConfigError(
+                "No validation technique specified. Specify --execution or --witness-validation ."
+            )
 
         self.convert_to_int = args.write_integers
         self.naive_verification = args.naive_verification
@@ -62,28 +71,35 @@ class TestValidator(object):
         # If a void appears in a line, there must be something between
         # the void and the __VERIFIER_error() symbol - otherwise
         # it is a function definition/declaration.
-        self.error_method_pattern = re.compile('((?!void).)*(void.*\S.*)?__VERIFIER_error\(\) *;.*')
+        self.error_method_pattern = re.compile(
+            '((?!void).)*(void.*\S.*)?__VERIFIER_error\(\) *;.*')
 
         self.statistics = utils.Statistics('Test Validator ' + self.get_name())
         self.timer_validation = utils.Stopwatch()
         self.statistics.add_value('Time for validation', self.timer_validation)
         self.timer_witness_validation = utils.Stopwatch()
-        self.statistics.add_value('Time for witness validation', self.timer_witness_validation)
+        self.statistics.add_value('Time for witness validation',
+                                  self.timer_witness_validation)
         self.counter_size_witnesses = utils.Counter()
-        self.statistics.add_value('Total size of witnesses', self.counter_size_witnesses)
+        self.statistics.add_value('Total size of witnesses',
+                                  self.counter_size_witnesses)
         self.timer_execution_validation = utils.Stopwatch()
-        self.statistics.add_value('Time for execution validation', self.timer_execution_validation)
+        self.statistics.add_value('Time for execution validation',
+                                  self.timer_execution_validation)
         self.counter_size_harnesses = utils.Counter()
-        self.statistics.add_value('Total size of harnesses', self.counter_size_harnesses)
+        self.statistics.add_value('Total size of harnesses',
+                                  self.counter_size_harnesses)
 
         self.timer_vector_gen = utils.Stopwatch()
-        self.statistics.add_value("Time for test vector generation", self.timer_vector_gen)
+        self.statistics.add_value("Time for test vector generation",
+                                  self.timer_vector_gen)
         self.counter_handled_test_cases = utils.Counter()
-        self.statistics.add_value('Number of looked-at test cases', self.counter_handled_test_cases)
+        self.statistics.add_value('Number of looked-at test cases',
+                                  self.counter_handled_test_cases)
 
         self.final_test_vector_size = utils.Constant()
-        self.statistics.add_value("Size of successful test vector", self.final_test_vector_size)
-
+        self.statistics.add_value("Size of successful test vector",
+                                  self.final_test_vector_size)
 
     def get_statistics(self):
         return self.statistics
@@ -94,7 +110,8 @@ class TestValidator(object):
 
         err_lines = list()
         for line_num, line in enumerate(content, start=1):
-            # Try to differentiate definition from call through the 'void' condition
+            # Try to differentiate definition from call
+            # through the 'void' condition
             if self.error_method_pattern.match(line):
                 err_lines.append(line_num)
         assert err_lines  # Asser that there is at least one error call
@@ -115,9 +132,11 @@ class TestValidator(object):
             test_vector = self.get_test_vector(test_case)
             if test_vector or not empty_case_handled:
                 if not test_vector:
-                    test_vector = utils.TestVector(test_case.name, test_case.origin)
+                    test_vector = utils.TestVector(test_case.name,
+                                                   test_case.origin)
                     empty_case_handled = True
-                new_content = self.create_witness(program_file, test_case.name, test_vector, nondet_methods)
+                new_content = self.create_witness(program_file, test_case.name,
+                                                  test_vector, nondet_methods)
                 new_content['vector'] = test_vector
                 new_content['origin'] = test_case.origin
                 created_content.append(new_content)
@@ -125,24 +144,27 @@ class TestValidator(object):
                 logging.info("Test vector was not generated for %s", test_case)
         return created_content
 
-    def create_witness(self, program_file, test_name, test_vector, nondet_methods):
+    def create_witness(self, program_file, test_name, test_vector,
+                       nondet_methods):
         """
         Creates a witness for the test file produced by crest.
-        Test files produced by our version of crest specify one test value per line, without
-        any mention of the variable the value is assigned to.
-        Because of this, we have to build a fancy witness automaton of the following format:
-        For each test value specified in the test file, there is one precessor and one
-        successor state. These two states are connected by one transition for each
-        call to a CREST_x(..) function. Each of these transitions has the assumption,
-        that the variable specified in the corresponding CREST_x(..) function has the current
+        Test files produced by our version of crest specify one test value per
+        line, without any mention of the variable the value is assigned to.
+        Because of this, we have to build a fancy witness automaton of the
+        following format: For each test value specified in the test file, there
+        is one precessor and one successor state. These two states are
+        connected by one transition for each call to a CREST_x(..) function.
+        Each of these transitions has the assumption, that the variable
+        specified in the corresponding CREST_x(..) function has the current
         test value.
         """
-        witness = self.witness_creator.create_witness(producer=self.get_name(),
-                                                      program_file=program_file,
-                                                      test_vector=test_vector,
-                                                      nondet_methods=nondet_methods,
-                                                      machine_model=self.machine_model,
-                                                      error_lines=self.get_error_lines(program_file))
+        witness = self.witness_creator.create_witness(
+            producer=self.get_name(),
+            program_file=program_file,
+            test_vector=test_vector,
+            nondet_methods=nondet_methods,
+            machine_model=self.machine_model,
+            error_lines=self.get_error_lines(program_file))
 
         witness_file = test_name + ".witness.graphml"
         witness_file = utils.get_file_path(witness_file)
@@ -167,9 +189,10 @@ class TestValidator(object):
         return all_vectors
 
     def create_harness(self, test_name, test_vector, nondet_methods):
-        harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
-                                                      error_method=utils.error_method,
-                                                      test_vector=test_vector)
+        harness = self.harness_creator.create_harness(
+            nondet_methods=nondet_methods,
+            error_method=utils.error_method,
+            test_vector=test_vector)
         harness_file = test_name + '.harness.c'
         harness_file = utils.get_file_path(harness_file)
 
@@ -189,20 +212,23 @@ class TestValidator(object):
     def _get_test_cases(self, visited_tests):
         return self._input_generator.get_test_cases(visited_tests)
 
-    def _perform_validation(self, program_file, validator, validator_method, is_ready_func, stop_event):
+    def _perform_validation(self, program_file, validator, validator_method,
+                            is_ready_func, stop_event):
         visited_tests = set()
         result = list()
         while not is_ready_func() and not stop_event.is_set():
             new_test_cases = self._get_test_cases(visited_tests)
             try:
-                result = validator_method(program_file, validator, new_test_cases)
+                result = validator_method(program_file, validator,
+                                          new_test_cases)
                 if result.is_positive():
                     return result
                 else:
                     new_test_case_names = [t.name for t in new_test_cases]
                     visited_tests = visited_tests.union(new_test_case_names)
                 sleep(0.001)  # Sleep for 1 millisecond
-            except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
+            except utils.InputGenerationError:
+                # Just capture here and retry as long as the thread is alive
                 pass
 
         if not stop_event.is_set():
@@ -210,17 +236,24 @@ class TestValidator(object):
             result = validator_method(program_file, validator, new_test_cases)
         return self.decide_final_verdict(result)
 
-    def perform_klee_replay_validation(self, program_file, is_ready_func, stop_event):
+    def perform_klee_replay_validation(self, program_file, is_ready_func,
+                                       stop_event):
         validator = KleeReplayRunner(self.config.machine_model)
-        return self._perform_validation(program_file, validator, self._k, is_ready_func, stop_event)
+        return self._perform_validation(program_file, validator, self._k,
+                                        is_ready_func, stop_event)
 
-    def perform_execution_validation(self, program_file, is_ready_func, stop_event):
-        validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
-        return self._perform_validation(program_file, validator, self._hs, is_ready_func, stop_event)
+    def perform_execution_validation(self, program_file, is_ready_func,
+                                     stop_event):
+        validator = ExecutionRunnerTwo(self.config.machine_model,
+                                       self.get_name())
+        return self._perform_validation(program_file, validator, self._hs,
+                                        is_ready_func, stop_event)
 
-    def perform_witness_validation(self, program_file, is_ready_func, stop_event):
+    def perform_witness_validation(self, program_file, is_ready_func,
+                                   stop_event):
         validator = ValidationRunner(self.config.witness_validators)
-        return self._perform_validation(program_file, validator, self._hs, is_ready_func, stop_event)
+        return self._perform_validation(program_file, validator, self._hs,
+                                        is_ready_func, stop_event)
 
     def _hs(self, program_file, validator, new_test_cases):
         test_vectors = self.create_all_test_vectors(new_test_cases)
@@ -259,7 +292,8 @@ class TestValidator(object):
         return utils.VerdictUnknown()
 
     def _m(self, program_file, validator, new_test_cases):
-        produced_witnesses = self.create_all_witnesses(program_file, new_test_cases)
+        produced_witnesses = self.create_all_witnesses(program_file,
+                                                       new_test_cases)
         for witness in produced_witnesses:
             logging.debug('Looking at witness %s .', witness['name'])
             witness_name = witness['name']
@@ -279,7 +313,8 @@ class TestValidator(object):
             logging.debug('Results for %s: %s', witness_name, str(verdicts))
             if any(['false' in v.lower() for v in verdicts]):
                 self.final_test_vector_size.value = len(witness['vector'])
-                return utils.VerdictFalse(witness['origin'], witness['vector'], None, witness_name)
+                return utils.VerdictFalse(witness['origin'], witness['vector'],
+                                          None, witness_name)
 
         return utils.VerdictUnknown()
 
@@ -288,15 +323,18 @@ class TestValidator(object):
         result = utils.VerdictUnknown()
 
         if self.config.use_klee_replay:
-            result = self.perform_klee_replay_validation(program_file, is_ready_func, stop_event)
+            result = self.perform_klee_replay_validation(
+                program_file, is_ready_func, stop_event)
             logging.info("Klee-replay validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_execution:
-            result = self.perform_execution_validation(program_file, is_ready_func, stop_event)
+            result = self.perform_execution_validation(
+                program_file, is_ready_func, stop_event)
             logging.info("Execution validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_witness_validation:
-            result = self.perform_witness_validation(program_file, is_ready_func, stop_event)
+            result = self.perform_witness_validation(program_file,
+                                                     is_ready_func, stop_event)
             logging.info("Witness validation says: " + str(result))
 
         if result.is_positive():
@@ -306,13 +344,15 @@ class TestValidator(object):
             # This currently won't work with AFL due to its string-style input
             if result.witness is None and 'afl' not in self.get_name().lower():
                 nondet_methods = utils.get_nondet_methods()
-                witness = self.create_witness(program_file, result.test.origin, test_vector, nondet_methods)
+                witness = self.create_witness(program_file, result.test.origin,
+                                              test_vector, nondet_methods)
                 with open(witness['name'], 'w+') as outp:
                     outp.write(witness['content'])
                 result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
-                harness = self.create_harness(result.test_vector.origin, test_vector, nondet_methods)
+                harness = self.create_harness(result.test_vector.origin,
+                                              test_vector, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']
@@ -325,16 +365,17 @@ class ExecutionRunner(object):
     def __init__(self, machine_model):
         self.machine_model = machine_model
 
-    def _get_compile_cmd(self, program_file, harness_file, output_file, c_version='gnu11'):
+    def _get_compile_cmd(self,
+                         program_file,
+                         harness_file,
+                         output_file,
+                         c_version='gnu11'):
         mm_arg = self.machine_model.compile_parameter
         cmd = ['gcc']
-        cmd += ['-std={}'.format(c_version),
-                mm_arg,
-                '-D__alias__(x)=',
-                '-o', output_file,
-                '-include', program_file,
-                harness_file,
-                '-lm']
+        cmd += [
+            '-std={}'.format(c_version), mm_arg, '-D__alias__(x)=', '-o',
+            output_file, '-include', program_file, harness_file, '-lm'
+        ]
 
         return cmd
 
@@ -343,15 +384,19 @@ class ExecutionRunner(object):
 
     def compile(self, program_file, harness_file):
         output_file = utils.get_file_path('a.out', temp_dir=True)
-        compile_cmd = self._get_compile_cmd(program_file, harness_file, output_file)
+        compile_cmd = self._get_compile_cmd(program_file, harness_file,
+                                            output_file)
         compile_result = utils.execute(compile_cmd, quiet=True)
 
         if compile_result.returncode != 0:
-            compile_cmd = self._get_compile_cmd(program_file, harness_file, output_file, 'gnu90')
-            compile_result = utils.execute(compile_cmd, quiet=True, err_to_output=False)
+            compile_cmd = self._get_compile_cmd(program_file, harness_file,
+                                                output_file, 'gnu90')
+            compile_result = utils.execute(
+                compile_cmd, quiet=True, err_to_output=False)
 
             if compile_result.returncode != 0:
-                raise utils.CompileError("Compilation failed for harness {}".format(harness_file))
+                raise utils.CompileError(
+                    "Compilation failed for harness {}".format(harness_file))
                 return None
 
         return output_file
@@ -385,7 +430,8 @@ class ExecutionRunnerTwo(ExecutionRunner):
 
     def _create_executable_harness(self, program_file):
         nondet_methods = utils.get_nondet_methods()
-        harness_content = self.harness_generator.create_harness(nondet_methods, utils.error_method)
+        harness_content = self.harness_generator.create_harness(
+            nondet_methods, utils.error_method)
         harness_file = 'harness.c'
         with open(harness_file, 'wb+') as outp:
             outp.write(harness_content)
@@ -397,7 +443,12 @@ class ExecutionRunnerTwo(ExecutionRunner):
 
         if executable:
             run_cmd = self._get_run_cmd(executable)
-            run_result = utils.execute(run_cmd, quiet=True, err_to_output=False, input_str=input_vector, timelimit=5)
+            run_result = utils.execute(
+                run_cmd,
+                quiet=True,
+                err_to_output=False,
+                input_str=input_vector,
+                timelimit=5)
 
             if utils.found_err(run_result):
                 return [FALSE]
@@ -423,24 +474,20 @@ class KleeReplayRunner(object):
         c_version = 'gnu11'
         if not self.executable:
             compile_cmd = ['gcc']
-            compile_cmd += ['-std={}'.format(c_version),
-                            "-L", klee.lib_dir,
-                            '-D__alias__(x)=',
-                            '-o', self.executable_name,
-                            klee_prepared_file,
-                            '-lkleeRuntest',
-                            '-lm']
+            compile_cmd += [
+                '-std={}'.format(c_version), "-L", klee.lib_dir,
+                '-D__alias__(x)=', '-o', self.executable_name,
+                klee_prepared_file, '-lkleeRuntest', '-lm'
+            ]
             result = utils.execute(compile_cmd)
             if result.returncode != 0:
                 c_version = 'gnu90'
                 compile_cmd = ['gcc']
-                compile_cmd += ['-std={}'.format(c_version),
-                                "-L", klee.lib_dir,
-                                '-D__alias__(x)=',
-                                '-o', self.executable_name,
-                                klee_prepared_file,
-                                '-lkleeRuntest',
-                                '-lm']
+                compile_cmd += [
+                    '-std={}'.format(c_version), "-L", klee.lib_dir,
+                    '-D__alias__(x)=', '-o', self.executable_name,
+                    klee_prepared_file, '-lkleeRuntest', '-lm'
+                ]
             self.executable = self.executable_name
 
         if not os.path.exists(self.executable_name):
@@ -449,7 +496,8 @@ class KleeReplayRunner(object):
         curr_env = utils.get_env()
         curr_env['KTEST_FILE'] = test_case.origin
 
-        result = utils.execute([self.executable], env=curr_env, err_to_output=False)
+        result = utils.execute(
+            [self.executable], env=curr_env, err_to_output=False)
 
         if utils.found_err(result):
             return [FALSE]
@@ -498,12 +546,15 @@ class Validator(object):
     def validate(self, program_file, witness_file):
         # err_to_output=True is important so that messages to stderr are in correct relation to messages to stdout!
         # This may be important for determining the run result.
-        cmd_result = utils.execute(self._get_cmd(program_file, witness_file), quiet=True, err_to_output=True)
+        cmd_result = utils.execute(
+            self._get_cmd(program_file, witness_file),
+            quiet=True,
+            err_to_output=True)
 
         returncode = cmd_result.returncode
         # Execute returns a negative returncode -N if the process was killed by signal N
         if returncode < 0:
-            returnsignal = - returncode
+            returnsignal = -returncode
         else:
             returnsignal = 0
 
@@ -515,7 +566,8 @@ class Validator(object):
         # Remove last line if empty. FShell expects no empty line at the end.
         if len(tool_output) >= 1 and not tool_output[-1]:
             tool_output = tool_output[:-1]
-        validation_result = self.tool.determine_result(returncode, returnsignal, tool_output, isTimeout=False)
+        validation_result = self.tool.determine_result(
+            returncode, returnsignal, tool_output, isTimeout=False)
         return validation_result
 
     @abstractmethod
@@ -534,7 +586,8 @@ class CPAcheckerValidator(Validator):
         if not self.executable:
             import shutil
             self.executable = self.tool.executable()
-            self.cpa_directory = os.path.join(os.path.dirname(self.executable), '..')
+            self.cpa_directory = os.path.join(
+                os.path.dirname(self.executable), '..')
             config_copy_dir = utils.get_file_path('config', temp_dir=True)
             if not os.path.exists(config_copy_dir):
                 copy_dir = os.path.join(self.cpa_directory, 'config')
@@ -559,11 +612,10 @@ class UAutomizerValidator(Validator):
         else:
             raise AssertionError("Unhandled machine model: " + machine_model)
 
-        cmd = [self.executable,
-               '--validate', witness_file,
-               utils.spec_file,
-               machine_model,
-               program_file]
+        cmd = [
+            self.executable, '--validate', witness_file, utils.spec_file,
+            machine_model, program_file
+        ]
         return cmd
 
 
@@ -592,11 +644,10 @@ class FShellW2t(Validator):
         machine_model = utils.get_machine_model(witness_file)
         machine_model = machine_model.compile_parameter
 
-        return [self.executable,
-                '--propertyfile', utils.spec_file,
-                '--graphml-witness', witness_file,
-                machine_model,
-                program_file]
+        return [
+            self.executable, '--propertyfile', utils.spec_file,
+            '--graphml-witness', witness_file, machine_model, program_file
+        ]
 
     def validate(self, program_file, witness_file):
         """Overwrites Validator.validate(...)."""

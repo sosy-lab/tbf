@@ -39,7 +39,8 @@ class InputGenerator(BaseInputGenerator):
 
     def _create_nondet_method(self, method_name, method_type, param_types):
         var_name = utils.get_sym_var_name(method_name)
-        method_head = utils.get_method_head(method_name, method_type, param_types)
+        method_head = utils.get_method_head(method_name, method_type,
+                                            param_types)
         method_body = ['{']
         if method_type != 'void':
             if 'float' in method_type or 'double' in method_type:
@@ -48,11 +49,12 @@ class InputGenerator(BaseInputGenerator):
                 conversion_cmd = 'strtoull({0}, 0, 10);'.format(var_name)
             else:
                 conversion_cmd = 'strtoll({0}, 0, 10);'.format(var_name)
-            return_statement = 'return ({0}) {1}'.format(method_type, conversion_cmd)
-            method_body += ['char * {0} = malloc(1000);'.format(var_name),
-                            'fgets({0}, 1000, stdin);'.format(var_name),
-                            return_statement
-                            ]
+            return_statement = 'return ({0}) {1}'.format(
+                method_type, conversion_cmd)
+            method_body += [
+                'char * {0} = malloc(1000);'.format(var_name),
+                'fgets({0}, 1000, stdin);'.format(var_name), return_statement
+            ]
         method_body = '\n    '.join(method_body)
         method_body += '\n}\n'
 
@@ -60,7 +62,8 @@ class InputGenerator(BaseInputGenerator):
 
     def _get_error_method_dummy(self):
         # overwrite the default error method dummy to *not* exit. Somehow, Fshell doesn't like exit or aborts.
-        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(utils.error_string)
+        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(
+            utils.error_string)
 
     def create_input_generation_cmds(self, filename):
         if self.machine_model.is_32:
@@ -68,13 +71,13 @@ class InputGenerator(BaseInputGenerator):
         elif self.machine_model.is_64:
             mm_arg = "--64"
         else:
-            raise AssertionError("Unhandled machine model " + self.machine_model)
+            raise AssertionError("Unhandled machine model " +
+                                 self.machine_model)
 
-        input_generation_cmd = [fshell_binary,
-                                mm_arg,
-                                "--outfile", tests_file,
-                                "--query-file", query_file,
-                                filename]
+        input_generation_cmd = [
+            fshell_binary, mm_arg, "--outfile", tests_file, "--query-file",
+            query_file, filename
+        ]
 
         return [input_generation_cmd]
 
@@ -84,7 +87,8 @@ class InputGenerator(BaseInputGenerator):
             with open(tests_file, 'r') as inp:
                 content = [l.strip() for l in inp.readlines()]
             if len([l for l in content if "Test Suite" in l]) > 1:
-                raise AssertionError("More than one test suite exists in " + tests_file)
+                raise AssertionError("More than one test suite exists in " +
+                                     tests_file)
 
             curr_test = list()
             test_cases = list()
@@ -93,7 +97,8 @@ class InputGenerator(BaseInputGenerator):
                 if line.startswith("IN:"):
                     test_name = str(count)
                     if test_name not in exclude:
-                        test_cases.append(utils.TestCase(test_name, tests_file, curr_test))
+                        test_cases.append(
+                            utils.TestCase(test_name, tests_file, curr_test))
                     curr_test = list()
                     count += 1
                 if line.startswith("strto"):
@@ -101,7 +106,8 @@ class InputGenerator(BaseInputGenerator):
                     curr_test.append(test_value)
             test_name = str(count)
             if curr_test and test_name not in exclude:
-                test_cases.append(utils.TestCase(test_name, tests_file, curr_test))
+                test_cases.append(
+                    utils.TestCase(test_name, tests_file, curr_test))
             return test_cases
         else:
             return []
@@ -118,5 +124,3 @@ class FshellTestValidator(TestValidator):
             vector.add(tv)
 
         return vector
-
-

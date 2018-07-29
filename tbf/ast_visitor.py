@@ -310,7 +310,6 @@ class DfsVisitor(AstVisitor):
         else:
             return []
 
-
     def visit_CompoundLiteral(self, item):
         a = self.visit(item.type)
         b = self.visit(item.init)
@@ -361,7 +360,9 @@ class DfsVisitor(AstVisitor):
         return flatten([self.visit(e) for e in item.ext])
 
     def visit_For(self, item):
-        return flatten([self.visit(i) for i in [item.init, item.cond, item.next, item.stmt]])
+        return flatten([
+            self.visit(i) for i in [item.init, item.cond, item.next, item.stmt]
+        ])
 
     def visit_FuncCall(self, item):
         a = self.visit(item.name)
@@ -495,9 +496,13 @@ class NondetReplacer(DfsVisitor):
         if type(var_type) is a.IdentifierType:
             return var_type
         elif type(var_type) is a.TypeDecl:
-            return a.TypeDecl(var_name, list(), self._build_nondet_type_decl(var_name, var_type.type))
+            return a.TypeDecl(
+                var_name, list(),
+                self._build_nondet_type_decl(var_name, var_type.type))
         elif type(var_type) is a.PtrDecl:
-            return a.PtrDecl([], self._build_nondet_type_decl(var_name, var_type.type))
+            return a.PtrDecl([],
+                             self._build_nondet_type_decl(
+                                 var_name, var_type.type))
         else:
             raise AssertionError("Unhandled type: " + str(type(var_type)))
 
@@ -514,14 +519,20 @@ class NondetReplacer(DfsVisitor):
             self.var_counter += 1
 
             nondet_var_type = self.get_type(node)
-            nondet_type_decl = self._build_nondet_type_decl(nondet_var_name, nondet_var_type)
-            nondet_init = self._get_nondet_init(nondet_var_name, nondet_var_type)
-            nondet_var = a.Decl(nondet_var_name, list(), list(), list(), nondet_type_decl, nondet_init, None)
+            nondet_type_decl = self._build_nondet_type_decl(
+                nondet_var_name, nondet_var_type)
+            nondet_init = self._get_nondet_init(nondet_var_name,
+                                                nondet_var_type)
+            nondet_var = a.Decl(nondet_var_name, list(), list(), list(),
+                                nondet_type_decl, nondet_init, None)
             statements_to_prepend.append(nondet_var)
-            nondet_marker = self.get_nondet_marker(nondet_var_name, nondet_var_type)
+            nondet_marker = self.get_nondet_marker(nondet_var_name,
+                                                   nondet_var_type)
             if nondet_marker is not None:
                 statements_to_prepend.append(nondet_marker)
-            return statements_to_prepend, a.ID(nondet_var_name)  # Replace __VERIFIER_nondet_X() with new nondet var
+            return statements_to_prepend, a.ID(
+                nondet_var_name
+            )  # Replace __VERIFIER_nondet_X() with new nondet var
 
         else:
             p, node.name = self.visit(node.name)
@@ -533,7 +544,8 @@ class NondetReplacer(DfsVisitor):
 
     def is_nondet_call(self, call):
         name = get_name(call)
-        return name in self.external_functions or name.startswith('__VERIFIER_nondet_')
+        return name in self.external_functions or name.startswith(
+            '__VERIFIER_nondet_')
 
     def is_error_call(self, call):
         name = get_name(call)
@@ -541,7 +553,8 @@ class NondetReplacer(DfsVisitor):
 
     def get_type(self, func_call_node):
         name = get_name(func_call_node)
-        for scope in reversed([s['vars'] for s in self.var_stack]):  # Look at innermost scope first
+        for scope in reversed([s['vars'] for s in self.var_stack
+                              ]):  # Look at innermost scope first
             if name in scope.keys():
                 return scope[name]
         raise ParseError("Unknown type for " + name)
@@ -581,7 +594,10 @@ class NondetReplacer(DfsVisitor):
                     ps += p
                     ns += n
                 item.param_decls = ns
-            self.var_stack.append({'name': get_name(item.decl), 'vars': dict()})  # New scope
+            self.var_stack.append({
+                'name': get_name(item.decl),
+                'vars': dict()
+            })  # New scope
             p, item.body = self.visit(item.body)
             self.var_stack.pop()  # Leave scope
             return [], item
@@ -720,15 +736,19 @@ class NondetReplacer(DfsVisitor):
     def _get_assume_definition(self):
         param_name = '__cond'
         int_type = a.TypeDecl(param_name, [], a.IdentifierType(['int']))
-        param_list = a.ParamList([a.Decl(param_name, [], [], [], int_type, None, None)])
-        assume_type = a.TypeDecl('__VERIFIER_assume', [], a.IdentifierType(['void']))
+        param_list = a.ParamList(
+            [a.Decl(param_name, [], [], [], int_type, None, None)])
+        assume_type = a.TypeDecl('__VERIFIER_assume', [],
+                                 a.IdentifierType(['void']))
         assume_func_decl = a.FuncDecl(param_list, assume_type)
-        assume_decl = a.Decl('__VERIFIER_assume', list(), list(), list(), assume_func_decl, None, None)
+        assume_decl = a.Decl('__VERIFIER_assume', list(), list(), list(),
+                             assume_func_decl, None, None)
 
         exit_code = a.ExprList([a.Constant('int', '0')])
         true_branch = a.Compound([a.FuncCall(a.ID('exit'), exit_code)])
         false_branch = None
-        if_statement = a.If(a.UnaryOp('!', a.ID(param_name)), true_branch, false_branch)
+        if_statement = a.If(
+            a.UnaryOp('!', a.ID(param_name)), true_branch, false_branch)
 
         return_statement = a.Return(None)
 
@@ -873,9 +893,11 @@ class NondetIdentifierCollector(DfsVisitor):
         if self.pattern.match(func_name):
             relevant_var = self.get_var_name_from_function(item)
 
-            self.nondet_identifiers[relevant_var] = {'line': item.coord.line,
-                                                     'origin file': item.coord.file,
-                                                     'scope': self.scope[-1]}
+            self.nondet_identifiers[relevant_var] = {
+                'line': item.coord.line,
+                'origin file': item.coord.file,
+                'scope': self.scope[-1]
+            }
         # no need to visit item.args, we don't do nested klee_make_symbolic calls
         return []
 
@@ -955,6 +977,7 @@ def get_type(node):
     except AttributeError:
         pass
     return ' '.join(name)
+
 
 class FuncDefCollector(a.NodeVisitor):
 

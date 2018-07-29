@@ -67,7 +67,8 @@ class HarnessCreator(object):
 
     def _get_error_definition(self, method_name):
         definition = 'void {0}() {{\n'.format(method_name)
-        definition += '    fprintf(stderr, \"{0}\\n\");\n'.format(utils.error_string)
+        definition += '    fprintf(stderr, \"{0}\\n\");\n'.format(
+            utils.error_string)
         definition += '    exit(1);\n}\n\n'
         return definition.encode()
 
@@ -76,13 +77,16 @@ class HarnessCreator(object):
         if test_vector is not None:
             definitions += b'unsigned int access_counter = 0;\n\n'
         for method in nondet_methods:
-            definitions += utils.get_method_head(method['name'], method['type'], method['params']).encode()
+            definitions += utils.get_method_head(method['name'], method['type'],
+                                                 method['params']).encode()
             definitions += b' {\n'
             if method['type'] != 'void':
                 definitions += "    unsigned int inp_size = 3000;\n".encode()
-                definitions += "    char * inp_var = malloc(inp_size);\n".encode()
+                definitions += "    char * inp_var = malloc(inp_size);\n".encode(
+                )
                 if test_vector is None:  # Build generic harness
-                    definitions += "    fgets(inp_var, inp_size, stdin);\n".encode()
+                    definitions += "    fgets(inp_var, inp_size, stdin);\n".encode(
+                    )
                 else:
                     definitions += "    switch(access_counter) {\n".encode()
                     for idx, item in enumerate(test_vector.vector):
@@ -90,12 +94,20 @@ class HarnessCreator(object):
                             value = item['value']
                         else:
                             value = item['value'].encode()
-                        definitions += b''.join([b'case ', str(idx).encode(), b': strcpy(inp_var, "', value, b'"); break;\n'])
+                        # yapf: disable
+                        definitions += b''.join([
+                            b'case ', str(idx).encode(),
+                            b': strcpy(inp_var, "', value, b'"); break;\n'
+                        ])
+                        # yapf: enable
                     definitions += b"        default: abort();\n"
                     definitions += b"    }\n"
                     definitions += b"    access_counter++;\n"
 
-                definitions += b''.join([b'    return *((', method['type'].encode(), b' *) parse_inp(inp_var));\n'])
+                definitions += b''.join([
+                    b'    return *((', method['type'].encode(),
+                    b' *) parse_inp(inp_var));\n'
+                ])
             definitions += b'}\n\n'
         return definitions
 
@@ -103,6 +115,7 @@ class HarnessCreator(object):
         harness = b''
         harness += self._get_preamble()
         harness += self._get_error_definition(error_method)
-        harness += self._get_nondet_method_definitions(nondet_methods, test_vector)
+        harness += self._get_nondet_method_definitions(nondet_methods,
+                                                       test_vector)
 
         return harness

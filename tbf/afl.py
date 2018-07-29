@@ -10,21 +10,23 @@ findings_dir = utils.get_file_path('findings', temp_dir=True)
 name = 'afl-fuzz'
 tests_dir = utils.tmp
 
+
 class InputGenerator(BaseInputGenerator):
 
     def create_input_generation_cmds(self, program_file):
         instrumented_program = 'tested.out'
-        compile_cmd = [os.path.join(bin_dir, 'afl-gcc'),
-                       self.machine_model.compile_parameter,
-                       '-o', instrumented_program,
-                       program_file]
+        compile_cmd = [
+            os.path.join(bin_dir,
+                         'afl-gcc'), self.machine_model.compile_parameter, '-o',
+            instrumented_program, program_file
+        ]
 
         testcase_dir = self._create_testcase_dir()
-        input_gen_cmd = [os.path.join(bin_dir, 'afl-fuzz'),
-                         '-i', testcase_dir,
-                         '-o', findings_dir,
-                         '--',
-                         os.path.abspath(instrumented_program)]
+        input_gen_cmd = [
+            os.path.join(bin_dir, 'afl-fuzz'), '-i', testcase_dir, '-o',
+            findings_dir, '--',
+            os.path.abspath(instrumented_program)
+        ]
         return [compile_cmd, input_gen_cmd]
 
     def _create_testcase_dir(self):
@@ -32,7 +34,8 @@ class InputGenerator(BaseInputGenerator):
         os.mkdir(testcase_dir)
         initial_testcase = os.path.join(testcase_dir, '0.afl-test')
         with open(initial_testcase, 'w+') as outp:
-            outp.write(1000 * '0\n')  # FIXME: This is an unreliable first test case
+            outp.write(
+                1000 * '0\n')  # FIXME: This is an unreliable first test case
         return testcase_dir
 
     def get_name(self):
@@ -48,7 +51,8 @@ class InputGenerator(BaseInputGenerator):
     def prepare(self, filecontent, nondet_methods_used):
         harness_creator = HarnessCreator()
         harness = harness_creator._get_vector_read_method()
-        harness += harness_creator._get_nondet_method_definitions(nondet_methods_used, None)
+        harness += harness_creator._get_nondet_method_definitions(
+            nondet_methods_used, None)
         content = filecontent + '\n' + harness.decode()
         return content
 
@@ -68,6 +72,7 @@ class InputGenerator(BaseInputGenerator):
                         content = inp.read()
                     tcs.append(utils.TestCase(test_name, t, content))
         return tcs
+
 
 class AflTestValidator(BaseTestValidator):
 
