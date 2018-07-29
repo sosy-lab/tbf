@@ -162,47 +162,6 @@ class TestValidator(object):
         else:
             return utils.VerdictTrue()
 
-    def perform_witness_validation(self, program_file, is_ready_func, stop_event):
-        validator = ValidationRunner(self.config.witness_validators)
-        visited_tests = set()
-        result = list()
-        while not is_ready_func() and not stop_event.is_set():
-            try:
-                result = self._m(program_file, validator, visited_tests)
-                if result.is_positive():
-                    return result
-                sleep(0.001)  # Sleep for 1 millisecond
-            except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
-                pass
-        if not stop_event.is_set():
-            result = self._m(program_file, validator, visited_tests)
-        return self.decide_final_verdict(result)
-
-    def _m(self, program_file, validator, visited_tests):
-        produced_witnesses = self.create_all_witnesses(program_file, visited_tests)
-        for witness in produced_witnesses:
-            logging.debug('Looking at witness %s .', witness['name'])
-            witness_name = witness['name']
-            content_to_write = witness['content']
-            self.counter_size_witnesses.inc(len(content_to_write))
-            with open(witness_name, 'w+') as outp:
-                outp.write(witness['content'])
-            self.timer_witness_validation.start()
-            self.timer_validation.start()
-            try:
-                verdicts = validator.run(program_file, witness_name)
-            finally:
-                self.timer_witness_validation.stop()
-                self.timer_validation.stop()
-
-            self.counter_handled_test_cases.inc()
-            logging.info('Results for %s: %s', witness_name, str(verdicts))
-            if any(['false' in v.lower() for v in verdicts]):
-                self.final_test_vector_size.value = len(witness['vector'])
-                return utils.VerdictFalse(witness['origin'], witness['vector'], None, witness_name)
-
-        return utils.VerdictUnknown()
-
     def create_all_test_vectors(self, program_file, visited_tests):
         all_vectors = list()
         new_test_cases = self.get_test_cases(visited_tests)
@@ -238,13 +197,12 @@ class TestValidator(object):
         finally:
             self.timer_vector_gen.stop()
 
-    def perform_execution_validation(self, program_file, is_ready_func, stop_event):
-        validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
+    def _perform_validation(self, program_file, validator, validator_method, is_ready_func, stop_event):
         visited_tests = set()
         result = list()
         while not is_ready_func() and not stop_event.is_set():
             try:
-                result = self._hs(program_file, validator, visited_tests)
+                result = validator_method(program_file, validator, visited_tests)
                 if result.is_positive():
                     return result
                 sleep(0.001)  # Sleep for 1 millisecond
@@ -252,8 +210,20 @@ class TestValidator(object):
                 pass
 
         if not stop_event.is_set():
-            result = self._hs(program_file, validator, visited_tests)
+            result = validator_method(program_file, validator, visited_tests)
         return self.decide_final_verdict(result)
+
+    def perform_klee_replay_validation(self, program_file, is_ready_func, stop_event):
+        validator = KleeReplayRunner(self.config.machine_model)
+        return self._perform_validation(program_file, validator, self._k, is_ready_func, stop_event)
+
+    def perform_execution_validation(self, program_file, is_ready_func, stop_event):
+        validator = ExecutionRunnerTwo(self.config.machine_model, self.get_name())
+        return self._perform_validation(program_file, validator, self._hs, is_ready_func, stop_event)
+
+    def perform_witness_validation(self, program_file, is_ready_func, stop_event):
+        validator = ValidationRunner(self.config.witness_validators)
+        return self._perform_validation(program_file, validator, self._hs, is_ready_func, stop_event)
 
     def _hs(self, program_file, validator, visited_tests):
         test_vectors = self.create_all_test_vectors(program_file, visited_tests)
@@ -292,23 +262,30 @@ class TestValidator(object):
                 return utils.VerdictFalse(test)
         return utils.VerdictUnknown()
 
-    def perform_klee_replay_validation(self, program_file, is_ready_func, stop_event):
-        validator = KleeReplayRunner(self.config.machine_model)
-
-        visited_tests = set()
-        result = list()
-        while not is_ready_func() and not stop_event.is_set():
+    def _m(self, program_file, validator, visited_tests):
+        produced_witnesses = self.create_all_witnesses(program_file, visited_tests)
+        for witness in produced_witnesses:
+            logging.debug('Looking at witness %s .', witness['name'])
+            witness_name = witness['name']
+            content_to_write = witness['content']
+            self.counter_size_witnesses.inc(len(content_to_write))
+            with open(witness_name, 'w+') as outp:
+                outp.write(witness['content'])
+            self.timer_witness_validation.start()
+            self.timer_validation.start()
             try:
-                result = self._k(program_file, validator, visited_tests)
-                if result.is_positive():
-                    return result
-                sleep(0.001)  # Sleep for 1 millisecond
-            except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
-                pass
+                verdicts = validator.run(program_file, witness_name)
+            finally:
+                self.timer_witness_validation.stop()
+                self.timer_validation.stop()
 
-        if not stop_event.is_set():
-            result = self._k(program_file, validator, visited_tests)
-        return self.decide_final_verdict(result)
+            self.counter_handled_test_cases.inc()
+            logging.debug('Results for %s: %s', witness_name, str(verdicts))
+            if any(['false' in v.lower() for v in verdicts]):
+                self.final_test_vector_size.value = len(witness['vector'])
+                return utils.VerdictFalse(witness['origin'], witness['vector'], None, witness_name)
+
+        return utils.VerdictUnknown()
 
     def check_inputs(self, program_file, is_ready_func, stop_event):
         logging.debug('Checking inputs for file %s', program_file)
