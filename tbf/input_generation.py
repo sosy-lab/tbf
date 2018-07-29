@@ -11,11 +11,11 @@ class BaseInputGenerator(object):
 
     @abstractmethod
     def create_input_generation_cmds(self, filename):
-        pass
+        return list()
 
     @abstractmethod
     def get_name(self):
-        return None
+        return ''
 
     @abstractmethod
     def get_run_env(self):
@@ -107,34 +107,33 @@ class BaseInputGenerator(object):
                     stop_flag=stop_flag,
                     timelimit=self.timelimit)
                 self.timer_generator.stop()
-                if BaseInputGenerator.failed(
-                        result) and stop_flag and not stop_flag.is_set():
-                    logging.error("Generating input failed at command: %s",
-                                  ' '.join(cmd))
-                    return False
+                if BaseInputGenerator.failed(result) \
+                        and stop_flag and not stop_flag.is_set():
+                    raise utils.InputGenerationError("Failed at command: " + ' '.join(cmd))
 
-            return True
+            return self._get_success_and_stats()
+
         except utils.CompileError as e:
             logging.error("Compile error: %s", e.msg if e.msg else default_err)
-            return False
+            return self._get_failed_and_stats()
         except utils.InputGenerationError as e:
             logging.error("Input generation error: %s", e.msg
                           if e.msg else default_err)
-            return False
+            return self._get_failed_and_stats()
         except utils.ParseError as e:
             logging.error("Parse error: %s", e.msg if e.msg else default_err)
-            return False
+            return self._get_failed_and_stats()
 
         finally:
             self.timer_input_gen.stop()
             for n, s in self.statistics.stats:
                 if type(s) is utils.Stopwatch and s.is_running():
                     s.stop()
-            try:
-                self.number_generated_tests.value = len(self.get_test_cases())
-            except utils.InputGenerationError as e:
-                logging.error(e.msg)
-                return False
 
-    def get_statistics(self):
-        return self.statistics
+            self.number_generated_tests.value = len(self.get_test_cases())
+
+    def _get_failed_and_stats(self):
+        return False, self.statistics
+
+    def _get_success_and_stats(self):
+        return True, self.statistics

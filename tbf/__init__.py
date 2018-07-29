@@ -294,6 +294,8 @@ def run(args, stop_all_event=None):
     input_generator = _get_input_generator(args)
     validator = _get_validator(args, input_generator)
 
+    validator_stats = None
+    generator_stats = None
     old_dir_abs = os.path.abspath('.')
     try:
         os.chdir(utils.tmp)
@@ -329,7 +331,7 @@ def run(args, stop_all_event=None):
             generation_result = None
 
             def get_generation_result(res):
-                return True
+                return True, None
 
             def is_ready0(r):
                 return True
@@ -342,13 +344,14 @@ def run(args, stop_all_event=None):
             logging.info("Stop-all event is set, returning from execution")
             return
 
-        validation_result = validator.check_inputs(
+        validation_result, validator_stats = validator.check_inputs(
             filename, is_ready, stop_all_event, args.existing_tests_dir)
 
         try:
-            generation_success = get_generation_result(generation_result)
+            generation_success, generator_stats = get_generation_result(generation_result)
             generation_done = True
         except TimeoutError:
+            logging.warning("Couldn't' get result of input generation due to timeout")
             generation_done = False
 
         if validation_result.is_positive():
@@ -381,14 +384,20 @@ def run(args, stop_all_event=None):
     finally:
         os.chdir(old_dir_abs)
 
-        statistics = str(input_generator.get_statistics()) + "\n\n" \
-                     + str(validator.get_statistics())
+        statistics = ""
+        if generator_stats:
+            statistics += str(generator_stats)
+        if validator_stats:
+            if statistics:  # If other statistics are there, add some spacing
+                statistics += "\n\n"
+            statistics += str(validator_stats)
         verdict_str = "\nTBF verdict: " + validation_result.verdict.upper()
         with open(utils.get_file_path('Statistics.txt', temp_dir=False),
                   'w+') as stats:
             stats.write(statistics)
             stats.write('\n')
             stats.write(verdict_str)
+            stats.write('\n')
 
         if args.print_stats:
             print("Statistics:")

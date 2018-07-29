@@ -101,9 +101,6 @@ class TestValidator(object):
         self.statistics.add_value("Size of successful test vector",
                                   self.final_test_vector_size)
 
-    def get_statistics(self):
-        return self.statistics
-
     def get_error_lines(self, program_file):
         with open(program_file, 'r') as inp:
             content = inp.readlines()
@@ -334,24 +331,27 @@ class TestValidator(object):
                      tests_directory=None):
         logging.debug('Checking inputs for file %s', program_file)
         logging.debug('Considering test case directory %s', tests_directory)
-        result = utils.VerdictUnknown()
+        result = None
 
         if self.config.use_klee_replay:
             result = self.perform_klee_replay_validation(
                 program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Klee-replay validation says: " + str(result))
 
-        if not result.is_positive() and self.config.use_execution:
+        if (not result or not result.is_positive()) and self.config.use_execution:
             result = self.perform_execution_validation(
                 program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Execution validation says: " + str(result))
 
-        if not result.is_positive() and self.config.use_witness_validation:
+        if (not result or not result.is_positive()) and self.config.use_witness_validation:
             result = self.perform_witness_validation(
                 program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Witness validation says: " + str(result))
 
-        if result.is_positive():
+        if result is None:
+            return utils.VerdictUnknown(), None
+
+        elif result.is_positive():
             test_vector = result.test_vector
             if test_vector is None:
                 test_vector = self.get_test_vector(result.test)
@@ -371,7 +371,7 @@ class TestValidator(object):
                     outp.write(harness['content'])
                 result.harness = harness['name']
 
-        return result
+        return result, self.statistics
 
 
 class ExecutionRunner(object):
