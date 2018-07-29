@@ -18,7 +18,6 @@ def get_test_cases(exclude=[], directory=tests_dir):
     all_tests = [t for t in glob.glob(directory + '/*.ktest')]
     tcs = list()
     for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
-        print(t)
         file_name = utils.get_file_name(t)
         with open(t, mode='rb') as inp:
             content = inp.read()

@@ -85,7 +85,6 @@ class RandomTestValidator(TestValidator):
         test_info = [t for t in test.content.split('\n') if t]
         vector = utils.TestVector(test.name, test.origin)
         for idx, line in enumerate(test_info):
-            print(line)
             var_name = line.split(':')[0].strip()  # Line format is var: value
             nondet_method_name = utils.get_corresponding_method_name(var_name)
             value = line.split(':')[1].strip()  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
