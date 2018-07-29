@@ -92,7 +92,7 @@ class BaseInputGenerator(object):
             cmds = self.create_input_generation_cmds(file_to_analyze)
             for cmd in cmds:
                 self.timer_generator.start()
-                result = utils.execute(cmd, env=self.get_run_env(), quiet=not self.log_verbose, err_to_output=True, stop_flag=stop_flag, timelimit=self.timelimit)
+                result = utils.execute(cmd, env=self.get_run_env(), quiet=False, err_to_output=True, stop_flag=stop_flag, timelimit=self.timelimit)
                 self.timer_generator.stop()
                 if BaseInputGenerator.failed(result) and stop_flag and not stop_flag.is_set():
                     logging.error("Generating input failed at command: %s", ' '.join(cmd))

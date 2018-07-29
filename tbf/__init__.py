@@ -21,8 +21,6 @@ from time import sleep
 
 from tbf.test_validation import ValidationConfig
 
-logging.basicConfig(level=logging.INFO)
-
 __VERSION__ = "0.1-dev"
 
 
@@ -335,6 +333,11 @@ def main():
     timeout_watch = utils.Stopwatch()
     timeout_watch.start()
     args = _parse_cli_args(sys.argv[1:])
+
+    if args.log_verbose:
+        logging.getLogger().setLevel(level=logging.DEBUG)
+    else:
+        logging.getLogger().setLevel(level=logging.INFO)
 
     stop_event = Event()
     running_thread = Thread(target=run, args=(args, stop_event))

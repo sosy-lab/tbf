@@ -812,9 +812,9 @@ def shut_down(process):
 
 
 def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, input_str=None, timelimit=None):
-    log_method = logging.debug if quiet else logging.info
+    log_cmd = logging.debug if quiet else logging.info
 
-    logging.info(" ".join(command))
+    log_cmd(" ".join(command))
 
     p = subprocess.Popen(command,
                          stdin=subprocess.PIPE if input_str else None,
@@ -848,7 +848,7 @@ def execute(command, quiet=False, env=None, err_to_output=True, stop_flag=None, 
             returncode = shut_down(p)
     # Decode output, but we can't decode error output, since it may contain undecodable bytes.
     output = output.decode() if output else ''
-    log_method(output)
+    logging.debug(output)
     logging.debug(err_output)
 
     return ExecutionResult(returncode, output, err_output)
@@ -1130,10 +1130,10 @@ def preprocess(file_content, machine_model, includes=[]):
     for inc in includes:
         preprocess_cmd += ['-I', inc]
     final_cmd = preprocess_cmd + ['-std=gnu11', '-lm', '-']
-    p = execute(final_cmd, err_to_output=False, input_str=file_content, quiet=True)
+    p = execute(final_cmd, err_to_output=False, input_str=file_content, quiet=False)
     if p.returncode != 0:
         final_cmd = preprocess_cmd + ['-std=gnu90', '-lm', '-']
-        p = execute(final_cmd, err_to_output=False, input_str=file_content, quiet=True)
+        p = execute(final_cmd, err_to_output=False, input_str=file_content, quiet=False)
     return p.stdout
 
 
