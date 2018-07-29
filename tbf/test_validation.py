@@ -54,6 +54,8 @@ class ValidationConfig(object):
         self.convert_to_int = args.write_integers
         self.naive_verification = args.naive_verification
 
+        self.measure_coverage = args.report_coverage
+
 
 class TestValidator(object):
 
@@ -249,10 +251,26 @@ class TestValidator(object):
 
     def perform_execution_validation(self, program_file, is_ready_func,
                                      stop_event, tests_directory):
-        validator = ExecutionRunner(self.config.machine_model, self.get_name())
-        return self._perform_validation(program_file, validator, self._hs,
-                                        is_ready_func, stop_event,
-                                        tests_directory)
+
+        if self.config.measure_coverage:
+            validator = CoverageMeasuringExecutionRunner(
+                self.config.machine_model, self.get_name())
+        else:
+            validator = ExecutionRunner(self.config.machine_model,
+                                        self.get_name())
+
+        try:
+            return self._perform_validation(program_file, validator, self._hs,
+                                            is_ready_func, stop_event,
+                                            tests_directory)
+        finally:
+            if type(validator) is CoverageMeasuringExecutionRunner:
+                lines_ex, branch_ex, branch_taken = validator.get_coverage(
+                    program_file)
+                self.statistics.add_value("Statements covered", lines_ex)
+                self.statistics.add_value("Branch conditions executed",
+                                          branch_ex)
+                self.statistics.add_value("Branches covered", branch_taken)
 
     def perform_witness_validation(self, program_file, is_ready_func,
                                    stop_event, tests_directory):
@@ -384,6 +402,7 @@ class ExecutionRunner(object):
         self.harness = None
         self.producer = producer_name
         self.harness_generator = harness_gen.HarnessCreator()
+        self.harness_file = 'harness.c'
 
     def _get_compile_cmd(self,
                          program_file,
@@ -429,10 +448,9 @@ class ExecutionRunner(object):
         nondet_methods = utils.get_nondet_methods()
         harness_content = self.harness_generator.create_harness(
             nondet_methods, utils.error_method)
-        harness_file = 'harness.c'
-        with open(harness_file, 'wb+') as outp:
+        with open(self.harness_file, 'wb+') as outp:
             outp.write(harness_content)
-        return self.compile(program_file, harness_file)
+        return self.compile(program_file, self.harness_file)
 
     def run(self, program_file, test_vector):
         executable = self.get_executable_harness(program_file)
@@ -453,6 +471,38 @@ class ExecutionRunner(object):
                 return [UNKNOWN]
         else:
             return [ERROR]
+
+
+class CoverageMeasuringExecutionRunner(ExecutionRunner):
+
+    def _get_compile_cmd(self,
+                         program_file,
+                         harness_file,
+                         output_file,
+                         c_version='gnu11'):
+        cmd = super()._get_compile_cmd(program_file, harness_file, output_file,
+                                       c_version)
+        cmd += ['-fprofile-arcs', '-ftest-coverage']
+
+        return cmd
+
+    def get_coverage(self, program_file):
+        cmd = ['gcov', '-bc', self.harness_file]
+        res = utils.execute(cmd, quiet=False, err_to_output=False)
+        full_cov = res.stdout.splitlines()
+
+        program_name = os.path.basename(program_file)
+        lines_executed = None
+        branches_executed = None
+        branches_taken = None
+        for number, line in enumerate(full_cov):
+            if line.startswith('File') and program_name in line:
+                lines_executed = full_cov[number + 1].split(':')[1]
+                branches_executed = full_cov[number + 2].split(':')[1]
+                branches_taken = full_cov[number + 3].split(':')[1]
+                break
+
+        return lines_executed, branches_executed, branches_taken
 
 
 class KleeReplayRunner(object):

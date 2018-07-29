@@ -172,6 +172,13 @@ def _create_cli_arg_parser():
     )
 
     run_args.add_argument(
+        '--no-coverage',
+        dest='report_coverage',
+        action='store_false',
+        default=True,
+        help="do not report coverage of the executed test cases")
+
+    run_args.add_argument(
         '--stats',
         dest='print_stats',
         action='store_true',
