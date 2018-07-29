@@ -323,7 +323,7 @@ def run(args, stop_all_event=None):
 
         if args.keep_files:
             created_dir = utils.get_file_path('created_files', temp_dir=False)
-            logging.info("Moving created files to %s", created_dir)
+            logging.info("Moving created files to %s .", created_dir)
             shutil.move(utils.tmp, created_dir)
         else:
             shutil.rmtree(utils.tmp)

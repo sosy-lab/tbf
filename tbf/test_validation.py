@@ -112,10 +112,10 @@ class TestValidator(object):
         new_test_cases = self.get_test_cases(visited_tests)
         nondet_methods = utils.get_nondet_methods()
         if len(new_test_cases) > 0:
-            logging.info("Looking at %s test cases", len(new_test_cases))
+            logging.info("Looking at %s new test files.", len(new_test_cases))
         empty_case_handled = False
         for test_case in new_test_cases:
-            logging.debug('Looking at test case %s', test_case)
+            logging.debug('Looking at test case %s .', test_case)
             test_name = test_case.name
             assert test_name not in visited_tests
             visited_tests.add(test_name)
@@ -181,7 +181,7 @@ class TestValidator(object):
     def _m(self, program_file, validator, visited_tests):
         produced_witnesses = self.create_all_witnesses(program_file, visited_tests)
         for witness in produced_witnesses:
-            logging.debug('Looking at witness %s', witness['name'])
+            logging.debug('Looking at witness %s .', witness['name'])
             witness_name = witness['name']
             content_to_write = witness['content']
             self.counter_size_witnesses.inc(len(content_to_write))
@@ -207,9 +207,9 @@ class TestValidator(object):
         all_vectors = list()
         new_test_cases = self.get_test_cases(visited_tests)
         if len(new_test_cases) > 0:
-            logging.info("Looking at %s test files", len(new_test_cases))
+            logging.info("Looking at %s new test files.", len(new_test_cases))
         for test_case in new_test_cases:
-            logging.debug('Looking at test case %s', test_case)
+            logging.debug('Looking at test case %s .', test_case)
             test_name = test_case.name
             assert test_name not in visited_tests
             assert os.path.exists(test_case.origin)

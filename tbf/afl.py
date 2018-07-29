@@ -57,7 +57,7 @@ class InputGenerator(BaseInputGenerator):
     def get_test_count(self):
         files = get_test_cases()
         if not files:
-            raise utils.InputGenerationError("No test files generated")
+            raise utils.InputGenerationError("No test files generated.")
         return len(files)
 
     def get_name(self):
