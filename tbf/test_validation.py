@@ -353,6 +353,7 @@ class TestValidator(object):
             return utils.VerdictUnknown(), None
 
         elif result.is_positive():
+            stop_event.set()
             test_vector = result.test_vector
             if test_vector is None:
                 test_vector = self.get_test_vector(result.test)
