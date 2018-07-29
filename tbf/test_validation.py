@@ -209,15 +209,20 @@ class TestValidator(object):
         finally:
             self.timer_vector_gen.stop()
 
-    def _get_test_cases(self, visited_tests):
-        return self._input_generator.get_test_cases(visited_tests)
+    def _get_test_cases(self, visited_tests, tests_directory):
+        if tests_directory is None:
+            return self._input_generator.get_test_cases(visited_tests)
+        else:
+            return self._input_generator.get_test_cases(visited_tests,
+                                                        tests_directory)
 
     def _perform_validation(self, program_file, validator, validator_method,
-                            is_ready_func, stop_event):
+                            is_ready_func, stop_event, tests_directory):
         visited_tests = set()
         result = list()
         while not is_ready_func() and not stop_event.is_set():
-            new_test_cases = self._get_test_cases(visited_tests)
+            new_test_cases = self._get_test_cases(visited_tests,
+                                                  tests_directory)
             try:
                 result = validator_method(program_file, validator,
                                           new_test_cases)
@@ -232,28 +237,32 @@ class TestValidator(object):
                 pass
 
         if not stop_event.is_set():
-            new_test_cases = self._get_test_cases(visited_tests, tests_directory)
+            new_test_cases = self._get_test_cases(visited_tests,
+                                                  tests_directory)
             result = validator_method(program_file, validator, new_test_cases)
         return self.decide_final_verdict(result)
 
     def perform_klee_replay_validation(self, program_file, is_ready_func,
-                                       stop_event):
+                                       stop_event, tests_directory):
         validator = KleeReplayRunner(self.config.machine_model)
         return self._perform_validation(program_file, validator, self._k,
-                                        is_ready_func, stop_event)
+                                        is_ready_func, stop_event,
+                                        tests_directory)
 
     def perform_execution_validation(self, program_file, is_ready_func,
-                                     stop_event):
+                                     stop_event, tests_directory):
         validator = ExecutionRunnerTwo(self.config.machine_model,
                                        self.get_name())
         return self._perform_validation(program_file, validator, self._hs,
-                                        is_ready_func, stop_event)
+                                        is_ready_func, stop_event,
+                                        tests_directory)
 
     def perform_witness_validation(self, program_file, is_ready_func,
-                                   stop_event):
+                                   stop_event, tests_directory):
         validator = ValidationRunner(self.config.witness_validators)
         return self._perform_validation(program_file, validator, self._hs,
-                                        is_ready_func, stop_event)
+                                        is_ready_func, stop_event,
+                                        tests_directory)
 
     def _hs(self, program_file, validator, new_test_cases):
         test_vectors = self.create_all_test_vectors(new_test_cases)
@@ -318,23 +327,28 @@ class TestValidator(object):
 
         return utils.VerdictUnknown()
 
-    def check_inputs(self, program_file, is_ready_func, stop_event):
+    def check_inputs(self,
+                     program_file,
+                     is_ready_func,
+                     stop_event,
+                     tests_directory=None):
         logging.debug('Checking inputs for file %s', program_file)
+        logging.debug('Considering test case directory %s', tests_directory)
         result = utils.VerdictUnknown()
 
         if self.config.use_klee_replay:
             result = self.perform_klee_replay_validation(
-                program_file, is_ready_func, stop_event)
+                program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Klee-replay validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_execution:
             result = self.perform_execution_validation(
-                program_file, is_ready_func, stop_event)
+                program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Execution validation says: " + str(result))
 
         if not result.is_positive() and self.config.use_witness_validation:
-            result = self.perform_witness_validation(program_file,
-                                                     is_ready_func, stop_event)
+            result = self.perform_witness_validation(
+                program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Witness validation says: " + str(result))
 
         if result.is_positive():

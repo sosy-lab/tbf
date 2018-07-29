@@ -43,6 +43,17 @@ def _create_cli_arg_parser():
         help="input generator to use")
 
     input_generator_args.add_argument(
+        "--use-existing-test-dir",
+        dest="existing_tests_dir",
+        action="store",
+        required=False,
+        type=str,
+        default=None,
+        help=
+        "don't create new test cases, but use test cases from the provided directory"
+    )
+
+    input_generator_args.add_argument(
         "--strategy",
         "-s",
         dest="strategy",
@@ -189,6 +200,13 @@ def _parse_cli_args(argv):
     else:
         raise AssertionError("Unhandled machine model arg: " +
                              args.machine_model)
+
+    if args.existing_tests_dir:
+        if not os.path.exists(args.existing_tests_dir):
+            sys.exit("Directory doesn't exist: " + args.existing_tests_dir)
+        else:
+            args.existing_tests_dir = os.path.abspath(args.existing_tests_dir)
+
     return args
 
 
@@ -273,8 +291,8 @@ def run(args, stop_all_event=None):
     validation_result = utils.VerdictUnknown()
 
     filename = os.path.abspath(args.file)
-    inp_module = _get_input_generator(args)
-    validator_module = _get_validator(args, inp_module)
+    input_generator = _get_input_generator(args)
+    validator = _get_validator(args, input_generator)
 
     old_dir_abs = os.path.abspath('.')
     try:
@@ -284,27 +302,37 @@ def run(args, stop_all_event=None):
         assert not stop_all_event.is_set(
         ), "Stop event is already set before starting input generation"
 
-        generator_pool = ThreadPool(processes=1)
-        # Define the methods for running input generation and validation in parallel/sequentially
-        if args.run_parallel:
-            generator_function = generator_pool.apply_async
+        if args.existing_tests_dir is None:
+            generator_pool = ThreadPool(processes=1)
+            # Define the methods for running input generation and validation in parallel/sequentially
+            if args.run_parallel:
+                generator_function = generator_pool.apply_async
 
-            def get_generation_result(res):
-                return res.get(3)
+                def get_generation_result(res):
+                    return res.get(3)
 
-            def is_ready0(r):
-                return r.ready()
+                def is_ready0(r):
+                    return r.ready()
+            else:
+                generator_function = generator_pool.apply
+
+                def get_generation_result(res):
+                    return res
+
+                def is_ready0(r):
+                    return True
+
+            generation_result = generator_function(
+                input_generator.generate_input, args=(filename, stop_all_event))
+
         else:
-            generator_function = generator_pool.apply
+            generation_result = None
 
             def get_generation_result(res):
-                return res
+                return True
 
             def is_ready0(r):
                 return True
-
-        generation_result = generator_function(
-            inp_module.generate_input, args=(filename, stop_all_event))
 
         # We can't use a def here because we pass this function to a different function,
         # in which the def wouldn't be defined
@@ -314,8 +342,8 @@ def run(args, stop_all_event=None):
             logging.info("Stop-all event is set, returning from execution")
             return
 
-        validation_result = validator_module.check_inputs(
-            filename, is_ready, stop_all_event)
+        validation_result = validator.check_inputs(
+            filename, is_ready, stop_all_event, args.existing_tests_dir)
 
         try:
             generation_success = get_generation_result(generation_result)
@@ -353,8 +381,8 @@ def run(args, stop_all_event=None):
     finally:
         os.chdir(old_dir_abs)
 
-        statistics = str(inp_module.get_statistics()) + "\n\n" \
-                     + str(validator_module.get_statistics())
+        statistics = str(input_generator.get_statistics()) + "\n\n" \
+                     + str(validator.get_statistics())
         verdict_str = "\nTBF verdict: " + validation_result.verdict.upper()
         with open(utils.get_file_path('Statistics.txt', temp_dir=False),
                   'w+') as stats:
@@ -370,6 +398,8 @@ def run(args, stop_all_event=None):
         if args.keep_files:
             created_dir = utils.get_file_path('created_files', temp_dir=False)
             logging.info("Moving created files to %s .", created_dir)
+            if os.path.exists(created_dir):
+                shutil.rmtree(created_dir)
             shutil.move(utils.tmp, created_dir)
         else:
             shutil.rmtree(utils.tmp)
