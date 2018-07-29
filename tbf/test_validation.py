@@ -249,8 +249,7 @@ class TestValidator(object):
 
     def perform_execution_validation(self, program_file, is_ready_func,
                                      stop_event, tests_directory):
-        validator = ExecutionRunnerTwo(self.config.machine_model,
-                                       self.get_name())
+        validator = ExecutionRunner(self.config.machine_model, self.get_name())
         return self._perform_validation(program_file, validator, self._hs,
                                         is_ready_func, stop_event,
                                         tests_directory)
@@ -339,12 +338,14 @@ class TestValidator(object):
                 program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Klee-replay validation says: " + str(result))
 
-        if (not result or not result.is_positive()) and self.config.use_execution:
+        if (not result or
+                not result.is_positive()) and self.config.use_execution:
             result = self.perform_execution_validation(
                 program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Execution validation says: " + str(result))
 
-        if (not result or not result.is_positive()) and self.config.use_witness_validation:
+        if (not result or not result.is_positive()
+           ) and self.config.use_witness_validation:
             result = self.perform_witness_validation(
                 program_file, is_ready_func, stop_event, tests_directory)
             logging.info("Witness validation says: " + str(result))
@@ -378,8 +379,11 @@ class TestValidator(object):
 
 class ExecutionRunner(object):
 
-    def __init__(self, machine_model):
+    def __init__(self, machine_model, producer_name):
         self.machine_model = machine_model
+        self.harness = None
+        self.producer = producer_name
+        self.harness_generator = harness_gen.HarnessCreator()
 
     def _get_compile_cmd(self,
                          program_file,
@@ -394,9 +398,6 @@ class ExecutionRunner(object):
         ]
 
         return cmd
-
-    def _get_run_cmd(self, executable):
-        return [executable]
 
     def compile(self, program_file, harness_file):
         output_file = utils.get_file_path('a.out', temp_dir=True)
@@ -413,31 +414,11 @@ class ExecutionRunner(object):
             if compile_result.returncode != 0:
                 raise utils.CompileError(
                     "Compilation failed for harness {}".format(harness_file))
-                return None
 
         return output_file
 
-    def run(self, program_file, harness_file):
-        executable = self.compile(program_file, harness_file)
-        if executable:
-            run_cmd = self._get_run_cmd(executable)
-            run_result = utils.execute(run_cmd, quiet=True, err_to_output=False)
-
-            if utils.found_err(run_result):
-                return [FALSE]
-            else:
-                return [UNKNOWN]
-        else:
-            return [ERROR]
-
-
-class ExecutionRunnerTwo(ExecutionRunner):
-
-    def __init__(self, machine_model, producer_name):
-        super().__init__(machine_model)
-        self.harness = None
-        self.producer = producer_name
-        self.harness_generator = harness_gen.HarnessCreator()
+    def _get_run_cmd(self, executable):
+        return [executable]
 
     def get_executable_harness(self, program_file):
         if not self.harness:
