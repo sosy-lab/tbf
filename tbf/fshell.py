@@ -8,35 +8,8 @@ fshell_dir = os.path.abspath("./fshell")
 bin_dir = os.path.join(fshell_dir, "bin")
 fshell_binary = os.path.join(bin_dir, "fshell")
 query_file = os.path.join(fshell_dir, "query-block-coverage")
-tests_file = utils.get_file_path('testsuite.txt', temp_dir=True)
-
-
-def get_test_cases(exclude=[]):
-    if os.path.exists(tests_file):
-        with open(tests_file, 'r') as inp:
-            content = [l.strip() for l in inp.readlines()]
-        if len([l for l in content if "Test Suite" in l]) > 1:
-            raise AssertionError("More than one test suite exists in " + tests_file)
-
-        curr_test = list()
-        test_cases = list()
-        count = 1
-        for line in content:
-            if line.startswith("IN:"):
-                test_name = str(count)
-                if test_name not in exclude:
-                    test_cases.append(utils.TestCase(test_name, tests_file, curr_test))
-                curr_test = list()
-                count += 1
-            if line.startswith("strto"):
-                test_value = line.split("=")[1]
-                curr_test.append(test_value)
-        test_name = str(count)
-        if curr_test and test_name not in exclude:
-            test_cases.append(utils.TestCase(test_name, tests_file, curr_test))
-        return test_cases
-    else:
-        return []
+tests_dir = utils.tmp
+tests_file = os.path.join(tests_dir, 'testsuite.txt')
 
 
 class InputGenerator(BaseInputGenerator):
@@ -105,11 +78,33 @@ class InputGenerator(BaseInputGenerator):
 
         return [input_generation_cmd]
 
-    def get_test_count(self):
-        test_cases = get_test_cases()
-        if not test_cases:
-            raise utils.InputGenerationError('No tests generated.')
-        return len(test_cases)
+    def get_test_cases(self, exclude=(), directory=tests_dir):
+        tests_file = os.path.join(directory, 'testsuite.txt')
+        if os.path.exists(tests_file):
+            with open(tests_file, 'r') as inp:
+                content = [l.strip() for l in inp.readlines()]
+            if len([l for l in content if "Test Suite" in l]) > 1:
+                raise AssertionError("More than one test suite exists in " + tests_file)
+
+            curr_test = list()
+            test_cases = list()
+            count = 1
+            for line in content:
+                if line.startswith("IN:"):
+                    test_name = str(count)
+                    if test_name not in exclude:
+                        test_cases.append(utils.TestCase(test_name, tests_file, curr_test))
+                    curr_test = list()
+                    count += 1
+                if line.startswith("strto"):
+                    test_value = line.split("=")[1]
+                    curr_test.append(test_value)
+            test_name = str(count)
+            if curr_test and test_name not in exclude:
+                test_cases.append(utils.TestCase(test_name, tests_file, curr_test))
+            return test_cases
+        else:
+            return []
 
 
 class FshellTestValidator(TestValidator):
@@ -123,8 +118,5 @@ class FshellTestValidator(TestValidator):
             vector.add(tv)
 
         return vector
-
-    def get_test_cases(self, exclude=[]):
-        return get_test_cases(exclude)
 
 

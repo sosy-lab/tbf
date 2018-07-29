@@ -49,12 +49,13 @@ class TestValidator(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, validation_config):
+    def __init__(self, validation_config, input_generator):
         self._nondet_var_map = None
         self.machine_model = validation_config.machine_model
         self.config = validation_config
         self.witness_creator = wit_gen.WitnessCreator()
         self.harness_creator = harness_gen.HarnessCreator()
+        self._input_generator = input_generator
 
         self.naive_verification = validation_config.naive_verification
 
@@ -103,22 +104,14 @@ class TestValidator(object):
     def get_name(self):
         pass
 
-    @abstractmethod
-    def get_test_cases(self, exclude):
-        pass
-
-    def create_all_witnesses(self, program_file, visited_tests):
+    def create_all_witnesses(self, program_file, new_test_cases):
         created_content = []
-        new_test_cases = self.get_test_cases(visited_tests)
         nondet_methods = utils.get_nondet_methods()
         if len(new_test_cases) > 0:
             logging.info("Looking at %s new test files.", len(new_test_cases))
         empty_case_handled = False
         for test_case in new_test_cases:
             logging.debug('Looking at test case %s .', test_case)
-            test_name = test_case.name
-            assert test_name not in visited_tests
-            visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_case)
             if test_vector or not empty_case_handled:
                 if not test_vector:
@@ -162,22 +155,18 @@ class TestValidator(object):
         else:
             return utils.VerdictTrue()
 
-    def create_all_test_vectors(self, program_file, visited_tests):
+    def create_all_test_vectors(self, new_test_cases):
         all_vectors = list()
-        new_test_cases = self.get_test_cases(visited_tests)
         if len(new_test_cases) > 0:
             logging.info("Looking at %s new test files.", len(new_test_cases))
         for test_case in new_test_cases:
             logging.debug('Looking at test case %s .', test_case)
-            test_name = test_case.name
-            assert test_name not in visited_tests
             assert os.path.exists(test_case.origin)
-            visited_tests.add(test_name)
             test_vector = self.get_test_vector(test_case)
             all_vectors.append(test_vector)
         return all_vectors
 
-    def create_harness(self, program_file, test_name, test_vector, nondet_methods):
+    def create_harness(self, test_name, test_vector, nondet_methods):
         harness = self.harness_creator.create_harness(nondet_methods=nondet_methods,
                                                       error_method=utils.error_method,
                                                       test_vector=test_vector)
@@ -197,20 +186,28 @@ class TestValidator(object):
         finally:
             self.timer_vector_gen.stop()
 
+    def _get_test_cases(self, visited_tests):
+        return self._input_generator.get_test_cases(visited_tests)
+
     def _perform_validation(self, program_file, validator, validator_method, is_ready_func, stop_event):
         visited_tests = set()
         result = list()
         while not is_ready_func() and not stop_event.is_set():
+            new_test_cases = self._get_test_cases(visited_tests)
             try:
-                result = validator_method(program_file, validator, visited_tests)
+                result = validator_method(program_file, validator, new_test_cases)
                 if result.is_positive():
                     return result
+                else:
+                    new_test_case_names = [t.name for t in new_test_cases]
+                    visited_tests = visited_tests.union(new_test_case_names)
                 sleep(0.001)  # Sleep for 1 millisecond
             except utils.InputGenerationError:  # Just capture here and retry as long as the thread is alive
                 pass
 
         if not stop_event.is_set():
-            result = validator_method(program_file, validator, visited_tests)
+            new_test_cases = self._get_test_cases(visited_tests, tests_directory)
+            result = validator_method(program_file, validator, new_test_cases)
         return self.decide_final_verdict(result)
 
     def perform_klee_replay_validation(self, program_file, is_ready_func, stop_event):
@@ -225,8 +222,8 @@ class TestValidator(object):
         validator = ValidationRunner(self.config.witness_validators)
         return self._perform_validation(program_file, validator, self._hs, is_ready_func, stop_event)
 
-    def _hs(self, program_file, validator, visited_tests):
-        test_vectors = self.create_all_test_vectors(program_file, visited_tests)
+    def _hs(self, program_file, validator, new_test_cases):
+        test_vectors = self.create_all_test_vectors(new_test_cases)
 
         for vector in test_vectors:
             self.timer_execution_validation.start()
@@ -244,10 +241,9 @@ class TestValidator(object):
                 return utils.VerdictFalse(vector, vector)
         return utils.VerdictUnknown()
 
-    def _k(self, program_file, validator, visited_tests):
-        test_cases = self.get_test_cases(visited_tests)
+    def _k(self, program_file, validator, new_test_cases):
 
-        for test in test_cases:
+        for test in new_test_cases:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
@@ -262,8 +258,8 @@ class TestValidator(object):
                 return utils.VerdictFalse(test)
         return utils.VerdictUnknown()
 
-    def _m(self, program_file, validator, visited_tests):
-        produced_witnesses = self.create_all_witnesses(program_file, visited_tests)
+    def _m(self, program_file, validator, new_test_cases):
+        produced_witnesses = self.create_all_witnesses(program_file, new_test_cases)
         for witness in produced_witnesses:
             logging.debug('Looking at witness %s .', witness['name'])
             witness_name = witness['name']
@@ -316,7 +312,7 @@ class TestValidator(object):
                 result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
-                harness = self.create_harness(program_file, result.test_vector.origin, test_vector, nondet_methods)
+                harness = self.create_harness(result.test_vector.origin, test_vector, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
                 result.harness = harness['name']

@@ -14,17 +14,6 @@ klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
 
 
-def get_test_cases(exclude=[], directory=tests_dir):
-    all_tests = [t for t in glob.glob(directory + '/*.ktest')]
-    tcs = list()
-    for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
-        file_name = utils.get_file_name(t)
-        with open(t, mode='rb') as inp:
-            content = inp.read()
-        tcs.append(utils.TestCase(file_name, t, content))
-    return tcs
-
-
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self, timelimit=0, log_verbose=False, search_heuristic=['random-path', 'nurs:covnew'], machine_model=utils.MACHINE_MODEL_32):
@@ -92,12 +81,15 @@ class InputGenerator(BaseInputGenerator):
 
         return [compile_cmd, input_generation_cmd]
 
-    def get_test_count(self):
-        files = get_test_cases()
-        if not files:
-            raise utils.InputGenerationError('No test files generated.')
-        return len(files)
-
+    def get_test_cases(self, exclude=(), directory=tests_dir):
+        all_tests = [t for t in glob.glob(directory + '/*.ktest')]
+        tcs = list()
+        for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
+            file_name = utils.get_file_name(t)
+            with open(t, mode='rb') as inp:
+                content = inp.read()
+            tcs.append(utils.TestCase(file_name, t, content))
+        return tcs
 
 class KleeTestValidator(TestValidator):
 
@@ -149,7 +141,4 @@ class KleeTestValidator(TestValidator):
                 last_value = None
 
         return vector
-
-    def get_test_cases(self, exclude=[]):
-        return get_test_cases(exclude)
 

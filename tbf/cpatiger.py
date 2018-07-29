@@ -8,23 +8,8 @@ base_dir = os.path.abspath('./cpatiger')
 binary_dir = os.path.join(base_dir, 'scripts')
 binary = os.path.join(binary_dir, 'cpa.sh')
 tests_dir = os.path.join(utils.tmp, 'output')
-tests_file = os.path.join(tests_dir, 'testsuite.txt')
 input_method = 'input'
 name = 'cpatiger'
-
-
-def get_test_cases(exclude=[]):
-    if os.path.exists(tests_file):
-        with open(tests_file, 'r') as inp:
-            tests = [l.strip() for l in inp.readlines()
-                     if l.strip().startswith('[') and l.strip().endswith(']')]
-        tests = [t for i, t in enumerate(tests) if str(i) not in exclude]
-        tcs = list()
-        for i, t in enumerate(tests):
-            tcs.append(utils.TestCase(str(i), tests_file, t))
-        return tcs
-    else:
-        return []
 
 
 class InputGenerator(BaseInputGenerator):
@@ -82,9 +67,19 @@ class InputGenerator(BaseInputGenerator):
 
         return [input_generation_cmd]
 
-    def get_test_count(self):
-        return len(get_test_cases())
-
+    def get_test_cases(self, exclude=(), directory=tests_dir):
+        tests_file = os.path.join(directory, 'testsuite.txt')
+        if os.path.exists(tests_file):
+            with open(tests_file, 'r') as inp:
+                tests = [l.strip() for l in inp.readlines()
+                         if l.strip().startswith('[') and l.strip().endswith(']')]
+            tests = [t for i, t in enumerate(tests) if str(i) not in exclude]
+            tcs = list()
+            for i, t in enumerate(tests):
+                tcs.append(utils.TestCase(str(i), tests_file, t))
+            return tcs
+        else:
+            return []
 
 class CpaTigerTestValidator(TestValidator):
 
@@ -100,6 +95,3 @@ class CpaTigerTestValidator(TestValidator):
 
     def get_name(self):
         return name
-
-    def get_test_cases(self, exclude=[]):
-        return get_test_cases(exclude)

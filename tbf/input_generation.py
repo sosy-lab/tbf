@@ -22,8 +22,8 @@ class BaseInputGenerator(object):
         return os.environ
 
     @abstractmethod
-    def get_test_count(self):
-        pass
+    def get_test_cases(self, exclude=(), directory=None):
+        return list()
 
     @staticmethod
     def failed(result):
@@ -115,7 +115,7 @@ class BaseInputGenerator(object):
                 if type(s) is utils.Stopwatch and s.is_running():
                     s.stop()
             try:
-                self.number_generated_tests.value = self.get_test_count()
+                self.number_generated_tests.value = len(self.get_test_cases())
             except utils.InputGenerationError as e:
                 logging.error(e.msg)
                 return False

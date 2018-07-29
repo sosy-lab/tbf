@@ -8,26 +8,7 @@ from tbf.harness_generation import HarnessCreator
 bin_dir = os.path.abspath('./afl/bin')
 findings_dir = utils.get_file_path('findings', temp_dir=True)
 name = 'afl-fuzz'
-
-
-def get_test_name(test_file):
-    return os.path.basename(test_file)
-
-
-def get_test_cases(exclude=[]):
-    # 'crashes' and 'hangs' cannot lead to an error as long as we don't abort in __VERIFIER_error()
-    interesting_subdirs = ['queue']
-    tcs = list()
-    for s in interesting_subdirs:
-        abs_dir = os.path.join(findings_dir, s)
-        for t in glob.glob(abs_dir + '/id:*'):
-            test_name = get_test_name(t)
-            if test_name not in exclude:
-                with open(t, 'rb') as inp:
-                    content = inp.read()
-                tcs.append(utils.TestCase(test_name, t, content))
-    return tcs
-
+tests_dir = utils.tmp
 
 class InputGenerator(BaseInputGenerator):
 
@@ -54,12 +35,6 @@ class InputGenerator(BaseInputGenerator):
             outp.write(1000 * '0\n')  # FIXME: This is an unreliable first test case
         return testcase_dir
 
-    def get_test_count(self):
-        files = get_test_cases()
-        if not files:
-            raise utils.InputGenerationError("No test files generated.")
-        return len(files)
-
     def get_name(self):
         return name
 
@@ -77,14 +52,27 @@ class InputGenerator(BaseInputGenerator):
         content = filecontent + '\n' + harness.decode()
         return content
 
+    def _get_test_name(self, test_file):
+        return os.path.basename(test_file)
+
+    def get_test_cases(self, exclude=(), directory=tests_dir):
+        # 'crashes' and 'hangs' cannot lead to an error as long as we don't abort in __VERIFIER_error()
+        interesting_subdirs = ['queue']
+        tcs = list()
+        for s in interesting_subdirs:
+            abs_dir = os.path.join(findings_dir, s)
+            for t in glob.glob(abs_dir + '/id:*'):
+                test_name = self._get_test_name(t)
+                if test_name not in exclude:
+                    with open(t, 'rb') as inp:
+                        content = inp.read()
+                    tcs.append(utils.TestCase(test_name, t, content))
+        return tcs
 
 class AflTestValidator(BaseTestValidator):
 
     def get_name(self):
         return name
-
-    def get_test_cases(self, exclude):
-        return get_test_cases(exclude)
 
     def get_test_vector(self, test_case):
         vector = utils.TestVector(test_case.name, test_case.origin)

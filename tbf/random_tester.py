@@ -10,16 +10,6 @@ generator_harness = os.path.abspath("./random/random_tester.c")
 random_runner = os.path.abspath("./random/run.sh")
 
 
-def get_test_cases(exclude=[], directory=utils.tmp):
-    all_tests = [t for t in glob.glob(directory + '/vector[0-9]*.test')]
-    tcs = list()
-    for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
-        with open(t, 'r') as inp:
-            content = inp.read()
-        tcs.append(utils.TestCase(utils.get_file_name(t), t, content))
-    return tcs
-
-
 class InputGenerator(BaseInputGenerator):
 
     def get_run_env(self):
@@ -65,12 +55,14 @@ class InputGenerator(BaseInputGenerator):
 
         return [compile_cmd, input_generation_cmd]
 
-    def get_test_count(self):
-        files = get_test_cases()
-        if not files:
-            raise utils.InputGenerationError('No test files generated.')
-        return len(files)
-
+    def get_test_cases(self, exclude=(), directory=utils.tmp):
+        all_tests = [t for t in glob.glob(directory + '/vector[0-9]*.test')]
+        tcs = list()
+        for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
+            with open(t, 'r') as inp:
+                content = inp.read()
+            tcs.append(utils.TestCase(utils.get_file_name(t), t, content))
+        return tcs
 
 class RandomTestValidator(TestValidator):
 
@@ -92,7 +84,5 @@ class RandomTestValidator(TestValidator):
 
         return vector
 
-    def get_test_cases(self, exclude=[]):
-        return get_test_cases(exclude)
 
 

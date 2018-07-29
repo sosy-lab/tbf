@@ -10,17 +10,7 @@ lib_dir = os.path.abspath('./crest/lib')
 include_dir = os.path.abspath('./crest/include')
 name = 'crest'
 test_name_pattern = re.compile('input[0-9]+$')
-
-
-def get_test_cases(exclude=[]):
-    all_tests = [t for t in os.listdir('.') if test_name_pattern.match(utils.get_file_name(t))]
-    tcs = list()
-    for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
-        with open(t, 'r') as inp:
-            content = inp.read()
-        tcs.append(utils.TestCase(utils.get_file_name(t), t, content))
-    return tcs
-
+tests_dir = utils.tmp
 
 class InputGenerator(BaseInputGenerator):
 
@@ -38,12 +28,6 @@ class InputGenerator(BaseInputGenerator):
 
     def get_run_env(self):
         return self._run_env
-
-    def get_test_count(self):
-        files = get_test_cases()
-        if not files:
-            raise utils.InputGenerationError('No test files generated.')
-        return len(files)
 
     def prepare(self, filecontent, nondet_methods_used):
         content = ''
@@ -122,11 +106,17 @@ class InputGenerator(BaseInputGenerator):
                          '-' + self.search_heuristic]
         return [compile_cmd, input_gen_cmd]
 
+    def get_test_cases(self, exclude=(), directory=tests_dir):
+        all_tests = [t for t in os.listdir(directory) if test_name_pattern.match(utils.get_file_name(t))]
+        tcs = list()
+        for t in [t for t in all_tests if utils.get_file_name(t) not in exclude]:
+            with open(t, 'r') as inp:
+                content = inp.read()
+            tcs.append(utils.TestCase(utils.get_file_name(t), t, content))
+        return tcs
+
 
 class CrestTestValidator(TestValidator):
-
-    def __init__(self, validation_config):
-        super().__init__(validation_config)
 
     def get_name(self):
         return name
@@ -138,6 +128,3 @@ class CrestTestValidator(TestValidator):
             if value:
                 test_vector.add(value)
         return test_vector
-
-    def get_test_cases(self, exclude=[]):
-        return get_test_cases(exclude)

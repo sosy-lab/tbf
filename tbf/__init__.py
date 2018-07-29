@@ -179,7 +179,7 @@ def _parse_cli_args(argv):
     return args
 
 
-def _get_input_generator_module(args):
+def _get_input_generator(args):
     input_generator = args.input_generator.lower()
 
     if input_generator == 'afl':
@@ -213,21 +213,21 @@ def _get_input_generator_module(args):
         raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 
 
-def _get_validator_module(args):
+def _get_validator(args, input_generator):
     validator = args.input_generator.lower()
     validation_config = ValidationConfig(args)
     if validator == 'afl':
-        return afl.AflTestValidator(validation_config)
+        return afl.AflTestValidator(validation_config, input_generator)
     elif validator == "fshell":
-        return fshell.FshellTestValidator(validation_config)
+        return fshell.FshellTestValidator(validation_config, input_generator)
     elif validator == 'klee':
-        return klee.KleeTestValidator(validation_config)
+        return klee.KleeTestValidator(validation_config, input_generator)
     elif validator == 'crest':
-        return crest.CrestTestValidator(validation_config)
+        return crest.CrestTestValidator(validation_config, input_generator)
     elif validator == 'cpatiger':
-        return cpatiger.CpaTigerTestValidator(validation_config)
+        return cpatiger.CpaTigerTestValidator(validation_config, input_generator)
     elif validator == 'random':
-        return random_tester.RandomTestValidator(validation_config)
+        return random_tester.RandomTestValidator(validation_config, input_generator)
     else:
         raise AssertionError('Unhandled validator: ' + validator)
 
@@ -238,8 +238,8 @@ def run(args, stop_all_event=None):
     validation_result = utils.VerdictUnknown()
 
     filename = os.path.abspath(args.file)
-    inp_module = _get_input_generator_module(args)
-    validator_module = _get_validator_module(args)
+    inp_module = _get_input_generator(args)
+    validator_module = _get_validator(args, inp_module)
 
     old_dir_abs = os.path.abspath('.')
     try:
