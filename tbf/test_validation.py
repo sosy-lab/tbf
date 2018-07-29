@@ -46,9 +46,10 @@ class ValidationConfig(object):
                         "Validator not in list of known validators:"
                         "{0} not in {1}".format(validator, valid_validators))
         elif not self.use_witness_validation and not self.use_execution and not self.use_klee_replay:
-            raise utils.ConfigError(
-                "No validation technique specified. Specify --execution or --witness-validation ."
-            )
+            logging.info(
+                "No validation technique specified. If you want TBF to check whether generated tests"
+                " uncover a specification violation, provide one of the following parameters:"
+                " --execution, --witness-validation, --klee-replay (KLEE only)")
 
         self.convert_to_int = args.write_integers
         self.naive_verification = args.naive_verification
