@@ -348,10 +348,12 @@ def run(args, stop_all_event=None):
             filename, is_ready, stop_all_event, args.existing_tests_dir)
 
         try:
-            generation_success, generator_stats = get_generation_result(generation_result)
+            generation_success, generator_stats = get_generation_result(
+                generation_result)
             generation_done = True
         except TimeoutError:
-            logging.warning("Couldn't' get result of input generation due to timeout")
+            logging.warning(
+                "Couldn't' get result of input generation due to timeout")
             generation_done = False
 
         if validation_result.is_positive():

@@ -109,7 +109,8 @@ class BaseInputGenerator(object):
                 self.timer_generator.stop()
                 if BaseInputGenerator.failed(result) \
                         and stop_flag and not stop_flag.is_set():
-                    raise utils.InputGenerationError("Failed at command: " + ' '.join(cmd))
+                    raise utils.InputGenerationError("Failed at command: " +
+                                                     ' '.join(cmd))
 
             return self._get_success_and_stats()
 

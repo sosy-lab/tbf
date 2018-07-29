@@ -106,7 +106,6 @@ class InputGenerator(BaseInputGenerator):
         ]
         return [compile_cmd, input_gen_cmd]
 
-
     def get_test_cases(self, exclude=(), directory=tests_dir):
         all_tests = [
             t for t in os.listdir(directory)
