@@ -20,7 +20,7 @@ from multiprocessing.pool import ThreadPool
 from multiprocessing.context import TimeoutError
 from time import sleep
 
-from tbf.test_validation import ValidationConfig
+from tbf.testcase_validation import ValidationConfig
 
 __VERSION__ = "0.1-dev"
 

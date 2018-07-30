@@ -1,7 +1,7 @@
 import os
 import tbf.utils as utils
 from tbf.input_generation import BaseInputGenerator
-from tbf.test_validation import TestValidator
+from tbf.testcase_validation import TestValidator
 import pathlib
 
 name = "fshell"

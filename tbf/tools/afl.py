@@ -1,5 +1,5 @@
 from tbf.input_generation import BaseInputGenerator
-from tbf.test_validation import TestValidator as BaseTestValidator
+from tbf.testcase_validation import TestValidator as BaseTestValidator
 import os
 import tbf.utils as utils
 import glob
