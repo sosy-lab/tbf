@@ -1,6 +1,6 @@
 #!/bin/bash
 
-project_dir=`realpath run_tbf | rev | cut -d'/' -f 2- | rev`
+project_dir=`realpath "$0" | rev | cut -d'/' -f 2- | rev`/..
 klee_lib=${project_dir}/klee/lib
 klee_include=${project_dir}/klee/include
 klee_bin=${project_dir}/klee/bin
