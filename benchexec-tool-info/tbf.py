@@ -22,6 +22,7 @@ import benchexec.util as util
 import benchexec.tools.template
 import benchexec.tools.ultimateautomizer as uautomizer
 import benchexec.tools.cpachecker as cpachecker
+import logging
 
 from benchexec.model import SOFTTIMELIMIT
 
@@ -32,19 +33,12 @@ class Tool(benchexec.tools.template.BaseTool):
 
     REQUIRED_PATHS = [
                 "tbf",
-                "klee",
-                "crest",
-                "cpatiger",
-                "random",
-                "afl",
-                "fshell",
-                "lib",
-                "run_tbf",
+                "bin"
                 "ReachSafety.prp"
     ] + ['validators/cpachecker/' + p for p in cpachecker.Tool.REQUIRED_PATHS]
 
     def executable(self):
-        return util.find_executable('run_tbf')
+        return util.find_executable('bin/tbf')
 
     def version(self, executable):
         stdout = self._version_from_tool(executable)
