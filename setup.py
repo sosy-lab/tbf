@@ -5,7 +5,8 @@ import re
 import os
 
 with open('tbf/__init__.py') as inp:
-    version = re.search('^__VERSION__\s*=\s*[\"\'](.*)[\"\']', inp.read(), re.M).group(1)
+    version = re.search('^__VERSION__\s*=\s*[\"\'](.*)[\"\']', inp.read(),
+                        re.M).group(1)
 
 
 def get_files(directory, parent):
@@ -16,6 +17,7 @@ def get_files(directory, parent):
             files.append(os.path.join(rel_path, filename))
     return files
 
+
 # Collect package_data for testing tools
 tools = ['afl', 'cpatiger', 'crest', 'fshell', 'klee', 'random']
 tool_data = list()
@@ -25,38 +27,40 @@ for tool in tools:
 
 validator_data = get_files('tbf/validators', 'tbf')
 
-
-setup(name='TBF-test',
-      version=version,
-      author='Dirk Beyer',
-      description='TBF, an Automatic Test-Case Generation and Execution Framework',
-      url='https://github.com/sosy-lab/tbf',
-      packages=['tbf', 'tbf.tools'],
-      package_data = {'tbf.tools': tool_data, 'tbf': validator_data},
-      entry_points = { "console_scripts": [ 'tbf = tbf:main'] },
-      install_requires = [
-            'benchexec==1.16',
-            'pycparser==2.18',
-            'tempita==0.5.2',
-            ],
-      setup_requires = [
-            'pytest-runner',
-            'pytest-pylint',
-            ],
-      tests_require = [
-            'pytest',
-            'pylint',
-            ],
-
-      license = 'multiple',
-      keywords = 'test execution test-case generation verification',
-      classifiers = [
-            'Development Status :: 3 - Alpha',
-            'Environment :: Console',
-            'Intended Audience :: Science/Research',
-            'Operation System :: POSIX :: Linux',
-            'Programming Language :: Python :: 3 :: Only',
-            'Topic :: Software Development :: Testing',
-          ],
-      platforms = ['Linux'],
-     )
+setup(
+    name='TBF-test',
+    version=version,
+    author='Dirk Beyer',
+    description='TBF, an Automatic Test-Case Generation and Execution Framework',
+    url='https://github.com/sosy-lab/tbf',
+    packages=['tbf', 'tbf.tools'],
+    package_data={
+        'tbf.tools': tool_data,
+        'tbf': validator_data
+    },
+    entry_points={"console_scripts": ['tbf = tbf:main']},
+    install_requires=[
+        'benchexec==1.16',
+        'pycparser==2.18',
+        'tempita==0.5.2',
+    ],
+    setup_requires=[
+        'pytest-runner',
+        'pytest-pylint',
+    ],
+    tests_require=[
+        'pytest',
+        'pylint',
+    ],
+    license='multiple',
+    keywords='test execution test-case generation verification',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
+        'Operation System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3 :: Only',
+        'Topic :: Software Development :: Testing',
+    ],
+    platforms=['Linux'],
+)

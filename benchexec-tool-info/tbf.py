@@ -26,15 +26,15 @@ import logging
 
 from benchexec.model import SOFTTIMELIMIT
 
+
 class Tool(benchexec.tools.template.BaseTool):
     """
     Tool info for TBF (Test-based falsifier) .
     """
 
     REQUIRED_PATHS = [
-                "tbf",
-                "bin"
-                "ReachSafety.prp"
+        "tbf", "bin"
+        "ReachSafety.prp"
     ] + ['validators/cpachecker/' + p for p in cpachecker.Tool.REQUIRED_PATHS]
 
     def executable(self):
@@ -44,10 +44,8 @@ class Tool(benchexec.tools.template.BaseTool):
         stdout = self._version_from_tool(executable)
         return stdout.strip()
 
-
     def name(self):
         return 'TBF'
-
 
     def determine_result(self, returncode, returnsignal, output, isTimeout):
         """
@@ -72,18 +70,22 @@ class Tool(benchexec.tools.template.BaseTool):
         return result.RESULT_UNKNOWN
 
     def get_value_from_output(self, lines, identifier):
-      for line in reversed(lines):
-        if identifier in line:
-          start = line.find(':') + 1
-          end = line.find('(', start)
-          return line[start:end].strip()
-      return None
+        for line in reversed(lines):
+            if identifier in line:
+                start = line.find(':') + 1
+                end = line.find('(', start)
+                return line[start:end].strip()
+        return None
 
-    def cmdline(self, executable, options, tasks, propertyfile=None, rlimits={}):
+    def cmdline(self, executable, options, tasks, propertyfile=None,
+                rlimits={}):
         if SOFTTIMELIMIT in rlimits:
             if "--timelimit" in options:
-                logging.warning('Time limit already specified in command-line options, not adding time limit from benchmark definition to the command line.')
+                logging.warning(
+                    'Time limit already specified in command-line options, not adding time limit from benchmark definition to the command line.'
+                )
             else:
                 options = options + ["--timelimit", str(rlimits[SOFTTIMELIMIT])]
 
-        return super().cmdline(executable, options, tasks, propertyfile, rlimits)
+        return super().cmdline(executable, options, tasks, propertyfile,
+                               rlimits)
