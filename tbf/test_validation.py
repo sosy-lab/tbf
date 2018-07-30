@@ -6,7 +6,7 @@ import tbf.utils as utils
 import os
 from time import sleep
 import re
-from tbf.utils import TRUE, FALSE, UNKNOWN, ERROR
+from tbf.utils import FALSE, UNKNOWN, ERROR
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 
@@ -515,7 +515,7 @@ class KleeReplayRunner(object):
             os.remove(self.executable_name)
 
     def run(self, program_file, test_case):
-        import klee
+        from tools import klee
 
         klee_prepared_file = utils.get_prepared_name(program_file, klee.name)
         c_version = 'gnu11'

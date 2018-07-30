@@ -4,13 +4,14 @@ import sys
 import os
 import logging
 import argparse
+import pathlib
 
-import tbf.afl as afl
-import tbf.cpatiger as cpatiger
-import tbf.crest as crest
-import tbf.fshell as fshell
-import tbf.klee as klee
-import tbf.random_tester as random_tester
+import tbf.tools.afl as afl
+import tbf.tools.cpatiger as cpatiger
+import tbf.tools.crest as crest
+import tbf.tools.fshell as fshell
+import tbf.tools.klee as klee
+import tbf.tools.random_tester as random_tester
 import tbf.utils as utils
 import shutil
 
@@ -26,7 +27,7 @@ __VERSION__ = "0.1-dev"
 
 def _create_cli_arg_parser():
     parser = argparse.ArgumentParser(
-        description='Toolchain for test-input using verifier', add_help=False)
+        description='An Automatic Test-Case Generation and Execution Framework', add_help=False)
 
     args = parser.add_mutually_exclusive_group()
     run_args = args.add_argument_group()
@@ -417,15 +418,34 @@ def run(args, stop_all_event=None):
             created_dir = utils.get_file_path('created_files', temp_dir=False)
             logging.info("Moving created files to %s .", created_dir)
             if os.path.exists(created_dir):
-                shutil.rmtree(created_dir)
+                # despite the name, ignore_errors=True allows removal of non-empty directories
+                shutil.rmtree(created_dir, ignore_errors=True)
             shutil.move(utils.tmp, created_dir)
         else:
-            shutil.rmtree(utils.tmp)
+            shutil.rmtree(utils.tmp, ignore_errors=True)
+
+def _setup_environment():
+    script = pathlib.Path(__file__).resolve()
+    module_dir = script.parent
+    tool_dir = module_dir / "tools"
+
+    klee_lib = tool_dir / "klee" / "lib"
+    os.environ['KLEE_RUNTIME_LIBRARY_PATH'] = str(klee_lib)
+
+    crest_lib = tool_dir / "crest" / "lib"
+
+    new_ld_path = [str(klee_lib), str(crest_lib)]
+    if 'LD_LIBRARY_PATH' in os.environ:
+        new_ld_path = new_ld_path + os.environ['LD_LIBRARY_PATH']
+    os.environ['LD_LIBRARY_PATH'] = ':'.join(new_ld_path)
 
 
 def main():
     timeout_watch = utils.Stopwatch()
     timeout_watch.start()
+
+    _setup_environment()
+
     args = _parse_cli_args(sys.argv[1:])
 
     if args.log_verbose:
@@ -454,4 +474,9 @@ def main():
 
 
 if __name__ == '__main__':
+    if sys.platform.startswith('cygwin'):
+        logging.warning("It seems you're running TBF on cygwin - this is not officially supported.")
+    elif not sys.platform.startswith('linux'):
+        sys.exit("TBF currently only runs on Linux - exiting.")
+
     main()

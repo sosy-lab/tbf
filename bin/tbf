@@ -6,24 +6,8 @@ import pathlib
 
 sys.dont_write_bytecode = True
 
-if sys.platform.startswith('cygwin'):
-    print("Warning: It seems you're running TBF on cygwin - this is not officially supported.", file=sys.stderr)
-
-elif not sys.platform.startswith('linux'):
-    sys.exit("TBF currently only runs on Linux - exiting.")
-
-script = pathlib.Path(os.path.realpath(__file__))
-project_dir = script.parent / ".."
-
-klee_lib = project_dir /  "klee" / "lib"
-os.environ['KLEE_RUNTIME_LIBRARY_PATH'] = str(klee_lib)
-
-crest_lib = project_dir / "crest" / "lib"
-
-new_ld_path = [str(klee_lib), str(crest_lib)]
-if 'LD_LIBRARY_PATH' in os.environ:
-    new_ld_path = new_ld_path + os.environ['LD_LIBRARY_PATH']
-os.environ['LD_LIBRARY_PATH'] = ':'.join(new_ld_path)
+script = pathlib.Path(__file__).resolve()
+project_dir = script.parent.parent
 
 pythonpath = project_dir
 sys.path.insert(0, str(pythonpath))
