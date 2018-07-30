@@ -2,7 +2,6 @@ from tbf.input_generation import BaseInputGenerator
 from tbf.test_validation import TestValidator
 import tbf.utils as utils
 import os
-import pathlib
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 base_dir = os.path.join(module_dir, 'cpatiger')
