@@ -275,7 +275,7 @@ class TestValidator(object):
     def perform_witness_validation(self, program_file, is_ready_func,
                                    stop_event, tests_directory):
         validator = ValidationRunner(self.config.witness_validators)
-        return self._perform_validation(program_file, validator, self._hs,
+        return self._perform_validation(program_file, validator, self._m,
                                         is_ready_func, stop_event,
                                         tests_directory)
 
