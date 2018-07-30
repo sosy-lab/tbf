@@ -12,5 +12,7 @@ Tempita = "==0.5.2"
 python_version = "3.5"
 
 [dev-packages]
-pytest-runner = "*"
 yapf = "*"
+pylint = "*"
+pytest-runner = "*"
+pytest-pylint = "*"

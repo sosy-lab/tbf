@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from distutils.core import setup
+from setuptools import setup
 import re
 import os
 
@@ -40,6 +40,12 @@ setup(name='TBF-test',
             'tempita==0.5.2',
             ],
       setup_requires = [
+            'pytest-runner',
+            'pytest-pylint',
+            ],
+      tests_require = [
+            'pytest',
+            'pylint',
             ],
 
       license = 'multiple',
