@@ -1,0 +1,52 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "7e3b4f9cf69bd2ffbed6f9f8ce8dae4b7f68e1833150a40ae07d6dff314745e4"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.5"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "benchexec": {
+            "hashes": [
+                "sha256:4fd2a3a3a891438aad078e2e4c2fe4975db9ea49a6a6696432046b7cd23eb48f",
+                "sha256:8aba735c49eacb23428ea6902c611603b393bb2cea509c0bd62933b16c3d0dba"
+            ],
+            "index": "pypi",
+            "version": "==1.16"
+        },
+        "pycparser": {
+            "hashes": [
+                "sha256:99a8ca03e29851d96616ad0404b4aad7d9ee16f25c9f9708a11faf2810f7b226"
+            ],
+            "index": "pypi",
+            "version": "==2.18"
+        },
+        "tempita": {
+            "hashes": [
+                "sha256:cacecf0baa674d356641f1d406b8bff1d756d739c46b869a54de515d08e6fc9c"
+            ],
+            "index": "pypi",
+            "version": "==0.5.2"
+        }
+    },
+    "develop": {
+        "pytest-runner": {
+            "hashes": [
+                "sha256:d23f117be39919f00dd91bffeb4f15e031ec797501b717a245e377aee0f577be",
+                "sha256:d987fec1e31287592ffe1cb823a8c613c533db4c6aaca0ee1191dbc91e2fcc61"
+            ],
+            "index": "pypi",
+            "version": "==4.2"
+        }
+    }
+}

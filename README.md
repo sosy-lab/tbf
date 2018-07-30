@@ -22,3 +22,15 @@ where `TEST_GENERATOR` is one of `{afl, crest, cpatiger, fshell, klee, random}`.
 * [FShell](http://forsyte.at/software/fshell/) is the CBMC-based tester.
 * [KLEE](klee.github.io) is a symbolic execution-based tester and verifier.
 * PRTest (also just called 'random') is a very simple, in-house implementation of a random tester.
+
+# Development
+
+TBF uses [pipenv](https://docs.pipenv.org/) for easy dependency management
+during development:
+
+    * If you don't have pipenv installed yet, install it as described
+        [on the project's webpage][1].
+    * To get TBF ready, run from the project's root directory: `pipenv install --dev`.
+    * To run TBF in the dedicated pipenv environment, run `pipenv run bin/tbf`.
+
+[1]: https://docs.pipenv.org/install/#pragmatic-installation-of-pipenv
