@@ -4,6 +4,8 @@
 
     <resultfiles>**harness.c</resultfiles>
 
+    <option name="--stats" />
+
   <rundefinition name='klee_ex'>
     <option name='-i'>klee</option>
     <option name="--execution" />
