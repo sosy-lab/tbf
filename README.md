@@ -33,7 +33,7 @@ during development:
   * To set up the pipenv for TBF, run from the project's root directory: `pipenv install --dev`.
   * To run TBF in the dedicated pipenv environment, run `pipenv run bin/tbf`.
 
-If you copy `contrib/git_hooks/pre-commit-yapf.sh` to `.git/hooks/pre-commit/`,
+If you copy `contrib/git_hooks/pre-commit-yapf.sh` to file `.git/hooks/pre-commit`,
 the python formatter [yapf][2] will automatically run whenever you commit
 some code. This assumes that you set up the pipenv environment for TBF
 as specified above.
