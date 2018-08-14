@@ -249,7 +249,7 @@ def run(args, stop_all_event=None):
 
         try:
             generator_thread.join(timeout=3)
-            generation_done = True
+            generation_done = not generator_thread.is_alive()
         except TimeoutError:
             generation_done = False
 
@@ -299,8 +299,9 @@ if __name__ == '__main__':
         else:
             logging.info("Time taken: " + str(timeout_watch.sum()))
         stop_event.set()
-        try:
-            running_thread.join(5)
-        except TimeoutError:
-            logging.warning("Timeout error when waiting for main thread")
+        while running_thread.is_alive():
+            try:
+                running_thread.join(5)
+            except TimeoutError:
+                logging.warning("Timeout error when waiting for main thread")
 
