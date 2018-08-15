@@ -15,7 +15,6 @@ import utils
 import shutil
 
 from threading import Event, Thread
-from multiprocessing.context import TimeoutError
 from time import sleep
 
 from test_validation import ValidationConfig
@@ -247,11 +246,8 @@ def run(args, stop_all_event=None):
 
         validation_result = validator_module.check_inputs(filename, generator_thread, stop_all_event)
 
-        try:
-            generator_thread.join(timeout=3)
-            generation_done = True
-        except TimeoutError:
-            generation_done = False
+        generator_thread.join(timeout=3)
+        generation_done = not generator_thread.is_alive()
 
         if validation_result.is_positive():
             test_name = os.path.basename(validation_result.test_vector.origin)
@@ -299,8 +295,6 @@ if __name__ == '__main__':
         else:
             logging.info("Time taken: " + str(timeout_watch.sum()))
         stop_event.set()
-        try:
+        while running_thread.is_alive():
             running_thread.join(5)
-        except TimeoutError:
-            logging.warning("Timeout error when waiting for main thread")
 
