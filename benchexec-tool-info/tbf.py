@@ -2,7 +2,7 @@
 BenchExec is a framework for reliable benchmarking.
 This file is part of BenchExec.
 
-Copyright (C) 2007-2017  Dirk Beyer
+Copyright (C) 2007-2018  Dirk Beyer
 All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import benchexec.tools.template
 import benchexec.tools.ultimateautomizer as uautomizer
 import benchexec.tools.cpachecker as cpachecker
 import logging
+import os
 
 from benchexec.model import SOFTTIMELIMIT
 
@@ -33,12 +34,20 @@ class Tool(benchexec.tools.template.BaseTool):
     """
 
     REQUIRED_PATHS = [
-        "tbf", "bin"
-        "ReachSafety.prp"
-    ] + ['validators/cpachecker/' + p for p in cpachecker.Tool.REQUIRED_PATHS]
+        "tbf", "bin",
+        "ReachSafety.prp",
+    ]
+
+    def program_files(self, executable):
+        files = super().program_files(executable)
+
+        if 'bin/' in executable:
+            base_dir = os.path.dirname(os.path.dirname(executable))
+
+        return files + [os.path.join(base_dir, p) for p in self.REQUIRED_PATHS]
 
     def executable(self):
-        return util.find_executable('bin/tbf')
+        return util.find_executable('tbf', 'bin/tbf')
 
     def version(self, executable):
         stdout = self._version_from_tool(executable)
