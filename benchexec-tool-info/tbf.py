@@ -31,12 +31,7 @@ class Tool(benchexec.tools.template.BaseTool):
     Tool info for TBF (Test-based falsifier) .
     """
 
-    REQUIRED_PATHS = [
-        "tbf",
-        "bin",
-        "lib",
-        "ReachSafety.prp",
-    ]
+    REQUIRED_PATHS = ["tbf", "lib"]
 
     def program_files(self, executable):
         files = super().program_files(executable)
