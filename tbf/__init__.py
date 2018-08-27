@@ -22,7 +22,7 @@ from time import sleep
 
 from tbf.testcase_validation import ValidationConfig
 
-__VERSION__ = "0.1-dev"
+__VERSION__ = "0.2-dev"
 
 
 def _create_cli_arg_parser():
