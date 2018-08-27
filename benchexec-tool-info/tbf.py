@@ -34,7 +34,7 @@ class Tool(benchexec.tools.template.BaseTool):
     """
 
     REQUIRED_PATHS = [
-        "tbf", "bin",
+        "tbf", "bin", "lib",
         "ReachSafety.prp",
     ]
 

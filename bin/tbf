@@ -10,6 +10,9 @@ script = pathlib.Path(__file__).resolve()
 project_dir = script.parent.parent
 
 pythonpath = project_dir
+lib_dir = project_dir / pathlib.Path("lib/py")
+if lib_dir.exists():
+    sys.path.insert(0, str(lib_dir))
 sys.path.insert(0, str(pythonpath))
 
 import tbf
