@@ -6,7 +6,7 @@
 # Also generates AST code from the configuration file.
 # Should be called from the pycparser directory.
 #
-# Copyright (C) 2008-2015, Eli Bendersky
+# Eli Bendersky [http://eli.thegreenplace.net]
 # License: BSD
 #-----------------------------------------------------------------
 
@@ -21,10 +21,7 @@ from pycparser import c_parser
 
 # Generates the tables
 #
-c_parser.CParser(
-    lex_optimize=True,
-    yacc_debug=False,
-    yacc_optimize=True)
+c_parser.CParser(lex_optimize=True, yacc_debug=False, yacc_optimize=True)
 
 # Load to compile into .pyc
 #

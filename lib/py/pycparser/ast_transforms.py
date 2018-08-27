@@ -3,7 +3,7 @@
 #
 # Some utilities used by the parser to create a friendlier AST.
 #
-# Copyright (C) 2008-2015, Eli Bendersky
+# Eli Bendersky [http://eli.thegreenplace.net]
 # License: BSD
 #------------------------------------------------------------------------------
 
@@ -102,4 +102,3 @@ def _extract_nested_case(case_node, stmts_list):
     if isinstance(case_node.stmts[0], (c_ast.Case, c_ast.Default)):
         stmts_list.append(case_node.stmts.pop())
         _extract_nested_case(stmts_list[-1], stmts_list)
-

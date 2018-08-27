@@ -4,11 +4,11 @@
 # This package file exports some convenience functions for
 # interacting with pycparser
 #
-# Copyright (C) 2008-2016, Eli Bendersky
+# Eli Bendersky [http://eli.thegreenplace.net]
 # License: BSD
 #-----------------------------------------------------------------
 __all__ = ['c_lexer', 'c_parser', 'c_ast']
-__version__ = '2.17'
+__version__ = '2.18'
 
 from subprocess import Popen, PIPE
 from .c_parser import CParser
@@ -39,19 +39,20 @@ def preprocess_file(filename, cpp_path='cpp', cpp_args=''):
         # Note the use of universal_newlines to treat all newlines
         # as \n for Python's purpose
         #
-        pipe = Popen(   path_list,
-                        stdout=PIPE,
-                        universal_newlines=True)
+        pipe = Popen(path_list, stdout=PIPE, universal_newlines=True)
         text = pipe.communicate()[0]
     except OSError as e:
         raise RuntimeError("Unable to invoke 'cpp'.  " +
-            'Make sure its path was passed correctly\n' +
-            ('Original error: %s' % e))
+                           'Make sure its path was passed correctly\n' +
+                           ('Original error: %s' % e))
 
     return text
 
 
-def parse_file(filename, use_cpp=False, cpp_path='cpp', cpp_args='',
+def parse_file(filename,
+               use_cpp=False,
+               cpp_path='cpp',
+               cpp_args='',
                parser=None):
     """ Parse a C file using pycparser.
 

@@ -3,7 +3,7 @@
 #
 # C code generator from pycparser AST nodes.
 #
-# Copyright (C) 2008-2015, Eli Bendersky
+# Eli Bendersky [http://eli.thegreenplace.net]
 # License: BSD
 #------------------------------------------------------------------------------
 from . import c_ast
@@ -14,6 +14,7 @@ class CGenerator(object):
         return a value from each visit method, using string accumulation in
         generic_visit.
     """
+
     def __init__(self):
         # Statements start with indentation of self.indent_level spaces, using
         # the _make_indent method
@@ -39,7 +40,7 @@ class CGenerator(object):
 
     def visit_ID(self, n):
         return n.name
-    
+
     def visit_Pragma(self, n):
         ret = '#pragma'
         if n.string:
@@ -73,15 +74,14 @@ class CGenerator(object):
 
     def visit_BinaryOp(self, n):
         lval_str = self._parenthesize_if(n.left,
-                            lambda d: not self._is_simple_node(d))
+                                         lambda d: not self._is_simple_node(d))
         rval_str = self._parenthesize_if(n.right,
-                            lambda d: not self._is_simple_node(d))
+                                         lambda d: not self._is_simple_node(d))
         return '%s %s %s' % (lval_str, n.op, rval_str)
 
     def visit_Assignment(self, n):
         rval_str = self._parenthesize_if(
-                            n.rvalue,
-                            lambda n: isinstance(n, c_ast.Assignment))
+            n.rvalue, lambda n: isinstance(n, c_ast.Assignment))
         return '%s %s %s' % (self.visit(n.lvalue), n.op, rval_str)
 
     def visit_IdentifierType(self, n):
@@ -108,8 +108,8 @@ class CGenerator(object):
     def visit_DeclList(self, n):
         s = self.visit(n.decls[0])
         if len(n.decls) > 1:
-            s += ', ' + ', '.join(self.visit_Decl(decl, no_type=True)
-                                    for decl in n.decls[1:])
+            s += ', ' + ', '.join(
+                self.visit_Decl(decl, no_type=True) for decl in n.decls[1:])
         return s
 
     def visit_Typedef(self, n):
@@ -178,6 +178,9 @@ class CGenerator(object):
         s += self._make_indent() + '}\n'
         return s
 
+    def visit_CompoundLiteral(self, n):
+        return '(' + self.visit(n.type) + '){' + self.visit(n.init) + '}'
+
     def visit_EmptyStatement(self, n):
         return ';'
 
@@ -196,7 +199,7 @@ class CGenerator(object):
         return 'continue;'
 
     def visit_TernaryOp(self, n):
-        s  = '(' + self._visit_expr(n.cond) + ') ? '
+        s = '(' + self._visit_expr(n.cond) + ') ? '
         s += '(' + self._visit_expr(n.iftrue) + ') : '
         s += '(' + self._visit_expr(n.iffalse) + ')'
         return s
@@ -311,11 +314,10 @@ class CGenerator(object):
         indent = self._make_indent()
         if add_indent: self.indent_level -= 2
 
-        if typ in (
-                c_ast.Decl, c_ast.Assignment, c_ast.Cast, c_ast.UnaryOp,
-                c_ast.BinaryOp, c_ast.TernaryOp, c_ast.FuncCall, c_ast.ArrayRef,
-                c_ast.StructRef, c_ast.Constant, c_ast.ID, c_ast.Typedef,
-                c_ast.ExprList):
+        if typ in (c_ast.Decl, c_ast.Assignment, c_ast.Cast, c_ast.UnaryOp,
+                   c_ast.BinaryOp, c_ast.TernaryOp, c_ast.FuncCall,
+                   c_ast.ArrayRef, c_ast.StructRef, c_ast.Constant, c_ast.ID,
+                   c_ast.Typedef, c_ast.ExprList):
             # These can also appear in an expression context so no semicolon
             # is added to them automatically
             #
@@ -403,5 +405,5 @@ class CGenerator(object):
         """ Returns True for nodes that are "simple" - i.e. nodes that always
             have higher precedence than operators.
         """
-        return isinstance(n,(   c_ast.Constant, c_ast.ID, c_ast.ArrayRef,
-                                c_ast.StructRef, c_ast.FuncCall))
+        return isinstance(n, (c_ast.Constant, c_ast.ID, c_ast.ArrayRef,
+                              c_ast.StructRef, c_ast.FuncCall))

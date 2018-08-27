@@ -7,7 +7,7 @@
 # The design of this module was inspired by astgen.py from the
 # Python 2.5 code-base.
 #
-# Copyright (C) 2008-2015, Eli Bendersky
+# Eli Bendersky [http://eli.thegreenplace.net]
 # License: BSD
 #-----------------------------------------------------------------
 import pprint
@@ -15,13 +15,16 @@ from string import Template
 
 
 class ASTCodeGenerator(object):
+
     def __init__(self, cfg_filename='_c_ast.cfg'):
         """ Initialize the code generator from a configuration
             file.
         """
         self.cfg_filename = cfg_filename
-        self.node_cfg = [NodeCfg(name, contents)
-            for (name, contents) in self.parse_cfgfile(cfg_filename)]
+        self.node_cfg = [
+            NodeCfg(name, contents)
+            for (name, contents) in self.parse_cfgfile(cfg_filename)
+        ]
 
     def generate(self, file=None):
         """ Generates the code into file, an open file buffer.
@@ -48,7 +51,8 @@ class ASTCodeGenerator(object):
                 lbracket_i = line.find('[')
                 rbracket_i = line.find(']')
                 if colon_i < 1 or lbracket_i <= colon_i or rbracket_i <= lbracket_i:
-                    raise RuntimeError("Invalid line in %s:\n%s\n" % (filename, line))
+                    raise RuntimeError(
+                        "Invalid line in %s:\n%s\n" % (filename, line))
 
                 name = line[:colon_i]
                 val = line[lbracket_i + 1:rbracket_i]
@@ -63,6 +67,7 @@ class NodeCfg(object):
         contents: a list of contents - attributes and child nodes
         See comment at the top of the configuration file for details.
     """
+
     def __init__(self, name, contents):
         self.name = name
         self.all_entries = []
@@ -114,16 +119,15 @@ class NodeCfg(object):
             src += '        nodelist = []\n'
 
             for child in self.child:
-                src += (
-                    '        if self.%(child)s is not None:' +
-                    ' nodelist.append(("%(child)s", self.%(child)s))\n') % (
-                        dict(child=child))
+                src += ('        if self.%(child)s is not None:' +
+                        ' nodelist.append(("%(child)s", self.%(child)s))\n') % (
+                            dict(child=child))
 
             for seq_child in self.seq_child:
                 src += (
                     '        for i, child in enumerate(self.%(child)s or []):\n'
-                    '            nodelist.append(("%(child)s[%%d]" %% i, child))\n') % (
-                        dict(child=seq_child))
+                    '            nodelist.append(("%(child)s[%%d]" %% i, child))\n'
+                ) % (dict(child=seq_child))
 
             src += '        return tuple(nodelist)\n'
         else:
@@ -132,7 +136,8 @@ class NodeCfg(object):
         return src
 
     def _gen_attr_names(self):
-        src = "    attr_names = (" + ''.join("%r, " % nm for nm in self.attr) + ')'
+        src = "    attr_names = (" + ''.join(
+            "%r, " % nm for nm in self.attr) + ')'
         return src
 
 
@@ -150,7 +155,7 @@ r'''#-----------------------------------------------------------------
 #
 # AST Node classes.
 #
-# Copyright (C) 2008-2015, Eli Bendersky
+# Eli Bendersky [http://eli.thegreenplace.net]
 # License: BSD
 #-----------------------------------------------------------------
 
@@ -270,9 +275,7 @@ class NodeVisitor(object):
 
 '''
 
-
 if __name__ == "__main__":
     import sys
     ast_gen = ASTCodeGenerator('_c_ast.cfg')
     ast_gen.generate(open('c_ast.py', 'w'))
-
