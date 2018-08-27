@@ -486,6 +486,12 @@ class CoverageMeasuringExecutionRunner(ExecutionRunner):
 
         return cmd
 
+    @staticmethod
+    def _get_gcov_val(gcov_line):
+        stat = gcov_line.split(':')[1]
+        measure_end = stat.find('of ')
+        return stat[:measure_end] + "(" + stat[measure_end:] + ")"
+
     def get_coverage(self, program_file):
         cmd = ['gcov', '-bc', self.harness_file]
         res = utils.execute(cmd, quiet=False, err_to_output=False)
@@ -497,9 +503,9 @@ class CoverageMeasuringExecutionRunner(ExecutionRunner):
         branches_taken = None
         for number, line in enumerate(full_cov):
             if line.startswith('File') and program_name in line:
-                lines_executed = full_cov[number + 1].split(':')[1]
-                branches_executed = full_cov[number + 2].split(':')[1]
-                branches_taken = full_cov[number + 3].split(':')[1]
+                lines_executed = self._get_gcov_val(full_cov[number + 1])
+                branches_executed = self._get_gcov_val(full_cov[number + 2])
+                branches_taken = self._get_gcov_val(full_cov[number + 3])
                 break
 
         return lines_executed, branches_executed, branches_taken
