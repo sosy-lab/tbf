@@ -55,17 +55,18 @@ To run TBF with AFL-fuzz and test-case execution on file `examples/simple.c` fro
 
 Parameter `--stats` makes TBF print statistics on stdout.
 
-After execution, directory `output/` will contain some files of interest.
+After execution, directory `output/` will contain some files of interest, e.g. the test harness as C-file (`harness.c`) and the executable test (`a.out`).
 
 ### Supported Test-Case Generators
 
 Currently supported test-case generators are:
-* (`afl`) [AFL-fuzz](http://lcamtuf.coredump.cx/afl/) is a greybox fuzz tester.
-* (`crest`) [CREST](http://jburnim.github.io/crest/) is a concolic tester (using dynamic symbolic execution)
-* (`cpatiger`) [CPATiger](http://forsyte.at/software/cpatiger/) is a multi-goal tester based on the model checker CPAchecker (an automatic, formal verification tool).
-* (`fshell`) [FShell](http://forsyte.at/software/fshell/) is the CBMC-based tester.
-* (`klee`) [KLEE](klee.github.io) is a symbolic execution-based tester and verifier.
-* (`random`) PRTest (also just called 'random') is a very simple, in-house implementation of a random tester.
+
+  * (`afl`) [AFL-fuzz](http://lcamtuf.coredump.cx/afl/) is a greybox fuzz tester.
+  * (`crest`) [CREST](http://jburnim.github.io/crest/) is a concolic tester (using dynamic symbolic execution)
+  * (`cpatiger`) [CPATiger](http://forsyte.at/software/cpatiger/) is a multi-goal tester based on the model checker CPAchecker (an automatic, formal verification tool).
+  * (`fshell`) [FShell](http://forsyte.at/software/fshell/) is the CBMC-based tester.
+  * (`klee`) [KLEE](klee.github.io) is a symbolic execution-based tester and verifier.
+  * (`random`) PRTest (also just called 'random') is a very simple, in-house implementation of a random tester.
 
 # Development
 
