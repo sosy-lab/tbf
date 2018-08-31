@@ -390,19 +390,28 @@ class TestValidator(object):
                                               test_vector, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
+
                 result.harness = harness['name']
 
+            # Create an ExecutionRunner only for the purpose of
+            # compiling the final harness
+            validator = ExecutionRunner(self.config.machine_model,
+                                        self.get_name(),
+                                        harness_file=result.harness,
+                                        save_exec=True)
+            validator.compile(program_file, result.harness)
         return result, self.statistics
 
 
 class ExecutionRunner(object):
 
-    def __init__(self, machine_model, producer_name):
+    def __init__(self, machine_model, producer_name, harness_file="harness.c", save_exec=False):
         self.machine_model = machine_model
         self.harness = None
         self.producer = producer_name
         self.harness_generator = harness_gen.HarnessCreator()
-        self.harness_file = 'harness.c'
+        self.harness_file = harness_file
+        self.save_exec = save_exec
 
     def _get_compile_cmd(self,
                          program_file,
@@ -419,7 +428,7 @@ class ExecutionRunner(object):
         return cmd
 
     def compile(self, program_file, harness_file):
-        output_file = utils.get_file_path('a.out', temp_dir=True)
+        output_file = utils.get_file_path('a.out', temp_dir=not self.save_exec)
         compile_cmd = self._get_compile_cmd(program_file, harness_file,
                                             output_file)
         compile_result = utils.execute(compile_cmd, quiet=True)
