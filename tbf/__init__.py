@@ -20,7 +20,7 @@ from multiprocessing.pool import ThreadPool
 from multiprocessing.context import TimeoutError
 from time import sleep
 
-from tbf.testcase_validation import ValidationConfig
+from tbf.testcase_validation import ValidationConfig, ExecutionRunner
 
 __VERSION__ = "0.2-dev"
 
@@ -374,6 +374,13 @@ def run(args, stop_all_event=None):
                 persistent_harness = utils.get_file_path(
                     'harness.c', temp_dir=False)
                 shutil.copy(validation_result.harness, persistent_harness)
+
+                # Create an ExecutionRunner only for the purpose of
+                # compiling the persistent harness
+                validator = ExecutionRunner(args.machine_model,
+                                            validation_result.test)
+                final_harness_name = utils.get_file_path('a.out', temp_dir=False)
+                validator.compile(filename, persistent_harness, final_harness_name)
 
             if validation_result.witness is not None:
                 persistent_witness = utils.get_file_path(
