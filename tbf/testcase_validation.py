@@ -373,21 +373,20 @@ class TestValidator(object):
 
         elif result.is_positive():
             stop_event.set()
-            test_vector = result.test_vector
-            if test_vector is None:
-                test_vector = self.get_test_vector(result.test)
+            if result.test_vector is None:
+                result.test_vector = self.get_test_vector(result.test)
             # This currently won't work with AFL due to its string-style input
             if result.witness is None and 'afl' not in self.get_name().lower():
                 nondet_methods = utils.get_nondet_methods()
                 witness = self.create_witness(program_file, result.test.origin,
-                                              test_vector, nondet_methods)
+                                              result.test_vector, nondet_methods)
                 with open(witness['name'], 'w+') as outp:
                     outp.write(witness['content'])
                 result.witness = witness['name']
             if result.harness is None:
                 nondet_methods = utils.get_nondet_methods()
                 harness = self.create_harness(result.test_vector.origin,
-                                              test_vector, nondet_methods)
+                                              result.test_vector, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
 
@@ -530,7 +529,7 @@ class KleeReplayRunner(object):
             os.remove(self.executable_name)
 
     def run(self, program_file, test_case):
-        from tools import klee
+        from tbf.tools import klee
 
         klee_prepared_file = utils.get_prepared_name(program_file, klee.name)
         c_version = 'gnu11'
