@@ -395,22 +395,20 @@ class TestValidator(object):
             # Create an ExecutionRunner only for the purpose of
             # compiling the final harness
             validator = ExecutionRunner(self.config.machine_model,
-                                        self.get_name(),
-                                        harness_file=result.harness,
-                                        save_exec=True)
-            validator.compile(program_file, result.harness)
+                                        self.get_name())
+            final_harness_name = utils.get_file_path('a.out', temp_dir=False)
+            validator.compile(program_file, result.harness, final_harness_name)
         return result, self.statistics
 
 
 class ExecutionRunner(object):
 
-    def __init__(self, machine_model, producer_name, harness_file="harness.c", save_exec=False):
+    def __init__(self, machine_model, producer_name):
         self.machine_model = machine_model
         self.harness = None
         self.producer = producer_name
         self.harness_generator = harness_gen.HarnessCreator()
-        self.harness_file = harness_file
-        self.save_exec = save_exec
+        self.harness_file = 'harness.c'
 
     def _get_compile_cmd(self,
                          program_file,
@@ -426,8 +424,7 @@ class ExecutionRunner(object):
 
         return cmd
 
-    def compile(self, program_file, harness_file):
-        output_file = utils.get_file_path('a.out', temp_dir=not self.save_exec)
+    def compile(self, program_file, harness_file, output_file):
         compile_cmd = self._get_compile_cmd(program_file, harness_file,
                                             output_file)
         compile_result = utils.execute(compile_cmd, quiet=True)
@@ -458,7 +455,8 @@ class ExecutionRunner(object):
             nondet_methods, utils.error_method)
         with open(self.harness_file, 'wb+') as outp:
             outp.write(harness_content)
-        return self.compile(program_file, self.harness_file)
+        output_file = utils.get_file_path('a.out', temp_dir=True)
+        return self.compile(program_file, self.harness_file, output_file)
 
     def run(self, program_file, test_vector):
         executable = self.get_executable_harness(program_file)
