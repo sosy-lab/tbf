@@ -369,17 +369,17 @@ def run(args, stop_all_event=None):
             test_name = os.path.basename(validation_result.test_vector.origin)
             persistent_test = utils.get_file_path(test_name, temp_dir=False)
             shutil.copy(validation_result.test_vector.origin, persistent_test)
-            for proof in validation_result.harness, validation_result.witness:
-                if proof is not None:
-                    proof_name = os.path.basename(proof)
-                    if proof_name.endswith('.harness.c'):
-                        persistent_proof = utils.get_file_path(
-                            'harness.c', temp_dir=False)
-                    else:
-                        assert proof_name.endswith('.witness.graphml')
-                        persistent_proof = utils.get_file_path(
-                            'witness.graphml', temp_dir=False)
-                    shutil.copy(proof, persistent_proof)
+
+            if validation_result.harness is not None:
+                persistent_harness = utils.get_file_path(
+                    'harness.c', temp_dir=False)
+                shutil.copy(validation_result.harness, persistent_harness)
+
+            if validation_result.witness is not None:
+                persistent_witness = utils.get_file_path(
+                    'witness.graphml', temp_dir=False)
+                shutil.copy(validation_result.witness, persistent_witness)
+
         elif not generation_done:
             validation_result = utils.VerdictUnknown()
 
