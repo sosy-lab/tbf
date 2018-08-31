@@ -392,12 +392,6 @@ class TestValidator(object):
 
                 result.harness = harness['name']
 
-            # Create an ExecutionRunner only for the purpose of
-            # compiling the final harness
-            validator = ExecutionRunner(self.config.machine_model,
-                                        self.get_name())
-            final_harness_name = utils.get_file_path('a.out', temp_dir=False)
-            validator.compile(program_file, result.harness, final_harness_name)
         return result, self.statistics
 
 
