@@ -820,7 +820,7 @@ class TestVector(object):
 
 
 def shut_down(process):
-    process.send_signal(signal.SIGKILL)
+    process.kill()
     returncode = process.wait()
 
     return returncode
@@ -1454,7 +1454,7 @@ class StatisticsPool(object):
 
 error_string = "Error found."
 error_return = 107
-error_method = '__VERIFIER_error'
+error_method = None
 spec_file = os.path.join(os.path.dirname(__file__), "ReachSafety.prp")
 output_dir = os.path.abspath('./output')
 tmp = tempfile.mkdtemp()

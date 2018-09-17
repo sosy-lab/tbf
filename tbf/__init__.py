@@ -187,6 +187,22 @@ def _create_cli_arg_parser():
         default=False,
         help="print statistics on stdout")
 
+    run_args.add_argument(
+        '--error-method',
+        dest='error_method',
+        action='store',
+        default='__VERIFIER_error',
+        help='name of error method to check for. If not specified, __VERIFIER_error is used'
+    )
+
+    run_args.add_argument(
+        '--no-error-method',
+        dest='use_error_method',
+        action='store_false',
+        default=True,
+        help='tells TBF not to look for a call to an error method, but just run all tests'
+    )
+
     run_args.add_argument("file", type=str, help="file to verify")
 
     args.add_argument(
@@ -295,6 +311,10 @@ def _get_validator(args, input_generator):
 
 
 def run(args, stop_all_event=None):
+    if args.use_error_method:
+        utils.error_method = args.error_method
+    else:
+        utils.error_method = None
     default_err = "Unknown error"
 
     validation_result = utils.VerdictUnknown()

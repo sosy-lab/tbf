@@ -65,7 +65,8 @@ class BaseInputGenerator(object):
         content += 'struct _IO_FILE;\ntypedef struct _IO_FILE FILE;\n'
         content += "extern struct _IO_FILE *stdin;\n"
         content += "extern struct _IO_FILE *stderr;\n"
-        content += self._get_error_method_dummy()
+        if utils.error_method:
+            content += self._get_error_method_dummy()
         content += utils.get_assume_method()
         return self.prepare(content, nondet_methods_used)
 

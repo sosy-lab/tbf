@@ -114,7 +114,8 @@ class HarnessCreator(object):
     def create_harness(self, nondet_methods, error_method, test_vector=None):
         harness = b''
         harness += self._get_preamble()
-        harness += self._get_error_definition(error_method)
+        if error_method:
+            harness += self._get_error_definition(error_method)
         harness += self._get_nondet_method_definitions(nondet_methods,
                                                        test_vector)
 
