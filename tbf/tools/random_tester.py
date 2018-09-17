@@ -56,10 +56,10 @@ class InputGenerator(BaseInputGenerator):
         compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
         machinem_arg = self.machine_model.compile_parameter
         compile_cmd = [
-            'gcc', '-std=gnu11', machinem_arg, '-I', include_dir, '-o',
-            compiled_file, generator_harness, filename, '-lm'
+            'gcc', '-std=gnu11', machinem_arg, '-I', str(include_dir), '-o',
+            compiled_file, str(generator_harness), filename, '-lm'
         ]
-        input_generation_cmd = [random_runner, compiled_file]
+        input_generation_cmd = [str(random_runner), compiled_file]
 
         return [compile_cmd, input_generation_cmd]
 
