@@ -1457,7 +1457,7 @@ error_return = 107
 error_method = None
 spec_file = os.path.join(os.path.dirname(__file__), "ReachSafety.prp")
 output_dir = os.path.abspath('./output')
-tmp = tempfile.mkdtemp()
+tmp = tempfile.mkdtemp(prefix='tbf_')
 nondet_pattern = re.compile('__VERIFIER_nondet_.+?\(\)')
 
 FALSE = 'false'
