@@ -6,6 +6,7 @@ import tbf.utils as utils
 import os
 from time import sleep
 import re
+import math
 from tbf.utils import FALSE, UNKNOWN, ERROR
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
@@ -489,7 +490,10 @@ class CoverageMeasuringExecutionRunner(ExecutionRunner):
     def _get_gcov_val(gcov_line):
         stat = gcov_line.split(':')[1]
         measure_end = stat.find('of ')
-        return stat[:measure_end] + "(" + stat[measure_end:] + ")"
+        value = float(stat[:measure_end].strip()[:-1])
+        if math.isnan(value):
+            value = 0
+        return str(value) + "% (" + stat[measure_end:] + ")"
 
     def get_coverage(self, program_file):
         cmd = ['gcov', '-bc', self.harness_file]
