@@ -15,14 +15,27 @@ import tbf.tools.random_tester as random_tester
 import tbf.utils as utils
 import shutil
 
-from threading import Event, Thread
-from multiprocessing.pool import ThreadPool
+from ctypes import c_bool
+import multiprocessing as mp
 from multiprocessing.context import TimeoutError
 from time import sleep
 
 from tbf.testcase_validation import ValidationConfig, ExecutionRunner
 
 __VERSION__ = "0.2-dev"
+
+
+class StopEvent(object):
+
+    def __init__(self):
+        m = mp.Manager()
+        self.val = m.Value(c_bool, False)
+
+    def is_set(self):
+        return self.val.value
+
+    def set(self):
+        self.val.value = True
 
 
 def _create_cli_arg_parser():
@@ -333,8 +346,8 @@ def run(args, stop_all_event=None):
         assert not stop_all_event.is_set(
         ), "Stop event is already set before starting input generation"
 
+        generator_pool = mp.Pool(processes=1)
         if args.existing_tests_dir is None:
-            generator_pool = ThreadPool(processes=1)
             # Define the methods for running input generation and validation in parallel/sequentially
             if args.run_parallel:
                 generator_function = generator_pool.apply_async
@@ -381,9 +394,9 @@ def run(args, stop_all_event=None):
                 generation_result)
             generation_done = True
         except TimeoutError:
-            logging.warning(
-                "Couldn't' get result of input generation due to timeout")
+            logging.warning("Couldn't' get result of input generation")
             generation_done = False
+            generator_pool.terminate()
 
         if validation_result.is_positive():
             test_name = os.path.basename(validation_result.test_vector.origin)
@@ -489,22 +502,25 @@ def main():
     else:
         logging.getLogger().setLevel(level=logging.INFO)
 
-    stop_event = Event()
-    running_thread = Thread(target=run, args=(args, stop_event))
+    stop_event = StopEvent()
+    main_run = mp.Process(target=run, args=(args, stop_event))
     try:
-        running_thread.start()
-        while running_thread.is_alive() and (
+        main_run.start()
+        while main_run.is_alive() and (
                 not args.timelimit or timeout_watch.curr_s() < args.timelimit):
             sleep(0.1)
     finally:
         timeout_watch.stop()
         if args.timelimit and timeout_watch.sum() >= args.timelimit:
-            logging.error("Timeout error.\n")
-        else:
-            logging.info("Time taken: " + str(timeout_watch.sum()))
+            logging.info("Timelimit reached.\n")
+        logging.info("Time taken: " + str(timeout_watch.sum()))
         stop_event.set()
-        while running_thread.is_alive():
-            running_thread.join(5)
+        if main_run.is_alive():
+            try:
+                main_run.join(5)
+            except mp.TimeoutError:
+                logging.info("Main run didn't terminate within acceptable limit. Killing it.")
+                main_run.terminate()
 
 
 if __name__ == '__main__':
