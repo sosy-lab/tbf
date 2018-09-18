@@ -402,7 +402,7 @@ class ExecutionRunner(object):
         self.harness = None
         self.producer = producer_name
         self.harness_generator = harness_gen.HarnessCreator()
-        self.harness_file = 'harness.c'
+        self.harness_file = utils.get_file_path('harness.c', temp_dir=True)
 
     def _get_compile_cmd(self,
                          program_file,
