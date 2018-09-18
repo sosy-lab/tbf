@@ -119,6 +119,7 @@ class BaseInputGenerator(object):
             logging.error("Compile error in input generation: %s", e.msg if e.msg else default_err)
             return self._get_failed_and_stats()
         except utils.InputGenerationError as e:
+            # Should be error because an error in input generation is not expected
             logging.error("Input generation error: %s", e.msg
                           if e.msg else default_err)
             return self._get_failed_and_stats()
