@@ -388,6 +388,7 @@ def run(args, stop_all_event=None):
 
         validation_result, validator_stats = validator.check_inputs(
             filename, is_ready, stop_all_event, args.existing_tests_dir)
+        stop_all_event.set()
 
         try:
             generation_success, generator_stats = get_generation_result(

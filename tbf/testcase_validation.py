@@ -372,7 +372,6 @@ class TestValidator(object):
             return utils.VerdictUnknown(), None
 
         elif result.is_positive():
-            stop_event.set()
             if result.test_vector is None:
                 result.test_vector = self.get_test_vector(result.test)
             # This currently won't work with AFL due to its string-style input
