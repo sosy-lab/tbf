@@ -125,7 +125,7 @@ class TestValidator(object):
         created_content = []
         nondet_methods = utils.get_nondet_methods()
         if len(new_test_cases) > 0:
-            logging.info("Looking at %s new test files.", len(new_test_cases))
+            logging.info("Looking at %s new test file(s).", len(new_test_cases))
         empty_case_handled = False
         for test_case in new_test_cases:
             logging.debug('Looking at test case %s .', test_case)
@@ -180,7 +180,7 @@ class TestValidator(object):
     def create_all_test_vectors(self, new_test_cases):
         all_vectors = list()
         if len(new_test_cases) > 0:
-            logging.info("Looking at %s new test files.", len(new_test_cases))
+            logging.info("Looking at %s new test file(s).", len(new_test_cases))
         for test_case in new_test_cases:
             logging.debug('Looking at test case %s .', test_case)
             assert os.path.exists(test_case.origin)
