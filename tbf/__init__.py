@@ -465,7 +465,10 @@ def _setup_environment():
 
     new_ld_path = [str(klee_lib), str(crest_lib)]
     if 'LD_LIBRARY_PATH' in os.environ:
-        new_ld_path = new_ld_path + os.environ['LD_LIBRARY_PATH']
+        if type(os.environ['LD_LIBRARY_PATH']) is list:
+            new_ld_path = new_ld_path + os.environ['LD_LIBRARY_PATH']
+        else:
+            new_ld_path = new_ld_path + [os.environ['LD_LIBRARY_PATH']]
     os.environ['LD_LIBRARY_PATH'] = ':'.join(new_ld_path)
 
 
