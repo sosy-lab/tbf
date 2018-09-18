@@ -427,11 +427,6 @@ def run(args, stop_all_event=None):
     except utils.CompileError as e:
         # This is a proper error because the program can't be compiled, so no tests can be executed
         logging.error("Compile error: %s", e.msg if e.msg else default_err)
-    except utils.InputGenerationError as e:
-        # This is only an info message and not an error, because
-        # the correct test could have been created before the error occurred
-        logging.info("Input generation error: %s", e.msg
-                      if e.msg else default_err)
     except utils.ParseError as e:
         # This is a proper error because even parsing of the program failed, so preparation for the test execution
         # was not possible

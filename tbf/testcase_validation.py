@@ -224,18 +224,14 @@ class TestValidator(object):
         while not is_ready_func() and not stop_event.is_set():
             new_test_cases = self._get_test_cases(visited_tests,
                                                   tests_directory)
-            try:
-                result = validator_method(program_file, validator,
-                                          new_test_cases)
-                if result.is_positive():
-                    return result
-                else:
-                    new_test_case_names = [t.name for t in new_test_cases]
-                    visited_tests = visited_tests.union(new_test_case_names)
-                sleep(0.001)  # Sleep for 1 millisecond
-            except utils.InputGenerationError:
-                # Just capture here and retry as long as the thread is alive
-                pass
+            result = validator_method(program_file, validator,
+                                      new_test_cases)
+            if result.is_positive():
+                return result
+            else:
+                new_test_case_names = [t.name for t in new_test_cases]
+                visited_tests = visited_tests.union(new_test_case_names)
+            sleep(0.001)  # Sleep for 1 millisecond
 
         if not stop_event.is_set():
             new_test_cases = self._get_test_cases(visited_tests,
