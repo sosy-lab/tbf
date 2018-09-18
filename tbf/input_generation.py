@@ -44,7 +44,7 @@ class BaseInputGenerator(object):
 
         self.statistics.add_value('Time for full input generation',
                                   self.timer_input_gen)
-        self.statistics.add_value('Time for test case generator',
+        self.statistics.add_value('Time for test-case generator',
                                   self.timer_generator)
         self.statistics.add_value('Time for controlled file accesses',
                                   self.timer_file_access)
