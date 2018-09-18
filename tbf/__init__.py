@@ -448,7 +448,11 @@ def run(args, stop_all_event=None):
             if os.path.exists(created_dir):
                 # despite the name, ignore_errors=True allows removal of non-empty directories
                 shutil.rmtree(created_dir, ignore_errors=True)
-            shutil.move(utils.tmp, created_dir)
+            if os.stat(utils.tmp).st_dev == os.stat(os.path.dirname(created_dir)).st_dev:
+                shutil.move(utils.tmp, created_dir)
+            else:
+                shutil.copytree(utils.tmp, created_dir)
+                shutil.rmtree(utils.tmp, ignore_errors=True)
         else:
             shutil.rmtree(utils.tmp, ignore_errors=True)
 
