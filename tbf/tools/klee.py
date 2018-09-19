@@ -18,7 +18,7 @@ name = 'klee'
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self,
-                 timelimit=0,
+                 timelimit=None,
                  log_verbose=False,
                  search_heuristic=['random-path', 'nurs:covnew'],
                  machine_model=utils.MACHINE_MODEL_32):
@@ -30,7 +30,7 @@ class InputGenerator(BaseInputGenerator):
             self.search_heuristic = search_heuristic
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
-        self.timelimit = timelimit
+        self.timelimit = timelimit if timelimit else 0
 
     def get_run_env(self):
         return self._run_env
