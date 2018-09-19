@@ -486,9 +486,12 @@ class CoverageMeasuringExecutionRunner(ExecutionRunner):
 
     @staticmethod
     def _get_gcov_val(gcov_line):
-        stat = gcov_line.split(':')[1]
-        measure_end = stat.find('of ')
-        return stat[:measure_end] + "(" + stat[measure_end:] + ")"
+        if ':' in gcov_line:
+            stat = gcov_line.split(':')[1]
+            measure_end = stat.find('of ')
+            return stat[:measure_end] + "(" + stat[measure_end:] + ")"
+        else:
+            return None
 
     def get_coverage(self, program_file):
         cmd = ['gcov', '-bc', self.harness_file]
