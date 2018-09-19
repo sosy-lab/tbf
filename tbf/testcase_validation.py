@@ -6,7 +6,6 @@ import tbf.utils as utils
 import os
 from time import sleep
 import re
-import math
 from tbf.utils import FALSE, UNKNOWN, ERROR
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
@@ -264,10 +263,13 @@ class TestValidator(object):
             if type(validator) is CoverageMeasuringExecutionRunner:
                 lines_ex, branch_ex, branch_taken = validator.get_coverage(
                     program_file)
-                self.statistics.add_value("Statements covered", lines_ex)
-                self.statistics.add_value("Branch conditions executed",
-                                          branch_ex)
-                self.statistics.add_value("Branches covered", branch_taken)
+                if lines_ex:
+                    self.statistics.add_value("Statements covered", lines_ex)
+                if branch_ex:
+                    self.statistics.add_value("Branch conditions executed",
+                                              branch_ex)
+                if branch_taken:
+                    self.statistics.add_value("Branches covered", branch_taken)
 
     def perform_witness_validation(self, program_file, is_ready_func,
                                    stop_event, tests_directory):
@@ -486,10 +488,7 @@ class CoverageMeasuringExecutionRunner(ExecutionRunner):
     def _get_gcov_val(gcov_line):
         stat = gcov_line.split(':')[1]
         measure_end = stat.find('of ')
-        value = float(stat[:measure_end].strip()[:-1])
-        if math.isnan(value):
-            value = 0
-        return str(value) + "% (" + stat[measure_end:] + ")"
+        return stat[:measure_end] + "(" + stat[measure_end:] + ")"
 
     def get_coverage(self, program_file):
         cmd = ['gcov', '-bc', self.harness_file]
