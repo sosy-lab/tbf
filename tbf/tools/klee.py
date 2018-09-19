@@ -22,7 +22,7 @@ class InputGenerator(BaseInputGenerator):
                  log_verbose=False,
                  search_heuristic=['random-path', 'nurs:covnew'],
                  machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(timelimit, machine_model, log_verbose)
+        super().__init__(machine_model, log_verbose)
         self.log_verbose = log_verbose
         if type(search_heuristic) is not list:
             self.search_heuristic = list(search_heuristic)
@@ -30,6 +30,7 @@ class InputGenerator(BaseInputGenerator):
             self.search_heuristic = search_heuristic
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
+        self.timelimit = timelimit
 
     def get_run_env(self):
         return self._run_env

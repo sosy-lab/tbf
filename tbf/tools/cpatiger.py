@@ -18,9 +18,10 @@ class InputGenerator(BaseInputGenerator):
                  timelimit=0,
                  log_verbose=False,
                  machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(timelimit, machine_model, log_verbose)
+        super().__init__(machine_model, log_verbose)
 
         self._run_env = utils.get_env_with_path_added(binary_dir)
+        self.timelimit = timelimit
 
     def get_run_env(self):
         return self._run_env

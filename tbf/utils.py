@@ -9,9 +9,10 @@ import re
 from struct import unpack
 import codecs
 
-from threading import Thread
 from math import floor
-import signal
+
+import threading
+import time
 
 parser = pycparser.CParser()
 sym_var_prefix = '__sym_'
@@ -824,6 +825,11 @@ def shut_down(process):
     returncode = process.wait()
 
     return returncode
+
+
+def set_stop_timer(timelimit, stop_event):
+    timewatcher = threading.Timer(timelimit, stop_event.set)
+    timewatcher.start()
 
 
 def execute(command,

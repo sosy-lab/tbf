@@ -227,7 +227,8 @@ def _create_cli_arg_parser():
 def _parse_cli_args(argv):
     parser = _create_cli_arg_parser()
     args = parser.parse_args(argv)
-    args.timelimit = float(args.timelimit) if args.timelimit else None
+    args.timelimit = int(args.timelimit) if args.timelimit else None
+    args.ig_timelimit = int(args.ig_timelimit) if args.ig_timelimit else None
     if not args.machine_model:
         logging.info("No machine model specified. Assuming 32 bit")
         args.machine_model = utils.MACHINE_MODEL_32
@@ -252,12 +253,10 @@ def _get_input_generator(args):
     input_generator = args.input_generator.lower()
 
     if input_generator == 'afl':
-        return afl.InputGenerator(args.ig_timelimit, args.machine_model,
-                                  args.log_verbose)
+        return afl.InputGenerator(args.machine_model, args.log_verbose)
 
     elif input_generator == 'fshell':
-        return fshell.InputGenerator(args.ig_timelimit, args.machine_model,
-                                     args.log_verbose)
+        return fshell.InputGenerator(args.machine_model, args.log_verbose)
 
     elif input_generator == 'klee':
         if args.strategy:
@@ -279,15 +278,11 @@ def _get_input_generator(args):
                     "Crest requires exactly one strategy. Given strategies: " +
                     args.strategy)
             return crest.InputGenerator(
-                args.ig_timelimit,
                 args.log_verbose,
                 args.strategy[0],
                 machine_model=args.machine_model)
         else:
-            return crest.InputGenerator(
-                args.ig_timelimit,
-                args.log_verbose,
-                machine_model=args.machine_model)
+            return crest.InputGenerator(args.log_verbose, machine_model=args.machine_model)
 
     elif input_generator == 'cpatiger':
         return cpatiger.InputGenerator(
@@ -296,8 +291,7 @@ def _get_input_generator(args):
             machine_model=args.machine_model)
 
     elif input_generator == 'random':
-        return random_tester.InputGenerator(
-            args.ig_timelimit, args.machine_model, args.log_verbose)
+        return random_tester.InputGenerator(args.machine_model, args.log_verbose)
     else:
         raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 
@@ -346,6 +340,7 @@ def run(args, stop_all_event=None):
         assert not stop_all_event.is_set(
         ), "Stop event is already set before starting input generation"
 
+        stop_input_generator_event = StopEvent()
         generator_pool = mp.Pool(processes=1)
         if args.existing_tests_dir is None:
             # Define the methods for running input generation and validation in parallel/sequentially
@@ -366,8 +361,10 @@ def run(args, stop_all_event=None):
                 def is_ready0(r):
                     return True
 
+            if args.ig_timelimit:
+                utils.set_stop_timer(args.ig_timelimit, stop_input_generator_event)
             generation_result = generator_function(
-                input_generator.generate_input, args=(filename, stop_all_event))
+                input_generator.generate_input, args=(filename, stop_input_generator_event))
 
         else:
             generation_result = None
@@ -383,11 +380,13 @@ def run(args, stop_all_event=None):
         is_ready = lambda: is_ready0(generation_result)
 
         if stop_all_event.is_set():
+            stop_input_generator_event.set()
             logging.info("Stop-all event is set, returning from execution")
             return
 
         validation_result, validator_stats = validator.check_inputs(
             filename, is_ready, stop_all_event, args.existing_tests_dir)
+        stop_input_generator_event.set()
         stop_all_event.set()
 
         try:
