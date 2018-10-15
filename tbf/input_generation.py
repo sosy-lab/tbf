@@ -62,9 +62,7 @@ class BaseInputGenerator(object):
         content = utils.rewrite_cproblems(content)
         nondet_methods_used = utils.get_nondet_methods()
         content += '\n'
-        content += 'struct _IO_FILE;\ntypedef struct _IO_FILE FILE;\n'
-        content += "extern struct _IO_FILE *stdin;\n"
-        content += "extern struct _IO_FILE *stderr;\n"
+        content += utils.EXTERNAL_DECLARATIONS
         if utils.error_method:
             content += self._get_error_method_dummy()
         content += utils.get_assume_method()

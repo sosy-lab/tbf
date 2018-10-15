@@ -347,7 +347,7 @@ class TestValidator(object):
                      stop_event,
                      tests_directory=None):
         logging.debug('Checking inputs for file %s', program_file)
-        logging.debug('Considering test-case directory %s', tests_directory)
+        logging.debug('Considering test-case directory: %s', tests_directory)
         result = None
 
         if self.config.use_klee_replay:

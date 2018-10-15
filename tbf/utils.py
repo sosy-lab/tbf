@@ -17,6 +17,30 @@ import time
 parser = pycparser.CParser()
 sym_var_prefix = '__sym_'
 
+EXTERNAL_DECLARATIONS = """
+struct _IO_FILE;
+typedef struct _IO_FILE FILE;
+extern struct _IO_FILE *stdin;
+extern struct _IO_FILE *stderr;
+typedef long unsigned int size_t;
+extern void abort (void) __attribute__ ((__nothrow__ , __leaf__))
+    __attribute__ ((__noreturn__));
+extern void exit (int __status) __attribute__ ((__nothrow__ , __leaf__))
+     __attribute__ ((__noreturn__));
+extern char *fgets (char *__restrict __s, int __n, FILE *__restrict __stream);
+extern int sscanf (const char *__restrict __s,
+    const char *__restrict __format, ...) __attribute__ ((__nothrow__ , __leaf__));
+extern size_t strlen (const char *__s)
+    __attribute__ ((__nothrow__ , __leaf__))
+    __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern int fprintf (FILE *__restrict __stream,
+    const char *__restrict __format, ...);
+extern void *malloc (size_t __size) __attribute__ ((__nothrow__ , __leaf__))
+    __attribute__ ((__malloc__));
+extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+    size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+        """
+
 GCC_BUILTINS = [
     'cos',
     'sin',

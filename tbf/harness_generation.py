@@ -41,25 +41,8 @@ class HarnessCreator(object):
 
     def _get_preamble(self):
         preamble = ''
-        preamble += "struct _IO_FILE;\ntypedef struct _IO_FILE FILE;\n"
-        preamble += "extern struct _IO_FILE *stdin;\n"
-        preamble += "extern struct _IO_FILE *stderr;\n"
-        # preamble += "typedef long unsigned int size_t;\n"
-        # preamble += "extern void abort (void) __attribute__ ((__nothrow__ , __leaf__))\n"
-        # preamble += "    __attribute__ ((__noreturn__));\n"
-        # preamble += "extern void exit (int __status) __attribute__ ((__nothrow__ , __leaf__))\n"
-        # preamble += "     __attribute__ ((__noreturn__));\n"
-        # preamble += "extern char *fgets (char *__restrict __s, int __n, FILE *__restrict __stream);\n"
-        # preamble += "extern int sscanf (const char *__restrict __s,\n"
-        # preamble += "    const char *__restrict __format, ...) __attribute__ ((__nothrow__ , __leaf__));\n"
-        # preamble += "extern size_t strlen (const char *__s)\n"
-        # preamble += "    __attribute__ ((__nothrow__ , __leaf__))\n"
-        # preamble += "    __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));\n"
-        # preamble += "extern int fprintf (FILE *__restrict __stream,\n"
-        # preamble += "    const char *__restrict __format, ...);\n"
-        # preamble += "extern void *malloc (size_t __size) __attribute__ ((__nothrow__ , __leaf__))\n"
-        # preamble += "    __attribute__ ((__malloc__));\n"
-        # preamble += "\n"
+        preamble += utils.EXTERNAL_DECLARATIONS
+        preamble += "\n"
         preamble += utils.get_assume_method() + "\n"
         preamble = preamble.encode()
         preamble += self._get_vector_read_method()
