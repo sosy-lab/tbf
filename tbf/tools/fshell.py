@@ -67,7 +67,7 @@ class InputGenerator(BaseInputGenerator):
         return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(
             utils.error_string)
 
-    def create_input_generation_cmds(self, filename):
+    def create_input_generation_cmds(self, filename, cli_options):
         if self.machine_model.is_32:
             mm_arg = "--32"
         elif self.machine_model.is_64:
@@ -78,7 +78,7 @@ class InputGenerator(BaseInputGenerator):
 
         input_generation_cmd = [
             fshell_binary, mm_arg, "--outfile", tests_file, "--query-file",
-            query_file, filename
+            query_file, cli_options, filename
         ]
 
         return [input_generation_cmd]

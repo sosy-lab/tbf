@@ -10,7 +10,7 @@ class BaseInputGenerator(object):
     var_counter = 0
 
     @abstractmethod
-    def create_input_generation_cmds(self, filename):
+    def create_input_generation_cmds(self, filename, cli_options):
         return list()
 
     @abstractmethod
@@ -29,9 +29,10 @@ class BaseInputGenerator(object):
     def failed(result):
         return result.returncode != 0
 
-    def __init__(self, machine_model, log_verbose):
+    def __init__(self, machine_model, log_verbose, additional_options):
         self.machine_model = machine_model
         self.log_verbose = log_verbose
+        self.cli_options = additional_options
         self.statistics = utils.Statistics("Input Generator " + self.get_name())
 
         self.timer_file_access = utils.Stopwatch()
@@ -96,7 +97,7 @@ class BaseInputGenerator(object):
                 self.timer_file_access.stop()
                 self.timer_prepare.stop()
 
-            cmds = self.create_input_generation_cmds(file_to_analyze)
+            cmds = self.create_input_generation_cmds(file_to_analyze, self.cli_options)
             for cmd in cmds:
                 self.timer_generator.start()
                 result = utils.execute(

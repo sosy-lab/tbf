@@ -17,8 +17,9 @@ class InputGenerator(BaseInputGenerator):
     def __init__(self,
                  timelimit=0,
                  log_verbose=False,
+                 additional_cli_options='',
                  machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(machine_model, log_verbose)
+        super().__init__(machine_model, log_verbose, additional_cli_options)
 
         self._run_env = utils.get_env_with_path_added(binary_dir)
         self.timelimit = timelimit
@@ -56,7 +57,7 @@ class InputGenerator(BaseInputGenerator):
 
         return method_head + method_body
 
-    def create_input_generation_cmds(self, filename):
+    def create_input_generation_cmds(self, filename, cli_options):
         import shutil
         config_copy_dir = utils.get_file_path('config', temp_dir=True)
         if not os.path.exists(config_copy_dir):
@@ -66,9 +67,10 @@ class InputGenerator(BaseInputGenerator):
         input_generation_cmd = [binary]
         if self.timelimit > 0:
             input_generation_cmd += ['-timelimit', str(self.timelimit)]
-        input_generation_cmd += [
-            '-tiger-variants', '-outputpath', tests_dir, '-spec',
-            utils.spec_file, filename
+        if '-tiger-variants' not in cli_options:
+            input_generation_cmd += ['-tiger-variants']
+        input_generation_cmd += ['-outputpath', tests_dir, '-spec',
+            utils.spec_file, cli_options, filename
         ]
 
         return [input_generation_cmd]

@@ -19,14 +19,13 @@ class InputGenerator(BaseInputGenerator):
 
     def __init__(self,
                  log_verbose=False,
-                 search_heuristic='ppc',
+                 additional_cli_options="",
                  machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(machine_model, log_verbose)
+        super().__init__(machine_model, log_verbose, additional_cli_options)
         self.log_verbose = log_verbose
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
 
-        self.search_heuristic = search_heuristic
         self.num_iterations = 100000
 
     def get_name(self):
@@ -97,14 +96,16 @@ class InputGenerator(BaseInputGenerator):
 
         return method_head + method_body
 
-    def create_input_generation_cmds(self, filename):
+    def create_input_generation_cmds(self, filename, cli_options):
         compile_cmd = [os.path.join(bin_dir, 'crestc'), filename]
         # the output file name created by crestc is 'input file name - '.c'
         instrumented_file = filename[:-2]
         input_gen_cmd = [
             os.path.join(bin_dir, 'run_crest'), instrumented_file,
-            str(self.num_iterations), '-' + self.search_heuristic
+            str(self.num_iterations), cli_options
         ]
+        if not cli_options:
+            input_gen_cmd.append('-ppc')
         return [compile_cmd, input_gen_cmd]
 
     def get_test_cases(self, exclude=(), directory=tests_dir):

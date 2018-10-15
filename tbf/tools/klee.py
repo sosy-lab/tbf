@@ -20,14 +20,10 @@ class InputGenerator(BaseInputGenerator):
     def __init__(self,
                  timelimit=None,
                  log_verbose=False,
-                 search_heuristic=['random-path', 'nurs:covnew'],
+                 additional_cli_options="",
                  machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(machine_model, log_verbose)
+        super().__init__(machine_model, log_verbose, additional_cli_options)
         self.log_verbose = log_verbose
-        if type(search_heuristic) is not list:
-            self.search_heuristic = list(search_heuristic)
-        else:
-            self.search_heuristic = search_heuristic
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
         self.timelimit = timelimit if timelimit else 0
@@ -69,7 +65,7 @@ class InputGenerator(BaseInputGenerator):
 
         return method_head + method_body
 
-    def create_input_generation_cmds(self, filename):
+    def create_input_generation_cmds(self, filename, cli_options):
         if self.machine_model.is_32:
             mm_args = ['-arch', 'i386']
         elif self.machine_model.is_64:
@@ -89,7 +85,9 @@ class InputGenerator(BaseInputGenerator):
         if self.timelimit > 0:
             input_generation_cmd += ['-max-time', str(self.timelimit)]
         input_generation_cmd.append('-only-output-states-covering-new')
-        input_generation_cmd += ['-search=' + h for h in self.search_heuristic]
+        input_generation_cmd += [cli_options]
+        if "-search=" not in cli_options:
+            input_generation_cmd += ['-search=random-path -search=nurs:covnew']
         input_generation_cmd += ['-output-dir=' + tests_dir]
         input_generation_cmd += [compiled_file]
 

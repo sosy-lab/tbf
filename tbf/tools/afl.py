@@ -15,7 +15,7 @@ tests_dir = utils.tmp
 
 class InputGenerator(BaseInputGenerator):
 
-    def create_input_generation_cmds(self, program_file):
+    def create_input_generation_cmds(self, program_file, cli_options):
         instrumented_program = 'tested.out'
         compile_cmd = [
             os.path.join(bin_dir,
@@ -26,9 +26,15 @@ class InputGenerator(BaseInputGenerator):
         testcase_dir = self._create_testcase_dir()
         input_gen_cmd = [
             os.path.join(bin_dir, 'afl-fuzz'), '-i', testcase_dir, '-o',
-            findings_dir, '--',
-            os.path.abspath(instrumented_program)
+            findings_dir
         ]
+
+        # If cli_options is an empty string and we add it to the command,
+        # afl-fuzz will interpret the resulting additional space (' ') as
+        # the program name and fail
+        if cli_options:
+            input_gen_cmd.append(cli_options)
+        input_gen_cmd += ['--', instrumented_program]
         return [compile_cmd, input_gen_cmd]
 
     def _create_testcase_dir(self):

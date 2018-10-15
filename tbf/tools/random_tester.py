@@ -51,7 +51,7 @@ class InputGenerator(BaseInputGenerator):
 
         return method_head + method_body
 
-    def create_input_generation_cmds(self, filename):
+    def create_input_generation_cmds(self, filename, cli_options):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1])
         compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
         machinem_arg = self.machine_model.compile_parameter
@@ -59,7 +59,7 @@ class InputGenerator(BaseInputGenerator):
             'gcc', '-std=gnu11', machinem_arg, '-I', str(include_dir), '-o',
             compiled_file, str(generator_harness), filename, '-lm'
         ]
-        input_generation_cmd = [str(random_runner), compiled_file]
+        input_generation_cmd = [str(random_runner),  cli_options, compiled_file]
 
         return [compile_cmd, input_generation_cmd]
 

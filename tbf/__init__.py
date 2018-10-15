@@ -69,11 +69,13 @@ def _create_cli_arg_parser():
     )
 
     input_generator_args.add_argument(
-        "--strategy",
+        "--ig-options",
         "-s",
-        dest="strategy",
-        nargs="+",
-        help="search heuristics to use")
+        dest="ig_options",
+        required=False,
+        type=str,
+        default="",
+        help="Additional parameters to pass to the input generator")
 
     input_generator_args.add_argument(
         "--ig-timelimit",
@@ -253,41 +255,29 @@ def _get_input_generator(args):
     input_generator = args.input_generator.lower()
 
     if input_generator == 'afl':
-        return afl.InputGenerator(args.machine_model, args.log_verbose)
+        return afl.InputGenerator(args.machine_model, args.log_verbose, args.ig_options)
 
     elif input_generator == 'fshell':
-        return fshell.InputGenerator(args.machine_model, args.log_verbose)
+        return fshell.InputGenerator(args.machine_model, args.log_verbose, args.ig_options)
 
     elif input_generator == 'klee':
-        if args.strategy:
-            return klee.InputGenerator(
-                args.ig_timelimit,
-                args.log_verbose,
-                args.strategy,
-                machine_model=args.machine_model)
-        else:
-            return klee.InputGenerator(
-                args.ig_timelimit,
-                args.log_verbose,
-                machine_model=args.machine_model)
+        return klee.InputGenerator(
+            args.ig_timelimit,
+            args.log_verbose,
+            args.ig_options,
+            machine_model=args.machine_model)
 
     elif input_generator == 'crest':
-        if args.strategy:
-            if len(args.strategy) != 1:
-                raise utils.ConfigError(
-                    "Crest requires exactly one strategy. Given strategies: " +
-                    args.strategy)
-            return crest.InputGenerator(
-                args.log_verbose,
-                args.strategy[0],
-                machine_model=args.machine_model)
-        else:
-            return crest.InputGenerator(args.log_verbose, machine_model=args.machine_model)
+        return crest.InputGenerator(
+            args.log_verbose,
+            args.ig_options,
+            machine_model=args.machine_model)
 
     elif input_generator == 'cpatiger':
         return cpatiger.InputGenerator(
             args.ig_timelimit,
             args.log_verbose,
+            args.ig_options,
             machine_model=args.machine_model)
 
     elif input_generator == 'random':
