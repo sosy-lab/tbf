@@ -28,7 +28,7 @@ from benchexec.model import SOFTTIMELIMIT
 
 class Tool(benchexec.tools.template.BaseTool):
     """
-    Tool info for TBF (Test-based falsifier) .
+    Tool info for tbf (https://github.com/sosy-lab/tbf).
     """
 
     REQUIRED_PATHS = ["tbf", "lib"]
@@ -36,8 +36,9 @@ class Tool(benchexec.tools.template.BaseTool):
     def program_files(self, executable):
         files = super().program_files(executable)
 
-        if 'bin/' in executable:
-            base_dir = os.path.dirname(os.path.dirname(executable))
+        # Get parent of directory of `executable`
+        dir_of_exec = os.path.dirname(os.path.abspath(executable))
+        base_dir = os.path.dirname(dir_of_exec)
 
         return files + [os.path.join(base_dir, p) for p in self.REQUIRED_PATHS]
 
@@ -45,8 +46,7 @@ class Tool(benchexec.tools.template.BaseTool):
         return util.find_executable('tbf', 'bin/tbf')
 
     def version(self, executable):
-        stdout = self._version_from_tool(executable)
-        return stdout.strip()
+        return self._version_from_tool(executable)
 
     def name(self):
         return 'TBF'
@@ -86,10 +86,15 @@ class Tool(benchexec.tools.template.BaseTool):
         if SOFTTIMELIMIT in rlimits:
             if "--timelimit" in options:
                 logging.warning(
-                    'Time limit already specified in command-line options, not adding time limit from benchmark definition to the command line.'
+                    'Time limit already specified in command-line options,'
+                    ' not adding time limit from benchmark definition'
+                    ' to the command line.'
                 )
             else:
                 options = options + ["--timelimit", str(rlimits[SOFTTIMELIMIT])]
+        if propertyfile:
+            logging.warning('Propertyfile given, but tbf ignores property files'
+                    ' and always checks for calls to __VERIFIER_error()')
 
         return super().cmdline(executable, options, tasks, propertyfile,
                                rlimits)
