@@ -51,9 +51,12 @@ class InputGenerator(BaseInputGenerator):
 
     def get_run_env(self):
         env = utils.get_env()
-        env['AFL_PATH'] = bin_dir
-        env['AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = 'true'
-        env['AFL_SKIP_CPUFREQ'] = 'true'
+        if 'AFL_PATH' not in env.keys():
+            env['AFL_PATH'] = bin_dir
+        if 'AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES' not in env.keys():
+            env['AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = 'true'
+        if 'AFL_SKIP_CPUFREQ' not in env.keys():
+            env['AFL_SKIP_CPUFREQ'] = 'true'
         return env
 
     def prepare(self, filecontent, nondet_methods_used):
