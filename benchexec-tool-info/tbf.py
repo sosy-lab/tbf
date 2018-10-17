@@ -98,3 +98,16 @@ class Tool(benchexec.tools.template.BaseTool):
 
         return super().cmdline(executable, options, tasks, propertyfile,
                                rlimits)
+
+    def environment(self, executable):
+        return {
+                "newEnv": {
+                    # Temporarily use old gcc version because
+                    # of bug in gcc-7.3.0-16.
+                    # You can change this to the gcc-version you would
+                    # like to use
+                    "AFL_CC": "gcc-5"
+                    }
+                }
+
+
