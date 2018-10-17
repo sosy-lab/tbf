@@ -102,9 +102,11 @@ class InputGenerator(BaseInputGenerator):
         instrumented_file = filename[:-2]
         input_gen_cmd = [
             os.path.join(bin_dir, 'run_crest'), instrumented_file,
-            str(self.num_iterations), cli_options
+            str(self.num_iterations)
         ]
-        if not cli_options:
+        if cli_options:
+            input_gen_cmd.append(cli_options)
+        else:
             input_gen_cmd.append('-ppc')
         return [compile_cmd, input_gen_cmd]
 

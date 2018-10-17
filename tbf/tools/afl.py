@@ -16,7 +16,7 @@ tests_dir = utils.tmp
 class InputGenerator(BaseInputGenerator):
 
     def create_input_generation_cmds(self, program_file, cli_options):
-        instrumented_program = 'tested.out'
+        instrumented_program = utils.get_file_path('tested.out', temp_dir=True)
         compile_cmd = [
             os.path.join(bin_dir,
                          'afl-gcc'), self.machine_model.compile_parameter, '-o',

@@ -85,9 +85,10 @@ class InputGenerator(BaseInputGenerator):
         if self.timelimit > 0:
             input_generation_cmd += ['-max-time', str(self.timelimit)]
         input_generation_cmd.append('-only-output-states-covering-new')
-        input_generation_cmd += [cli_options]
+        if cli_options:
+            input_generation_cmd += [cli_options]
         if "-search=" not in cli_options:
-            input_generation_cmd += ['-search=random-path -search=nurs:covnew']
+            input_generation_cmd += ['-search=random-path', '-search=nurs:covnew']
         input_generation_cmd += ['-output-dir=' + tests_dir]
         input_generation_cmd += [compiled_file]
 
