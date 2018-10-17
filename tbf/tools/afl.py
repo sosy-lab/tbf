@@ -4,7 +4,7 @@ import os
 import tbf.utils as utils
 import glob
 from tbf.harness_generation import HarnessCreator
-import pathlib
+import logging
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 bin_dir = os.path.join(module_dir, 'afl/bin')
@@ -17,9 +17,14 @@ class InputGenerator(BaseInputGenerator):
 
     def create_input_generation_cmds(self, program_file, cli_options):
         instrumented_program = utils.get_file_path('tested.out', temp_dir=True)
+        if utils.get_executable('clang'):
+            compiler = 'afl-clang'
+        else:
+            logging.info("Compiler 'clang' not found. Using gcc.")
+            compiler = 'afl-gcc'
         compile_cmd = [
             os.path.join(bin_dir,
-                         'afl-gcc'), self.machine_model.compile_parameter, '-o',
+                         compiler), self.machine_model.compile_parameter, '-o',
             instrumented_program, program_file
         ]
 

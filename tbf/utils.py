@@ -1,13 +1,13 @@
 import logging
 import subprocess
 import os
-import time
 import hashlib
 import tempfile
 import pycparser
 import re
 from struct import unpack
 import codecs
+import shutil
 
 from math import floor
 
@@ -905,6 +905,14 @@ def execute(command,
     logging.debug(err_output)
 
     return ExecutionResult(returncode, output, err_output)
+
+
+def get_executable(exec):
+    """
+    Returns the full path to the given executable.
+    If the executable does not exist, None is returned.
+    """
+    return shutil.which(exec)
 
 
 def flatten(list_of_lists):
