@@ -16,7 +16,7 @@ import tbf.utils as utils
 import shutil
 
 from ctypes import c_bool
-import multiprocessing as mp
+import multiprocessing.dummy as mp
 from multiprocessing.context import TimeoutError
 from time import sleep
 
