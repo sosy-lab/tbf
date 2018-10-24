@@ -1333,18 +1333,17 @@ def get_corresponding_method_name(sym_var_name):
     return name
 
 
-def convert_to_int(value, method_name):
-    assert undefined_methods is not None
+def convert_to_int(value, method_name, nondet_methods):
     if type(value) is str and value.startswith('\'') and value.endswith('\''):
         value = value[1:-1]
     value = codecs.decode(value, 'unicode_escape').encode('latin1')
     corresponding_method_singleton_list = [
-        m for m in undefined_methods if m['name'] == method_name
+        m for m in nondet_methods if m['name'] == method_name
     ]
     if len(corresponding_method_singleton_list) == 0:
         raise AssertionError(
             "Didn't find {} in list of undefined methods: {}".format(
-                method_name, undefined_methods))
+                method_name, nondet_methods))
     corresponding_method = corresponding_method_singleton_list[0]
     # The type of the symbolic variable may be different from the method return type,
     # but must be ultimately cast to the method return type,
@@ -1492,7 +1491,6 @@ class StatisticsPool(object):
 
 error_string = "Error found."
 error_return = 107
-error_method = None
 spec_file = os.path.join(os.path.dirname(__file__), "ReachSafety.prp")
 output_dir = os.path.abspath('./output')
 tmp = tempfile.mkdtemp(prefix='tbf_')

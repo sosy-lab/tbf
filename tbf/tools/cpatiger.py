@@ -95,7 +95,7 @@ class InputGenerator(BaseInputGenerator):
 
 class CpaTigerTestValidator(TestValidator):
 
-    def _get_test_vector(self, test):
+    def _get_test_vector(self, test, nondet_methods):
         assert len(test.content.split('\n')) == 1
         assert test.content.startswith('[') and test.content.endswith(']')
         test_vector = utils.TestVector(test.name, test.origin)

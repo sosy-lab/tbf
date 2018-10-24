@@ -309,9 +309,9 @@ def _get_validator(args, input_generator):
 
 def run(args, stop_all_event=None):
     if args.use_error_method:
-        utils.error_method = args.error_method
+        error_method = args.error_method
     else:
-        utils.error_method = None
+        error_method = None
     default_err = "Unknown error"
 
     validation_result = utils.VerdictUnknown()
@@ -354,7 +354,8 @@ def run(args, stop_all_event=None):
             if args.ig_timelimit:
                 utils.set_stop_timer(args.ig_timelimit, stop_input_generator_event)
             generation_result = generator_function(
-                input_generator.generate_input, args=(filename, stop_input_generator_event))
+                input_generator.generate_input,
+                args=(filename, error_method, nondet_methods, stop_input_generator_event))
 
         else:
             generation_result = None
@@ -375,7 +376,7 @@ def run(args, stop_all_event=None):
             return
 
         validation_result, validator_stats = validator.check_inputs(
-            filename, is_ready, stop_all_event, args.existing_tests_dir)
+            filename, error_method, nondet_methods, is_ready, stop_all_event, args.existing_tests_dir)
         stop_input_generator_event.set()
         stop_all_event.set()
 

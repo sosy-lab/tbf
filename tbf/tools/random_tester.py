@@ -85,7 +85,7 @@ class RandomTestValidator(TestValidator):
         return test_info_line.split(':')[0].split(' ')[
             -1]  # Object number should be at end, e.g. 'object  1: ...'
 
-    def _get_test_vector(self, test):
+    def _get_test_vector(self, test, nondet_methods):
         test_info = [t for t in test.content.split('\n') if t]
         vector = utils.TestVector(test.name, test.origin)
         for idx, line in enumerate(test_info):

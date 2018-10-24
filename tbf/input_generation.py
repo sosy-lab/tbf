@@ -57,22 +57,21 @@ class BaseInputGenerator(object):
     def prepare(self, filecontent, nondet_methods_used):
         pass
 
-    def prepare0(self, filecontent):
+    def prepare0(self, filecontent, error_method, nondet_methods):
         content = filecontent
         content = utils.rewrite_cproblems(content)
-        nondet_methods_used = utils.get_nondet_methods()
         content += '\n'
         content += utils.EXTERNAL_DECLARATIONS
-        if utils.error_method:
-            content += self._get_error_method_dummy()
+        if error_method:
+            content += self._get_error_method_dummy(error_method)
         content += utils.get_assume_method()
-        return self.prepare(content, nondet_methods_used)
+        return self.prepare(content, nondet_methods)
 
-    def _get_error_method_dummy(self):
-        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit(1); }}\n'.format(
+    def _get_error_method_dummy(self, error_method):
+        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit(1); }}\n'.format(
             utils.error_string)
 
-    def generate_input(self, filename, stop_flag):
+    def generate_input(self, filename, error_method, nondet_methods, stop_flag):
         default_err = "Unknown error"
         self.timer_input_gen.start()
         try:
@@ -88,7 +87,7 @@ class BaseInputGenerator(object):
                     "Prepared file already exists. Not preparing again.")
             else:
                 self.timer_prepare.start()
-                prepared_content = self.prepare0(filecontent)
+                prepared_content = self.prepare0(filecontent, error_method, nondet_methods)
                 self.timer_file_access.start()
                 with open(file_to_analyze, 'w+') as new_file:
                     new_file.write(prepared_content)

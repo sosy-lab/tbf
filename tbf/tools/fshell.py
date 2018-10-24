@@ -62,9 +62,9 @@ class InputGenerator(BaseInputGenerator):
 
         return method_head + method_body
 
-    def _get_error_method_dummy(self):
+    def _get_error_method_dummy(self, error_method):
         # overwrite the default error method dummy to *not* exit. Somehow, Fshell doesn't like exit or aborts.
-        return 'void ' + utils.error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(
+        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(
             utils.error_string)
 
     def create_input_generation_cmds(self, filename, cli_options):
@@ -120,7 +120,7 @@ class FshellTestValidator(TestValidator):
     def get_name(self):
         return name
 
-    def _get_test_vector(self, test):
+    def _get_test_vector(self, test, nondet_methods):
         vector = utils.TestVector(test.name, test.origin)
         for tv in test.content:
             vector.add(tv)

@@ -121,15 +121,14 @@ class TestValidator(object):
     def get_name(self):
         pass
 
-    def create_all_witnesses(self, program_file, new_test_cases):
+    def create_all_witnesses(self, program_file, new_test_cases, nondet_methods):
         created_content = []
-        nondet_methods = utils.get_nondet_methods()
         if len(new_test_cases) > 0:
             logging.info("Looking at %s new test file(s).", len(new_test_cases))
         empty_case_handled = False
         for test_case in new_test_cases:
             logging.debug('Looking at test case %s .', test_case)
-            test_vector = self.get_test_vector(test_case)
+            test_vector = self.get_test_vector(test_case, nondet_methods)
             if test_vector or not empty_case_handled:
                 if not test_vector:
                     test_vector = utils.TestVector(test_case.name,
@@ -177,21 +176,21 @@ class TestValidator(object):
         else:
             return utils.VerdictTrue()
 
-    def create_all_test_vectors(self, new_test_cases):
+    def create_all_test_vectors(self, new_test_cases, nondet_methods):
         all_vectors = list()
         if len(new_test_cases) > 0:
             logging.info("Looking at %s new test file(s).", len(new_test_cases))
         for test_case in new_test_cases:
             logging.debug('Looking at test case %s .', test_case)
             assert os.path.exists(test_case.origin)
-            test_vector = self.get_test_vector(test_case)
+            test_vector = self.get_test_vector(test_case, nondet_methods)
             all_vectors.append(test_vector)
         return all_vectors
 
-    def create_harness(self, test_name, test_vector, nondet_methods):
+    def create_harness(self, test_name, test_vector, error_method, nondet_methods):
         harness = self.harness_creator.create_harness(
             nondet_methods=nondet_methods,
-            error_method=utils.error_method,
+            error_method=error_method,
             test_vector=test_vector)
         harness_file = test_name + '.harness.c'
         harness_file = utils.get_file_path(harness_file)
@@ -199,13 +198,13 @@ class TestValidator(object):
         return {'name': harness_file, 'content': harness}
 
     @abstractmethod
-    def _get_test_vector(self, test_case):
+    def _get_test_vector(self, test_case, nondet_methods):
         pass
 
-    def get_test_vector(self, test_case):
+    def get_test_vector(self, test_case, nondet_methods):
         self.timer_vector_gen.start()
         try:
-            return self._get_test_vector(test_case)
+            return self._get_test_vector(test_case, nondet_methods)
         finally:
             self.timer_vector_gen.stop()
 
@@ -217,14 +216,14 @@ class TestValidator(object):
                                                         tests_directory)
 
     def _perform_validation(self, program_file, validator, validator_method,
-                            is_ready_func, stop_event, tests_directory):
+                            is_ready_func, stop_event, tests_directory, error_method, nondet_methods):
         visited_tests = set()
         result = list()
         while not is_ready_func() and not stop_event.is_set():
             new_test_cases = self._get_test_cases(visited_tests,
                                                   tests_directory)
             result = validator_method(program_file, validator,
-                                      new_test_cases)
+                                      new_test_cases, error_method, nondet_methods)
             if result.is_positive():
                 return result
             else:
@@ -235,18 +234,18 @@ class TestValidator(object):
         if not stop_event.is_set():
             new_test_cases = self._get_test_cases(visited_tests,
                                                   tests_directory)
-            result = validator_method(program_file, validator, new_test_cases)
+            result = validator_method(program_file, validator, new_test_cases, error_method, nondet_methods)
         return self.decide_final_verdict(result)
 
     def perform_klee_replay_validation(self, program_file, is_ready_func,
-                                       stop_event, tests_directory):
+                                       stop_event, tests_directory, error_method, nondet_methods):
         validator = KleeReplayRunner(self.config.machine_model)
         return self._perform_validation(program_file, validator, self._k,
                                         is_ready_func, stop_event,
-                                        tests_directory)
+                                        tests_directory, error_method, nondet_methods)
 
     def perform_execution_validation(self, program_file, is_ready_func,
-                                     stop_event, tests_directory):
+                                     stop_event, tests_directory, error_method, nondet_methods):
 
         if self.config.measure_coverage:
             validator = CoverageMeasuringExecutionRunner(
@@ -258,7 +257,7 @@ class TestValidator(object):
         try:
             return self._perform_validation(program_file, validator, self._hs,
                                             is_ready_func, stop_event,
-                                            tests_directory)
+                                            tests_directory, error_method, nondet_methods)
         finally:
             if type(validator) is CoverageMeasuringExecutionRunner:
                 lines_ex, branch_ex, branch_taken = validator.get_coverage(
@@ -272,20 +271,20 @@ class TestValidator(object):
                     self.statistics.add_value("Branches covered", branch_taken)
 
     def perform_witness_validation(self, program_file, is_ready_func,
-                                   stop_event, tests_directory):
+                                   stop_event, tests_directory, error_method, nondet_methods):
         validator = ValidationRunner(self.config.witness_validators)
         return self._perform_validation(program_file, validator, self._m,
                                         is_ready_func, stop_event,
-                                        tests_directory)
+                                        tests_directory, error_method, nondet_methods)
 
-    def _hs(self, program_file, validator, new_test_cases):
-        test_vectors = self.create_all_test_vectors(new_test_cases)
+    def _hs(self, program_file, validator, new_test_cases, error_method, nondet_methods):
+        test_vectors = self.create_all_test_vectors(new_test_cases, nondet_methods)
 
         for vector in test_vectors:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(program_file, vector)
+                verdicts = validator.run(program_file, vector, error_method, nondet_methods)
             finally:
                 self.timer_execution_validation.stop()
                 self.timer_validation.stop()
@@ -297,13 +296,13 @@ class TestValidator(object):
                 return utils.VerdictFalse(vector, vector)
         return utils.VerdictUnknown()
 
-    def _k(self, program_file, validator, new_test_cases):
+    def _k(self, program_file, validator, new_test_cases, error_method, nondet_methods):
 
         for test in new_test_cases:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(program_file, test)
+                verdicts = validator.run(program_file, test, error_method, nondet_methods)
             finally:
                 self.timer_execution_validation.stop()
                 self.timer_validation.stop()
@@ -314,7 +313,7 @@ class TestValidator(object):
                 return utils.VerdictFalse(test)
         return utils.VerdictUnknown()
 
-    def _m(self, program_file, validator, new_test_cases):
+    def _m(self, program_file, validator, new_test_cases, error_method, nondet_methods):
         produced_witnesses = self.create_all_witnesses(program_file,
                                                        new_test_cases)
         for witness in produced_witnesses:
@@ -327,7 +326,7 @@ class TestValidator(object):
             self.timer_witness_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(program_file, witness_name)
+                verdicts = validator.run(program_file, witness_name, error_method, nondet_methods)
             finally:
                 self.timer_witness_validation.stop()
                 self.timer_validation.stop()
@@ -343,6 +342,8 @@ class TestValidator(object):
 
     def check_inputs(self,
                      program_file,
+                     error_method,
+                     nondet_methods,
                      is_ready_func,
                      stop_event,
                      tests_directory=None):
@@ -352,19 +353,19 @@ class TestValidator(object):
 
         if self.config.use_klee_replay:
             result = self.perform_klee_replay_validation(
-                program_file, is_ready_func, stop_event, tests_directory)
+                program_file, is_ready_func, stop_event, tests_directory, error_method, nondet_methods)
             logging.info("Klee-replay validation says: " + str(result))
 
         if (not result or
                 not result.is_positive()) and self.config.use_execution:
             result = self.perform_execution_validation(
-                program_file, is_ready_func, stop_event, tests_directory)
+                program_file, is_ready_func, stop_event, tests_directory, error_method, nondet_methods)
             logging.info("Execution validation says: " + str(result))
 
         if (not result or not result.is_positive()
            ) and self.config.use_witness_validation:
             result = self.perform_witness_validation(
-                program_file, is_ready_func, stop_event, tests_directory)
+                program_file, is_ready_func, stop_event, tests_directory, error_method, nondet_methods)
             logging.info("Witness validation says: " + str(result))
 
         if result is None:
@@ -372,19 +373,17 @@ class TestValidator(object):
 
         elif result.is_positive():
             if result.test_vector is None:
-                result.test_vector = self.get_test_vector(result.test)
+                result.test_vector = self.get_test_vector(result.test, nondet_methods)
             # This currently won't work with AFL due to its string-style input
             if result.witness is None and 'afl' not in self.get_name().lower():
-                nondet_methods = utils.get_nondet_methods()
                 witness = self.create_witness(program_file, result.test.origin,
                                               result.test_vector, nondet_methods)
                 with open(witness['name'], 'w+') as outp:
                     outp.write(witness['content'])
                 result.witness = witness['name']
             if result.harness is None:
-                nondet_methods = utils.get_nondet_methods()
                 harness = self.create_harness(result.test_vector.origin,
-                                              result.test_vector, nondet_methods)
+                                              result.test_vector, error_method, nondet_methods)
                 with open(harness['name'], 'wb+') as outp:
                     outp.write(harness['content'])
 
@@ -436,22 +435,21 @@ class ExecutionRunner(object):
     def _get_run_cmd(self, executable):
         return [executable]
 
-    def get_executable_harness(self, program_file):
+    def get_executable_harness(self, program_file, error_method, nondet_methods):
         if not self.harness:
-            self.harness = self._create_executable_harness(program_file)
+            self.harness = self._create_executable_harness(program_file, error_method, nondet_methods)
         return self.harness
 
-    def _create_executable_harness(self, program_file):
-        nondet_methods = utils.get_nondet_methods()
+    def _create_executable_harness(self, program_file, error_method, nondet_methods):
         harness_content = self.harness_generator.create_harness(
-            nondet_methods, utils.error_method)
+            nondet_methods, error_method)
         with open(self.harness_file, 'wb+') as outp:
             outp.write(harness_content)
         output_file = utils.get_file_path('a.out', temp_dir=True)
         return self.compile(program_file, self.harness_file, output_file)
 
-    def run(self, program_file, test_vector):
-        executable = self.get_executable_harness(program_file)
+    def run(self, program_file, test_vector, error_method, nondet_methods):
+        executable = self.get_executable_harness(program_file, error_method, nondet_methods)
         input_vector = utils.get_input_vector(test_vector)
 
         if executable:
@@ -521,7 +519,7 @@ class KleeReplayRunner(object):
         if os.path.exists(self.executable_name):
             os.remove(self.executable_name)
 
-    def run(self, program_file, test_case):
+    def run(self, program_file, test_case, error_method, nondet_methods):
         from tbf.tools import klee
 
         klee_prepared_file = utils.get_prepared_name(program_file, klee.name)

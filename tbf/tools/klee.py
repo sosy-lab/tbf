@@ -118,7 +118,7 @@ class KleeTestValidator(TestValidator):
         return test_info_line.split(':')[0].split(' ')[
             -1]  # Object number should be at end, e.g. 'object  1: ...'
 
-    def _get_test_vector(self, test):
+    def _get_test_vector(self, test, nondet_methods):
 
         def _get_value(single_line):
             var_name = single_line.split(':')[2].strip()
@@ -153,7 +153,7 @@ class KleeTestValidator(TestValidator):
                 var_number = self._get_var_number(line)
                 assert last_nondet_method is not None
                 value = _get_value(line)
-                value, = utils.convert_to_int(value, last_nondet_method)
+                value, = utils.convert_to_int(value, last_nondet_method, nondet_methods)
                 assert last_value is None
                 last_value = str(value)
             if last_nondet_method is not None and last_value is not None:
