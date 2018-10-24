@@ -326,7 +326,12 @@ def run(args, stop_all_event=None):
     try:
         os.chdir(utils.tmp)
 
-        utils.find_nondet_methods(filename, args.svcomp_nondets_only)
+        if error_method:
+            error_method_exclude = [error_method]
+        else:
+            error_method_exclude = None
+        nondet_methods = utils.find_nondet_methods(filename, args.svcomp_nondets_only, error_method_exclude)
+
         assert not stop_all_event.is_set(
         ), "Stop event is already set before starting input generation"
 

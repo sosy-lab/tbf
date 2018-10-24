@@ -487,7 +487,6 @@ GCC_BUILTINS = [
 
 IMPLICIT_FUNCTIONS = [
     '__VERIFIER_assume',
-    '__VERIFIER_error',
     #stdio.h
     'fclose',
     'clearerr',
@@ -1206,33 +1205,24 @@ def preprocess(file_content, machine_model, includes=[]):
     return p.stdout
 
 
-undefined_methods = None
-
-
-def get_nondet_methods():
+def find_nondet_methods(filename, svcomp_only, excludes=None):
+    logging.debug("Finding undefined methods")
+    with open(filename, 'r') as inp:
+        file_content = inp.read()
+    if not svcomp_only:
+        try:
+            undefined_methods = _find_undefined_methods(file_content, excludes)
+        except pycparser.plyparser.ParseError as e:
+            logging.warning(
+                "Parse failure with pycparser while parsing: %s", e)
+            undefined_methods = _find_nondet_methods(file_content, excludes)
+    else:
+        undefined_methods = _find_nondet_methods(file_content, excludes)
+    logging.debug("Undefined methods: %s", undefined_methods)
     return undefined_methods
 
 
-def find_nondet_methods(filename, svcomp_only):
-    global undefined_methods
-    if undefined_methods is None:
-        logging.debug("Finding undefined methods")
-        with open(filename, 'r') as inp:
-            file_content = inp.read()
-        if not svcomp_only:
-            try:
-                undefined_methods = _find_undefined_methods(file_content)
-            except pycparser.plyparser.ParseError as e:
-                logging.warning(
-                    "Parse failure with pycparser while parsing: %s", e)
-                undefined_methods = _find_nondet_methods(file_content)
-        else:
-            undefined_methods = _find_nondet_methods(file_content)
-        logging.debug("Undefined methods: %s", undefined_methods)
-    return undefined_methods
-
-
-def _find_undefined_methods(file_content):
+def _find_undefined_methods(file_content, excludes):
     import tbf.ast_visitor as ast_visitor
 
     ast = parse_file_with_preprocessing(file_content, MACHINE_MODEL_32)
@@ -1245,6 +1235,9 @@ def _find_undefined_methods(file_content):
     func_def_collector.visit(ast)
     function_definitions = [f.name for f in func_def_collector.func_defs]
     function_definitions += IMPLICIT_FUNCTIONS
+
+    if excludes:
+        function_definitions += excludes
 
     undef_func_prepared = [
         f for f in function_declarations
@@ -1265,13 +1258,13 @@ def _find_undefined_methods(file_content):
     return undefined_functions
 
 
-def _find_nondet_methods(file_content):
+def _find_nondet_methods(file_content, excludes):
     if os.path.exists(file_content):
         with open(file_content, 'r') as inp:
             content = inp.read()
     else:
         content = file_content
-    method_names = set([s[:-2] for s in nondet_pattern.findall(content)])
+    method_names = set([s[:-2] for s in nondet_pattern.findall(content) if s[:-2] not in excludes])
 
     functions = list()
     for method_name in method_names:
