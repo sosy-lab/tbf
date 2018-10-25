@@ -96,7 +96,6 @@ class InputGenerator(BaseInputGenerator):
 
     def get_test_cases(self, exclude=(), directory=tests_dir):
         all_tests = [t for t in glob.glob(directory + '/*.ktest')]
-        logging.debug("Klee module found %s tests", len(all_tests))
         tcs = list()
         for t in [
                 t for t in all_tests if utils.get_file_name(t) not in exclude
