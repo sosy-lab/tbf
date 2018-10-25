@@ -17,11 +17,7 @@ class InputGenerator(BaseInputGenerator):
 
     def create_input_generation_cmds(self, program_file, cli_options):
         instrumented_program = utils.get_file_path('tested.out', temp_dir=True)
-        if utils.get_executable('clang'):
-            compiler = 'afl-clang'
-        else:
-            logging.info("Compiler 'clang' not found. Using gcc.")
-            compiler = 'afl-gcc'
+        compiler = self._get_compiler()
         compile_cmd = [
             os.path.join(bin_dir,
                          compiler), self.machine_model.compile_parameter, '-o',
@@ -88,6 +84,19 @@ class InputGenerator(BaseInputGenerator):
                         content = inp.read()
                     tcs.append(utils.TestCase(test_name, t, content))
         return tcs
+
+    def _get_compiler(self):
+        env = self.get_run_env()
+        if 'AFL_CC' in env.keys():
+            if 'clang' in env['AFL_CC']:
+                return 'afl-clang'
+            else:
+                return 'afl-gcc'
+        elif utils.get_executable('clang'):
+            return 'afl-clang'
+        else:
+            logging.info("Compiler 'clang' not found. Using gcc.")
+            return 'afl-gcc'
 
 
 class AflTestValidator(BaseTestValidator):

@@ -102,11 +102,11 @@ class Tool(benchexec.tools.template.BaseTool):
     def environment(self, executable):
         return {
                 "newEnv": {
-                    # Temporarily use old gcc version because
-                    # of bug in gcc-7.3.0-16.
-                    # You can change this to the gcc-version you would
-                    # like to use
-                    "AFL_CC": "gcc-5"
+                    # Through this variable, you can tell AFL
+                    # which compiler to use as a backend.
+                    # By default, command `clang` is used
+                    # "AFL_CC": "clang-3.9"
+                    # "AFL_CC": "gcc-5"
                     }
                 }
 
