@@ -12,7 +12,7 @@
   </rundefinition>
   <rundefinition name='crest_cpachecker'>
     <option name='-i'>crest</option>
-    <option name="--strategy">cfg_ppcWCaching</option>
+    <option name="--ig-options">-cfg_ppcWCaching</option>
     <option name="--validators">cpachecker</option>
     <option name="--witness-validation" />
   </rundefinition>
