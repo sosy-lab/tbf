@@ -101,6 +101,9 @@ class InputGenerator(BaseInputGenerator):
 
 class AflTestValidator(BaseTestValidator):
 
+    def _get_test_vector(self, test_case, nondet_methods):
+        raise NotImplementedError("Should use method get_test_vector")
+
     def get_name(self):
         return name
 
