@@ -15,14 +15,15 @@ name = 'cpatiger'
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self,
-                 timelimit=0,
+                 timelimit=None,
                  log_verbose=False,
                  additional_cli_options='',
                  machine_model=utils.MACHINE_MODEL_32):
         super().__init__(machine_model, log_verbose, additional_cli_options)
 
         self._run_env = utils.get_env_with_path_added(binary_dir)
-        self.timelimit = timelimit
+        # Make sure that timelimit is never None
+        self.timelimit = timelimit if timelimit else 0
 
     def get_run_env(self):
         return self._run_env
