@@ -2216,7 +2216,7 @@ sub linkOutputFile {
 sub setVersion {
     my($self) = @_;
     my $cversion = "";
-    open(VER, "@{$self->{CC}} -dumpversion " 
+    open(VER, "@{$self->{CC}} -dumpfullversion " 
          . join(' ', @{$self->{PPARGS}}) ." |") 
         || die "Cannot start GNUCC";
     while(<VER>) {
