@@ -281,7 +281,7 @@ def _get_input_generator(args):
             machine_model=args.machine_model)
 
     elif input_generator == 'random':
-        return random_tester.InputGenerator(args.machine_model, args.log_verbose)
+        return random_tester.InputGenerator(args.machine_model, args.log_verbose, args.ig_options)
     else:
         raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 

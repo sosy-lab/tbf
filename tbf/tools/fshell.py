@@ -78,8 +78,11 @@ class InputGenerator(BaseInputGenerator):
 
         input_generation_cmd = [
             fshell_binary, mm_arg, "--outfile", tests_file, "--query-file",
-            query_file, cli_options, filename
+            query_file
         ]
+        if cli_options:
+            input_generation_cmd += [cli_options]
+        input_generation_cmd += [filename]
 
         return [input_generation_cmd]
 

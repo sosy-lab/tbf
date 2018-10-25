@@ -59,7 +59,11 @@ class InputGenerator(BaseInputGenerator):
             'gcc', '-std=gnu11', machinem_arg, '-I', str(include_dir), '-o',
             compiled_file, str(generator_harness), filename, '-lm'
         ]
-        input_generation_cmd = [str(random_runner),  cli_options, compiled_file]
+
+        input_generation_cmd = [str(random_runner)]
+        if cli_options:
+            input_generation_cmd += [cli_options]
+        input_generation_cmd += [compiled_file]
 
         return [compile_cmd, input_generation_cmd]
 
