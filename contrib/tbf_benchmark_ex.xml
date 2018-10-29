@@ -26,7 +26,6 @@
   </rundefinition>
   <rundefinition name='crest_ex'>
     <option name='-i'>crest</option>
-    <option name="--ig-options">-hybrid</option>
     <option name="--execution" />
   </rundefinition>
   <rundefinition name='afl_ex'>
