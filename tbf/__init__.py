@@ -70,7 +70,6 @@ def _create_cli_arg_parser():
 
     input_generator_args.add_argument(
         "--ig-options",
-        "-s",
         dest="ig_options",
         required=False,
         type=str,
@@ -227,8 +226,20 @@ def _create_cli_arg_parser():
 
 
 def _parse_cli_args(argv):
+
+    try:
+        end_idx = argv.index('--ig-options')
+        known_args = argv[:end_idx] + argv[(end_idx+2):]
+        input_gen_args = argv[end_idx+1]
+    except ValueError:
+        known_args = argv
+        input_gen_args = None
+
     parser = _create_cli_arg_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(known_args)
+
+    args.ig_options = input_gen_args
+
     args.timelimit = int(args.timelimit) if args.timelimit else None
     args.ig_timelimit = int(args.ig_timelimit) if args.ig_timelimit else None
     if not args.machine_model:
