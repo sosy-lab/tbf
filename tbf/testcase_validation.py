@@ -53,6 +53,7 @@ class ValidationConfig(object):
 
         self.convert_to_int = args.write_integers
         self.naive_verification = args.naive_verification
+        self.stop_after_success = args.stop_after_success
 
         self.measure_coverage = args.report_coverage
 
@@ -170,9 +171,25 @@ class TestValidator(object):
 
         return {'name': witness_file, 'content': witness}
 
-    def decide_final_verdict(self, final_result):
-        if final_result.is_positive() or not self.naive_verification:
-            return final_result
+    @staticmethod
+    def _decide_single_verdict(result, test_origin, test_vector=None):
+        if any(r == FALSE for r in result):
+            return utils.VerdictFalse(test_origin, test_vector)
+        else:
+            return utils.VerdictUnknown()
+
+    def decide_final_verdict(self, results):
+        """
+        Decides the final verdict for the given sequence of verdicts.
+
+        :param results: sequence of Verdicts
+        :return: verdict 'false' if any false-verdict exists. Otherwise, verdict 'unknown' if naive verification
+                 is not used, and verdict 'true' if naive verification is used
+        """
+        if any(r.is_positive() for r in results):
+            return next(r for r in results if r.is_positive())
+        elif not self.naive_verification:
+            return utils.VerdictUnknown()
         else:
             return utils.VerdictTrue()
 
@@ -218,14 +235,15 @@ class TestValidator(object):
     def _perform_validation(self, program_file, validator, validator_method,
                             is_ready_func, stop_event, tests_directory, error_method, nondet_methods):
         visited_tests = set()
-        result = list()
+        verdicts = list()
         while not is_ready_func() and not stop_event.is_set():
             new_test_cases = self._get_test_cases(visited_tests,
                                                   tests_directory)
-            result = validator_method(program_file, validator,
-                                      new_test_cases, error_method, nondet_methods)
-            if result.is_positive():
-                return result
+            next_verdict_list = validator_method(program_file, validator,
+                                                 new_test_cases, error_method, nondet_methods)
+            verdicts += next_verdict_list
+            if self.config.stop_after_success and any(r.is_positive() for r in next_verdict_list):
+                return self.decide_final_verdict(verdicts)
             else:
                 new_test_case_names = [t.name for t in new_test_cases]
                 visited_tests = visited_tests.union(new_test_case_names)
@@ -234,8 +252,9 @@ class TestValidator(object):
         if not stop_event.is_set():
             new_test_cases = self._get_test_cases(visited_tests,
                                                   tests_directory)
-            result = validator_method(program_file, validator, new_test_cases, error_method, nondet_methods)
-        return self.decide_final_verdict(result)
+            next_verdict_list = validator_method(program_file, validator, new_test_cases, error_method, nondet_methods)
+            verdicts += next_verdict_list
+        return self.decide_final_verdict(verdicts)
 
     def perform_klee_replay_validation(self, program_file, is_ready_func,
                                        stop_event, tests_directory, error_method, nondet_methods):
@@ -280,42 +299,69 @@ class TestValidator(object):
     def _hs(self, program_file, validator, new_test_cases, error_method, nondet_methods):
         test_vectors = self.create_all_test_vectors(new_test_cases, nondet_methods)
 
+        results = list()
         for vector in test_vectors:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(program_file, vector, error_method, nondet_methods)
+                next_result = validator.run(program_file, vector, error_method, nondet_methods)
+                results.append(self._decide_single_verdict(next_result, vector, vector))
             finally:
                 self.timer_execution_validation.stop()
                 self.timer_validation.stop()
             self.counter_handled_test_cases.inc()
 
-            logging.debug('Results for %s: %s', vector, str(verdicts))
-            if any([v == FALSE for v in verdicts]):
+            logging.debug('Results for %s: %s', vector, str(next_result))
+            if self.config.stop_after_success and next_result == FALSE:
                 self.final_test_vector_size.value = len(vector)
-                return utils.VerdictFalse(vector, vector)
-        return utils.VerdictUnknown()
+                return results
+
+        return results
 
     def _k(self, program_file, validator, new_test_cases, error_method, nondet_methods):
+        """
+        Returns the verdicts for the given set of test cases
 
+        :param program_file: the program file to check against
+        :param validator: the validator used to check the test cases
+        :param new_test_cases: the sequence of test cases to check
+        :param error_method: the error method to check for
+        :param nondet_methods: the non-deterministic methods that should be stubbed
+        :return: The sequence of verdicts, corresponding to the given test cases.
+                 A verdict is 'false' if the test case reaches the error method. It is 'unknown', otherwise.
+        """
+        results = list()
         for test in new_test_cases:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(program_file, test, error_method, nondet_methods)
+                next_result = validator.run(program_file, test, error_method, nondet_methods)
+                results.append(self._decide_single_verdict(next_result, test))
             finally:
                 self.timer_execution_validation.stop()
                 self.timer_validation.stop()
             self.counter_handled_test_cases.inc()
 
-            logging.debug('Results for %s: %s', test, str(verdicts))
-            if any([v == FALSE for v in verdicts]):
-                return utils.VerdictFalse(test)
-        return utils.VerdictUnknown()
+            logging.debug('Result for %s: %s', test, str(next_result))
+            if self.config.stop_after_success and next_result == FALSE:
+                return results
+        return results
 
     def _m(self, program_file, validator, new_test_cases, error_method, nondet_methods):
+        """
+          Returns the verdicts for the given set of test cases. Uses a witness validation technique to do so.
+
+          :param program_file: the program file to check against
+          :param validator: the validator used to check the test cases
+          :param new_test_cases: the sequence of test cases to check
+          :param error_method: the error method to check for
+          :param nondet_methods: the non-deterministic methods that should be stubbed
+          :return: The sequence of verdicts, corresponding to the given test cases.
+                   A verdict is 'false' if the test case reaches the error method. It is 'unknown', otherwise.
+          """
         produced_witnesses = self.create_all_witnesses(program_file,
-                                                       new_test_cases)
+                                                       new_test_cases, nondet_methods)
+        results = list()
         for witness in produced_witnesses:
             logging.debug('Looking at witness %s .', witness['name'])
             witness_name = witness['name']
@@ -326,19 +372,19 @@ class TestValidator(object):
             self.timer_witness_validation.start()
             self.timer_validation.start()
             try:
-                verdicts = validator.run(program_file, witness_name, error_method, nondet_methods)
+                next_result = validator.run(program_file, witness_name, error_method, nondet_methods)
+                results.append(self._decide_single_verdict(next_result, witness['origin'], witness['vector']))
             finally:
                 self.timer_witness_validation.stop()
                 self.timer_validation.stop()
 
             self.counter_handled_test_cases.inc()
-            logging.debug('Results for %s: %s', witness_name, str(verdicts))
-            if any(['false' in v.lower() for v in verdicts]):
+            logging.debug('Results for %s: %s', witness_name, str(next_result))
+            if self.config.stop_after_success and next_result == FALSE:
                 self.final_test_vector_size.value = len(witness['vector'])
-                return utils.VerdictFalse(witness['origin'], witness['vector'],
-                                          None, witness_name)
+                return results
 
-        return utils.VerdictUnknown()
+        return results
 
     def check_inputs(self,
                      program_file,

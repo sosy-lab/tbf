@@ -217,6 +217,14 @@ def _create_cli_arg_parser():
         help='tells TBF not to look for a call to an error method, but just run all tests'
     )
 
+    run_args.add_argument(
+        '--no-stop-after-success',
+        dest="stop_after_success",
+        action='store_false',
+        default=True,
+        help="do not terminate TBF after a test case covering the error method was found"
+    )
+
     run_args.add_argument("file", type=str, help="file to verify")
 
     args.add_argument(
