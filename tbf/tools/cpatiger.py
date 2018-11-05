@@ -2,6 +2,7 @@ from tbf.input_generation import BaseInputGenerator
 from tbf.testcase_validation import TestValidator
 import tbf.utils as utils
 import os
+import json
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 base_dir = os.path.join(module_dir, 'cpatiger')
@@ -68,23 +69,30 @@ class InputGenerator(BaseInputGenerator):
         input_generation_cmd = [binary]
         if self.timelimit > 0:
             input_generation_cmd += ['-timelimit', str(self.timelimit)]
-        if '-tiger-variants' not in cli_options:
-            input_generation_cmd += ['-tiger-variants']
+        if not cli_options or '-tiger-variants' not in cli_options:
+            input_generation_cmd += ['-tiger-variants-noOmega']
         input_generation_cmd += ['-outputpath', tests_dir, '-spec',
-            utils.spec_file, cli_options, filename
-        ]
+                                 utils.spec_file
+                                 ]
+        if cli_options:
+            input_generation_cmd.append(cli_options)
+        if self.machine_model.is_64:
+            input_generation_cmd.append("-64")
+        else:
+            assert self.machine_model.is_32, "Unknown machine model: %s" % self.machine_model
+            input_generation_cmd.append("-32")
+        input_generation_cmd.append(filename)
 
         return [input_generation_cmd]
 
     def get_test_cases(self, exclude=(), directory=tests_dir):
-        tests_file = os.path.join(directory, 'testsuite.txt')
+        tests_file = os.path.join(directory, 'testsuite.json')
         if os.path.exists(tests_file):
             with open(tests_file, 'r') as inp:
-                tests = [
-                    l.strip()
-                    for l in inp.readlines()
-                    if l.strip().startswith('[') and l.strip().endswith(']')
-                ]
+                test_suite = json.loads(inp.read())
+
+            test_cases = test_suite['testCases']
+            tests = [t['inputs'] for t in test_cases]
             tests = [t for i, t in enumerate(tests) if str(i) not in exclude]
             tcs = list()
             for i, t in enumerate(tests):
@@ -97,11 +105,9 @@ class InputGenerator(BaseInputGenerator):
 class CpaTigerTestValidator(TestValidator):
 
     def _get_test_vector(self, test, nondet_methods):
-        assert len(test.content.split('\n')) == 1
-        assert test.content.startswith('[') and test.content.endswith(']')
+        assert type(test.content) is dict, "Type of test: %s" % type(test.content)
         test_vector = utils.TestVector(test.name, test.origin)
-        processed_line = test.content[1:-1]
-        test_values = processed_line.split(', ')
+        test_values = test.content.values()
         for value in test_values:
             test_vector.add(value)
         return test_vector
