@@ -87,7 +87,7 @@ class InputGenerator(BaseInputGenerator):
         input_generation_cmd.append('-only-output-states-covering-new')
         if cli_options:
             input_generation_cmd += [cli_options]
-        if "-search=" not in cli_options:
+        if not cli_options or "-search=" not in cli_options:
             input_generation_cmd += ['-search=random-path', '-search=nurs:covnew']
         input_generation_cmd += ['-output-dir=' + tests_dir]
         input_generation_cmd += [compiled_file]
