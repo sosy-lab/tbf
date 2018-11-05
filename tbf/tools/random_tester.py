@@ -62,7 +62,7 @@ class InputGenerator(BaseInputGenerator):
 
         input_generation_cmd = [str(random_runner)]
         if cli_options:
-            input_generation_cmd += [cli_options]
+            input_generation_cmd += cli_options
         input_generation_cmd += [compiled_file]
 
         return [compile_cmd, input_generation_cmd]

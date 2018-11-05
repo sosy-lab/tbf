@@ -105,7 +105,7 @@ class InputGenerator(BaseInputGenerator):
             str(self.num_iterations)
         ]
         if cli_options:
-            input_gen_cmd.append(cli_options)
+            input_gen_cmd += cli_options
         else:
             input_gen_cmd.append('-ppc')
         return [compile_cmd, input_gen_cmd]

@@ -34,7 +34,7 @@ class InputGenerator(BaseInputGenerator):
         # afl-fuzz will interpret the resulting additional space (' ') as
         # the program name and fail
         if cli_options:
-            input_gen_cmd.append(cli_options)
+            input_gen_cmd += cli_options
         input_gen_cmd += ['--', instrumented_program]
         return [compile_cmd, input_gen_cmd]
 

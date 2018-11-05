@@ -69,14 +69,6 @@ def _create_cli_arg_parser():
     )
 
     input_generator_args.add_argument(
-        "--ig-options",
-        dest="ig_options",
-        required=False,
-        type=str,
-        default="",
-        help="Additional parameters to pass to the input generator")
-
-    input_generator_args.add_argument(
         "--ig-timelimit",
         dest="ig_timelimit",
         help="time limit (in s) for input generation.\n" +
@@ -236,9 +228,9 @@ def _create_cli_arg_parser():
 def _parse_cli_args(argv):
 
     try:
-        end_idx = argv.index('--ig-options')
-        known_args = argv[:end_idx] + argv[(end_idx+2):]
-        input_gen_args = argv[end_idx+1]
+        end_idx = argv.index('--')
+        known_args = argv[:end_idx]
+        input_gen_args = argv[(end_idx+1):]
     except ValueError:
         known_args = argv
         input_gen_args = None

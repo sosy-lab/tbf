@@ -81,7 +81,7 @@ class InputGenerator(BaseInputGenerator):
             query_file
         ]
         if cli_options:
-            input_generation_cmd += [cli_options]
+            input_generation_cmd += cli_options
         input_generation_cmd += [filename]
 
         return [input_generation_cmd]
