@@ -1,6 +1,6 @@
-
 import benchexec.tools.template
 import benchexec.result as result
+
 
 class Tool(benchexec.tools.template.BaseTool):
 
@@ -25,7 +25,7 @@ class Tool(benchexec.tools.template.BaseTool):
             elif returnsignal == 15:
                 status = 'KILLED'
             else:
-                status = 'KILLED BY SIGNAL '+str(returnsignal)
+                status = 'KILLED BY SIGNAL ' + str(returnsignal)
 
         elif returncode != 0:
             status = 'ERROR ({0})'.format(returncode)

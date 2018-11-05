@@ -2,15 +2,13 @@ from tbf.input_generation import BaseInputGenerator
 from tbf.testcase_validation import TestValidator
 import tbf.utils as utils
 import os
-import json
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 base_dir = os.path.join(module_dir, 'cpatiger')
 binary_dir = os.path.join(base_dir, 'scripts')
 binary = os.path.join(binary_dir, 'cpa.sh')
 tests_dir = os.path.join(utils.tmp, 'output')
-input_var_prefix = '__inputVar'
-input_method_prefix = '_inp_'
+input_method = 'input'
 name = 'cpatiger'
 
 
@@ -27,8 +25,6 @@ class InputGenerator(BaseInputGenerator):
         # Make sure that timelimit is never None
         self.timelimit = timelimit if timelimit else 0
 
-        self._current_input_vars = set()
-
     def get_run_env(self):
         return self._run_env
 
@@ -38,6 +34,7 @@ class InputGenerator(BaseInputGenerator):
     def prepare(self, filecontent, nondet_methods_used):
         content = filecontent
         content += '\n'
+        content += 'extern int input();\n'
         for method in nondet_methods_used:  # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method(method)
             content += nondet_method_definition
@@ -50,23 +47,16 @@ class InputGenerator(BaseInputGenerator):
         return self._create_nondet_method(method_name, m_type, param_types)
 
     def _create_nondet_method(self, method_name, method_type, param_types):
-        input_method_name = input_method_prefix + method_name
-        input_method_declaration = 'extern {0} {1}();'.format(method_type, input_method_name)
-
-        input_var = input_var_prefix + method_name
-        self._current_input_vars.add(input_var)
-
         method_head = utils.get_method_head(method_name, 'int', param_types)
         method_body = ['{']
         if method_type != 'void':
             method_body += [
-                '{0} {1} = {2}();'.format(method_type, input_var, input_method_name),
-                'return {0};'.format(input_var)
+                'return ({0}) {1}();'.format(method_type, input_method)
             ]
         method_body = '\n    '.join(method_body)
         method_body += '\n}\n'
 
-        return input_method_declaration + "\n" + method_head + method_body
+        return method_head + method_body
 
     def create_input_generation_cmds(self, filename, cli_options):
         import shutil
@@ -75,36 +65,26 @@ class InputGenerator(BaseInputGenerator):
             copy_dir = os.path.join(base_dir, 'config')
             shutil.copytree(copy_dir, config_copy_dir)
 
-        input_var_list = ','.join(self._current_input_vars)
-
         input_generation_cmd = [binary]
         if self.timelimit > 0:
             input_generation_cmd += ['-timelimit', str(self.timelimit)]
-        if not cli_options or all('-tiger-variants' not in c for c in cli_options):
-            input_generation_cmd += ['-tiger-variants-noOmega']
+        if '-tiger-variants' not in cli_options:
+            input_generation_cmd += ['-tiger-variants']
         input_generation_cmd += ['-outputpath', tests_dir, '-spec',
-                                 utils.spec_file,
-                                 '-setprop', 'tiger.inputInterface=' + input_var_list
-                                 ]
-        if cli_options:
-            input_generation_cmd += cli_options
-        if self.machine_model.is_64:
-            input_generation_cmd.append("-64")
-        else:
-            assert self.machine_model.is_32, "Unknown machine model: %s" % self.machine_model
-            input_generation_cmd.append("-32")
-        input_generation_cmd.append(filename)
+            utils.spec_file, cli_options, filename
+        ]
 
         return [input_generation_cmd]
 
     def get_test_cases(self, exclude=(), directory=tests_dir):
-        tests_file = os.path.join(directory, 'testsuite.json')
+        tests_file = os.path.join(directory, 'testsuite.txt')
         if os.path.exists(tests_file):
             with open(tests_file, 'r') as inp:
-                test_suite = json.loads(inp.read())
-
-            test_cases = test_suite['testCases']
-            tests = [t['inputs'] for t in test_cases]
+                tests = [
+                    l.strip()
+                    for l in inp.readlines()
+                    if l.strip().startswith('[') and l.strip().endswith(']')
+                ]
             tests = [t for i, t in enumerate(tests) if str(i) not in exclude]
             tcs = list()
             for i, t in enumerate(tests):
@@ -117,10 +97,12 @@ class InputGenerator(BaseInputGenerator):
 class CpaTigerTestValidator(TestValidator):
 
     def _get_test_vector(self, test, nondet_methods):
-        assert type(test.content) is dict, "Type of test: %s" % type(test.content)
+        assert len(test.content.split('\n')) == 1
+        assert test.content.startswith('[') and test.content.endswith(']')
         test_vector = utils.TestVector(test.name, test.origin)
-        test_pairs = test.content.items()
-        for variable, value in test_pairs:
+        processed_line = test.content[1:-1]
+        test_values = processed_line.split(', ')
+        for value in test_values:
             test_vector.add(value)
         return test_vector
 

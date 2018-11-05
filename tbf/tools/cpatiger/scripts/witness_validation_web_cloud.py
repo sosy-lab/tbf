@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 CPAchecker is a tool for configurable software verification.
 This file is part of CPAchecker.
@@ -28,7 +27,7 @@ CPAchecker web page:
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
-sys.dont_write_bytecode = True # prevent creation of .pyc files
+sys.dont_write_bytecode = True  # prevent creation of .pyc files
 
 import argparse
 import glob
@@ -38,7 +37,10 @@ import urllib.request as request
 
 if os.path.basename(__file__) == 'witness_validation_web_cloud.py':
     # try looking up additional libraries if not packaged
-    for egg in glob.glob(os.path.join(os.path.dirname(__file__), os.pardir, 'lib', 'python-benchmark', '*.whl')):
+    for egg in glob.glob(
+            os.path.join(
+                os.path.dirname(__file__), os.pardir, 'lib', 'python-benchmark',
+                '*.whl')):
         sys.path.insert(0, egg)
 
 from benchmark.webclient import *  # @UnusedWildImport
@@ -55,63 +57,74 @@ def _create_argument_parser():
     """
 
     parser = argparse.ArgumentParser(
-        description="Validate witness using CPAchecker in the cloud (without local installation).",
+        description=
+        "Validate witness using CPAchecker in the cloud (without local installation).",
         fromfile_prefix_chars='@')
 
-    parser.add_argument("--cloudMaster",
-                      dest="cloud_master",
-                      default="https://vcloud.sosy-lab.org/cpachecker/webclient/",
-                      metavar="HOST",
-                      help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--cloudMaster",
+        dest="cloud_master",
+        default="http://vcloud.sosy-lab.org/webclient/",
+        metavar="HOST",
+        help=argparse.SUPPRESS)
 
-    parser.add_argument("--cloudUser",
-                      dest="cloud_user",
-                      metavar="USER:PWD",
-                      help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--cloudUser",
+        dest="cloud_user",
+        metavar="USER:PWD",
+        help=argparse.SUPPRESS)
 
-    parser.add_argument("--program",
-                      dest="program_file",
-                      metavar="FILE",
-                      help="The path to the program file.",
-                      required=True)
+    parser.add_argument(
+        "--program",
+        dest="program_file",
+        metavar="FILE",
+        help="The path to the program file.",
+        required=True)
 
-    parser.add_argument("--witness",
-                      dest="witness_file",
-                      metavar="FILE",
-                      help="The path to the witness file.",
-                      required=True)
+    parser.add_argument(
+        "--witness",
+        dest="witness_file",
+        metavar="FILE",
+        help="The path to the witness file.",
+        required=True)
 
-    parser.add_argument("--configuration",
-                      dest="configuration",
-                      metavar="CONFIG",
-                      help="The configuration used for the validation.")
+    parser.add_argument(
+        "--configuration",
+        dest="configuration",
+        metavar="CONFIG",
+        help="The configuration used for the validation.")
 
-    parser.add_argument("-d", "--debug",
-                      action="store_true",
-                      help=argparse.SUPPRESS)
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help=argparse.SUPPRESS)
 
-    parser.add_argument("-o", "--outputpath",
-                      dest="output_path", type=str,
-                      default=DEFAULT_OUTPUT_PATH,
-                      help="Output prefix for the generated results. "
-                            + "If the path is a folder files are put into it,"
-                            + "otherwise it is used as a prefix for the resulting files.")
+    parser.add_argument(
+        "-o",
+        "--outputpath",
+        dest="output_path",
+        type=str,
+        default=DEFAULT_OUTPUT_PATH,
+        help="Output prefix for the generated results. " +
+        "If the path is a folder files are put into it," +
+        "otherwise it is used as a prefix for the resulting files.")
 
-    parser.add_argument("--version",
-                        action="version",
-                        version="%(prog)s " + __version__)
+    parser.add_argument(
+        "--version", action="version", version="%(prog)s " + __version__)
     return parser
+
 
 def _setup_logging(config):
     """
     Configure the logging framework.
     """
     if config.debug:
-        logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
-                            level=logging.DEBUG)
+        logging.basicConfig(
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            level=logging.DEBUG)
     else:
-        logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
-                            level=logging.INFO)
+        logging.basicConfig(
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            level=logging.INFO)
+
 
 def _init(config):
     """
@@ -120,11 +133,16 @@ def _init(config):
     if not config.cloud_master:
         sys.exit("No URL of a VerifierCloud instance is given.")
 
-    webclient = WebInterface(config.cloud_master, config.cloud_user,
-                             user_agent='witness_validation_web_cloud.py', version=__version__)
+    webclient = WebInterface(
+        config.cloud_master,
+        config.cloud_user,
+        user_agent='witness_validation_web_cloud.py',
+        version=__version__)
 
-    logging.info('Using %s version %s.', webclient.tool_name(), webclient.tool_revision())
+    logging.info('Using %s version %s.', webclient.tool_name(),
+                 webclient.tool_revision())
     return webclient
+
 
 def _submit_run(webclient, config):
     """
@@ -135,6 +153,7 @@ def _submit_run(webclient, config):
           config.witness_file, config.program_file, config.configuration, config.cloud_user)
     webclient.flush_runs()
     return run_result_future.result()
+
 
 def _execute():
     """
@@ -149,8 +168,11 @@ def _execute():
 
     try:
         run_result = _submit_run(webclient, config)
-        return handle_result(run_result, config.output_path, config.witness_file,
-                             handle_host_info=lambda x : None)
+        return handle_result(
+            run_result,
+            config.output_path,
+            config.witness_file,
+            handle_host_info=lambda x: None)
 
     except request.HTTPError as e:
         logging.warning(e.reason)
