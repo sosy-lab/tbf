@@ -706,6 +706,9 @@ class MachineModel(object):
         else:
             raise AssertionError("Unhandled data type: " + data_type)
 
+    def __str__(self):
+        return "MachineModel(%s bit)" % self._wordsize
+
 
 class TestCase(object):
 
