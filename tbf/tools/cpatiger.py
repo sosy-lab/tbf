@@ -68,7 +68,7 @@ class InputGenerator(BaseInputGenerator):
         input_generation_cmd = [binary]
         if self.timelimit > 0:
             input_generation_cmd += ['-timelimit', str(self.timelimit)]
-        if '-tiger-variants' not in cli_options:
+        if not cli_options or '-tiger-variants' not in cli_options:
             input_generation_cmd += ['-tiger-variants']
         input_generation_cmd += ['-outputpath', tests_dir, '-spec',
             utils.spec_file, cli_options, filename

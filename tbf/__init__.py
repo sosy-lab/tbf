@@ -238,7 +238,7 @@ def _parse_cli_args(argv):
     parser = _create_cli_arg_parser()
     args = parser.parse_args(known_args)
 
-    args.ig_options = input_gen_args
+    args.ig_options = input_gen_args if input_gen_args else list()
 
     args.timelimit = int(args.timelimit) if args.timelimit else None
     args.ig_timelimit = int(args.ig_timelimit) if args.ig_timelimit else None
