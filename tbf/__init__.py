@@ -350,7 +350,7 @@ def run(args, stop_all_event=None):
         generator_pool = mp.Pool(processes=1)
         if args.existing_tests_dir is None:
             # Define the methods for running input generation and validation in parallel/sequentially
-            if args.run_parallel:
+            if args.run_parallel and _is_validation_used(args):
                 generator_function = generator_pool.apply_async
 
                 def get_generation_result(res):
@@ -475,6 +475,10 @@ def run(args, stop_all_event=None):
                 shutil.rmtree(utils.tmp, ignore_errors=True)
         else:
             shutil.rmtree(utils.tmp, ignore_errors=True)
+
+
+def _is_validation_used(arguments):
+    return arguments.execution_validation or arguments.klee_replay_validation or arguments.witness_validation
 
 
 def _setup_environment():
