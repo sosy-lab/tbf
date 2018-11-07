@@ -71,8 +71,11 @@ class InputGenerator(BaseInputGenerator):
         if not cli_options or '-tiger-variants' not in cli_options:
             input_generation_cmd += ['-tiger-variants']
         input_generation_cmd += ['-outputpath', tests_dir, '-spec',
-            utils.spec_file, cli_options, filename
+            utils.spec_file
         ]
+        if cli_options:
+            input_generation_cmd += cli_options
+        input_generation_cmd.append(filename)
 
         return [input_generation_cmd]
 
