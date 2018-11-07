@@ -10,7 +10,7 @@ fshell_dir = os.path.join(module_dir, "fshell")
 bin_dir = os.path.join(fshell_dir, "bin")
 fshell_binary = os.path.join(bin_dir, "fshell")
 query_file = os.path.join(fshell_dir, "query-block-coverage")
-tests_dir = utils.tmp
+tests_dir = '.'
 tests_file = os.path.join(tests_dir, 'testsuite.txt')
 
 

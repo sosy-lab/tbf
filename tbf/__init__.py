@@ -334,8 +334,10 @@ def run(args, stop_all_event=None):
     validator_stats = None
     generator_stats = None
     old_dir_abs = os.path.abspath('.')
+    tmp_dir = utils.create_temp()
     try:
-        os.chdir(utils.tmp)
+        logging.debug("Changing to directory %s", tmp_dir)
+        os.chdir(tmp_dir)
 
         if error_method:
             error_method_exclude = [error_method]
@@ -395,6 +397,7 @@ def run(args, stop_all_event=None):
             filename, error_method, nondet_methods, is_ready, stop_all_event, args.existing_tests_dir)
         stop_input_generator_event.set()
         stop_all_event.set()
+        logging.debug("Validation terminated and got results")
 
         try:
             generation_success, generator_stats = get_generation_result(
@@ -404,27 +407,28 @@ def run(args, stop_all_event=None):
             logging.warning("Couldn't' get result of input generation")
             generation_done = False
             generator_pool.terminate()
+        logging.debug("Input generation terminated and got results")
 
+        logging.debug("Changing to directory %s", old_dir_abs)
+        os.chdir(old_dir_abs)
         if validation_result.is_positive():
             test_name = os.path.basename(validation_result.test_vector.origin)
-            persistent_test = utils.get_file_path(test_name, temp_dir=False)
+            persistent_test = utils.get_output_path(test_name),
             shutil.copy(validation_result.test_vector.origin, persistent_test)
 
             if validation_result.harness is not None:
-                persistent_harness = utils.get_file_path(
-                    'harness.c', temp_dir=False)
+                persistent_harness = utils.get_output_path('harness.c')
                 shutil.copy(validation_result.harness, persistent_harness)
 
                 # Create an ExecutionRunner only for the purpose of
                 # compiling the persistent harness
-                validator = ExecutionRunner(args.machine_model,
-                                            validation_result.test)
-                final_harness_name = utils.get_file_path('a.out', temp_dir=False)
-                validator.compile(filename, persistent_harness, final_harness_name)
+                validator_for_compilation = ExecutionRunner(args.machine_model,
+                                                            validation_result.test)
+                final_harness_name = utils.get_output_path('a.out')
+                validator_for_compilation.compile(filename, persistent_harness, final_harness_name)
 
             if validation_result.witness is not None:
-                persistent_witness = utils.get_file_path(
-                    'witness.graphml', temp_dir=False)
+                persistent_witness = utils.get_output_path('witness.graphml')
                 shutil.copy(validation_result.witness, persistent_witness)
 
         elif not generation_done:
@@ -440,6 +444,8 @@ def run(args, stop_all_event=None):
     except FileNotFoundError as e:
         logging.error("File not found: %s", e.filename)
     finally:
+        # In case an exception occurred before we went back to the original directory
+        logging.debug("Changing to directory %s", old_dir_abs)
         os.chdir(old_dir_abs)
 
         statistics = ""
@@ -450,7 +456,7 @@ def run(args, stop_all_event=None):
                 statistics += "\n\n"
             statistics += str(validator_stats)
         verdict_str = "\nTBF verdict: " + validation_result.verdict.upper()
-        with open(utils.get_file_path('Statistics.txt', temp_dir=False),
+        with open(utils.get_output_path('Statistics.txt'),
                   'w+') as stats:
             stats.write(statistics)
             stats.write('\n')
@@ -463,18 +469,18 @@ def run(args, stop_all_event=None):
         print(verdict_str)
 
         if args.keep_files:
-            created_dir = utils.get_file_path('created_files', temp_dir=False)
+            created_dir = utils.get_output_path('created_files')
             logging.info("Moving created files to %s .", created_dir)
             if os.path.exists(created_dir):
                 # despite the name, ignore_errors=True allows removal of non-empty directories
                 shutil.rmtree(created_dir, ignore_errors=True)
-            if os.stat(utils.tmp).st_dev == os.stat(os.path.dirname(created_dir)).st_dev:
-                shutil.move(utils.tmp, created_dir)
+            if os.stat(tmp_dir).st_dev == os.stat(os.path.dirname(created_dir)).st_dev:
+                shutil.move(tmp_dir, created_dir)
             else:
-                shutil.copytree(utils.tmp, created_dir)
-                shutil.rmtree(utils.tmp, ignore_errors=True)
+                shutil.copytree(tmp_dir, created_dir)
+                shutil.rmtree(tmp_dir, ignore_errors=True)
         else:
-            shutil.rmtree(utils.tmp, ignore_errors=True)
+            shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 def _is_validation_used(arguments):

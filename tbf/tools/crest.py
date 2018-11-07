@@ -12,7 +12,7 @@ lib_dir = os.path.join(module_dir, 'crest/lib')
 include_dir = os.path.join(module_dir, 'crest/include')
 name = 'crest'
 test_name_pattern = re.compile('input[0-9]+$')
-tests_dir = utils.tmp
+tests_dir = '.'
 
 
 class InputGenerator(BaseInputGenerator):

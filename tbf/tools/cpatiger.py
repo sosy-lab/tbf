@@ -7,7 +7,7 @@ module_dir = os.path.dirname(os.path.realpath(__file__))
 base_dir = os.path.join(module_dir, 'cpatiger')
 binary_dir = os.path.join(base_dir, 'scripts')
 binary = os.path.join(binary_dir, 'cpa.sh')
-tests_dir = os.path.join(utils.tmp, 'output')
+tests_dir = 'output'
 input_method = 'input'
 name = 'cpatiger'
 
@@ -60,7 +60,7 @@ class InputGenerator(BaseInputGenerator):
 
     def create_input_generation_cmds(self, filename, cli_options):
         import shutil
-        config_copy_dir = utils.get_file_path('config', temp_dir=True)
+        config_copy_dir = 'config'
         if not os.path.exists(config_copy_dir):
             copy_dir = os.path.join(base_dir, 'config')
             shutil.copytree(copy_dir, config_copy_dir)

@@ -714,7 +714,7 @@ class TestCase(object):
 
     def __init__(self, name, origin_file, content):
         self._name = name
-        self._origin = origin_file
+        self._origin = os.path.abspath(origin_file)
         self._content = content
 
     @property
@@ -986,12 +986,12 @@ def get_cpachecker_options(witness_file):
     # yapf: enable
 
 
-def get_file_path(filename, temp_dir=True):
-    if temp_dir:
-        prefix = tmp
-    else:
-        prefix = output_dir
-    return os.path.join(prefix, filename)
+def get_output_path(filename):
+    return os.path.join(output_dir, filename)
+
+
+def create_temp():
+    return tempfile.mkdtemp(prefix='tbf_')
 
 
 def get_file_name(filename):
@@ -1490,7 +1490,6 @@ error_string = "Error found."
 error_return = 107
 spec_file = os.path.join(os.path.dirname(__file__), "ReachSafety.prp")
 output_dir = os.path.abspath('./output')
-tmp = tempfile.mkdtemp(prefix='tbf_')
 nondet_pattern = re.compile('__VERIFIER_nondet_.+?\(\)')
 
 FALSE = 'false'
@@ -1512,7 +1511,7 @@ def found_err(run_result):
 
 
 def get_prepared_name(filename, tool_name):
-    prepared_name = '.'.join(
+    return '.'.join(
         os.path.basename(filename).split('.')[:-1] + [tool_name, 'c'])
-    prepared_name = get_file_path(prepared_name, temp_dir=True)
-    return prepared_name
+
+

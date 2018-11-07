@@ -167,7 +167,6 @@ class TestValidator(object):
             error_lines=self.get_error_lines(program_file))
 
         witness_file = test_name + ".witness.graphml"
-        witness_file = utils.get_file_path(witness_file)
 
         return {'name': witness_file, 'content': witness}
 
@@ -210,7 +209,6 @@ class TestValidator(object):
             error_method=error_method,
             test_vector=test_vector)
         harness_file = test_name + '.harness.c'
-        harness_file = utils.get_file_path(harness_file)
 
         return {'name': harness_file, 'content': harness}
 
@@ -445,7 +443,7 @@ class ExecutionRunner(object):
         self.harness = None
         self.producer = producer_name
         self.harness_generator = harness_gen.HarnessCreator()
-        self.harness_file = utils.get_file_path('harness.c', temp_dir=True)
+        self.harness_file = 'harness.c'
 
     def _get_compile_cmd(self,
                          program_file,
@@ -483,7 +481,8 @@ class ExecutionRunner(object):
 
     def get_executable_harness(self, program_file, error_method, nondet_methods):
         if not self.harness:
-            self.harness = self._create_executable_harness(program_file, error_method, nondet_methods)
+            self.harness = os.path.abspath(
+                self._create_executable_harness(program_file, error_method, nondet_methods))
         return self.harness
 
     def _create_executable_harness(self, program_file, error_method, nondet_methods):
@@ -491,14 +490,14 @@ class ExecutionRunner(object):
             nondet_methods, error_method)
         with open(self.harness_file, 'wb+') as outp:
             outp.write(harness_content)
-        output_file = utils.get_file_path('a.out', temp_dir=True)
+        output_file = 'a.out'
         return self.compile(program_file, self.harness_file, output_file)
 
     def run(self, program_file, test_vector, error_method, nondet_methods):
         executable = self.get_executable_harness(program_file, error_method, nondet_methods)
         input_vector = utils.get_input_vector(test_vector)
 
-        if executable:
+        if executable and os.path.exists(executable):
             run_cmd = self._get_run_cmd(executable)
             run_result = utils.execute(
                 run_cmd,
@@ -686,7 +685,7 @@ class CPAcheckerValidator(Validator):
             self.executable = self.tool.executable()
             self.cpa_directory = os.path.join(
                 os.path.dirname(self.executable), '..')
-            config_copy_dir = utils.get_file_path('config', temp_dir=True)
+            config_copy_dir = 'config'
             if not os.path.exists(config_copy_dir):
                 copy_dir = os.path.join(self.cpa_directory, 'config')
                 shutil.copytree(copy_dir, config_copy_dir)

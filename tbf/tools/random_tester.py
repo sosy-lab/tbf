@@ -53,7 +53,6 @@ class InputGenerator(BaseInputGenerator):
 
     def create_input_generation_cmds(self, filename, cli_options):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1])
-        compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
         machinem_arg = self.machine_model.compile_parameter
         compile_cmd = [
             'gcc', '-std=gnu11', machinem_arg, '-I', str(include_dir), '-o',
@@ -67,7 +66,7 @@ class InputGenerator(BaseInputGenerator):
 
         return [compile_cmd, input_generation_cmd]
 
-    def get_test_cases(self, exclude=(), directory=utils.tmp):
+    def get_test_cases(self, exclude=(), directory='.'):
         all_tests = [t for t in glob.glob(directory + '/vector[0-9]*.test')]
         tcs = list()
         for t in [

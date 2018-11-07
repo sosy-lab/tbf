@@ -9,7 +9,7 @@ module_dir = os.path.dirname(os.path.realpath(__file__))
 include_dir = os.path.join(module_dir, 'klee/include')
 lib_dir = os.path.join(module_dir, 'klee/lib')
 bin_dir = os.path.join(module_dir, 'klee/bin')
-tests_output = utils.tmp
+tests_output = '.'
 tests_dir = os.path.join(tests_output, 'klee-tests')
 klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
@@ -76,7 +76,6 @@ class InputGenerator(BaseInputGenerator):
 
         compiled_file = '.'.join(
             os.path.basename(filename).split('.')[:-1] + ['bc'])
-        compiled_file = utils.get_file_path(compiled_file, temp_dir=True)
         compile_cmd = ['clang'] + mm_args + [
             '-I', include_dir, '-emit-llvm', '-c', '-g', '-o', compiled_file,
             filename
