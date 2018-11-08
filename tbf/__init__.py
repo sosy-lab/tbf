@@ -259,6 +259,8 @@ def _parse_cli_args(argv):
         else:
             args.existing_tests_dir = os.path.abspath(args.existing_tests_dir)
 
+    args.file = os.path.abspath(args.file)
+
     return args
 
 
@@ -319,6 +321,14 @@ def _get_validator(args, input_generator):
 
 
 def run(args, stop_all_event=None):
+    """
+    Runs tbf with the given arguments in the current working directory.
+    All created files are put in a directory `created_files`.
+
+    :param args:
+    :param stop_all_event:
+    :return:
+    """
     if args.use_error_method:
         error_method = args.error_method
     else:
@@ -327,20 +337,15 @@ def run(args, stop_all_event=None):
 
     validation_result = utils.VerdictUnknown()
 
-    filename = os.path.abspath(args.file)
+    filename = args.file
     input_generator = _get_input_generator(args)
     validator = _get_validator(args, input_generator)
 
     validator_stats = None
     generator_stats = None
     old_dir_abs = os.path.abspath('.')
-
     if args.keep_files:
-        created_dir = utils.get_output_path('created_files')
-        if os.path.exists(created_dir):
-            # despite the name, ignore_errors=True allows removal of non-empty directories
-            shutil.rmtree(created_dir, ignore_errors=True)
-        os.mkdir(created_dir)
+        created_dir = utils.provide_directory(utils.get_output_path('created_files'))
         work_dir = created_dir
     else:
         work_dir = utils.create_temp()

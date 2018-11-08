@@ -1533,3 +1533,9 @@ def get_prepared_name(filename, tool_name):
         os.path.basename(filename).split('.')[:-1] + [tool_name, 'c'])
 
 
+def provide_directory(directory):
+    if os.path.exists(directory):
+        # despite the name, ignore_errors=True allows removal of non-empty directories
+        shutil.rmtree(directory, ignore_errors=True)
+    os.mkdir(directory)
+    return directory
