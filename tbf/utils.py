@@ -868,6 +868,9 @@ def execute(command,
             timelimit=None):
     log_cmd = logging.debug if quiet else logging.info
 
+    if env:
+        logging.debug("PATH=%s", env['PATH'])
+        logging.debug("LD_LIBRARY_PATH=%s", env['LD_LIBRARY_PATH'] if 'LD_LIBRARY_PATH' in env else "[]")
     log_cmd(" ".join(command))
 
     p = subprocess.Popen(
@@ -1003,15 +1006,14 @@ def get_env():
 
 
 def add_ld_path_to_env(env, lib_dir):
-    new_env = env.copy()
     new_ld_path = [str(lib_dir)]
     if 'LD_LIBRARY_PATH' in env:
         if type(env['LD_LIBRARY_PATH']) is list:
             new_ld_path = new_ld_path + env['LD_LIBRARY_PATH']
         else:
             new_ld_path = new_ld_path + [env['LD_LIBRARY_PATH']]
-
-    env['LD_LIBRARY_PATH'] = ':'.join(new_ld_path)
+    new_env = env.copy()
+    new_env['LD_LIBRARY_PATH'] = ':'.join(new_ld_path)
     return new_env
 
 

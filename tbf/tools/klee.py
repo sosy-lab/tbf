@@ -25,9 +25,9 @@ class InputGenerator(BaseInputGenerator):
         super().__init__(machine_model, log_verbose, additional_cli_options)
         self.log_verbose = log_verbose
 
-        self._run_env = utils.get_env_with_path_added(bin_dir)
-        self._run_env['KLEE_RUNTIME_LIBRARY_PATH'] = str(lib_dir)
-        self._run_env = utils.add_ld_path_to_env(self._run_env, lib_dir)
+        run_env = utils.get_env_with_path_added(bin_dir)
+        run_env['KLEE_RUNTIME_LIBRARY_PATH'] = str(lib_dir)
+        self._run_env = utils.add_ld_path_to_env(run_env, lib_dir)
 
         self.timelimit = timelimit if timelimit else 0
 
