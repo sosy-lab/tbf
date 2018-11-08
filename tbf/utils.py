@@ -1510,10 +1510,10 @@ spec_file = os.path.join(os.path.dirname(__file__), "ReachSafety.prp")
 output_dir = os.path.abspath('./output')
 nondet_pattern = re.compile('__VERIFIER_nondet_.+?\(\)')
 
-FALSE = 'false'
-UNKNOWN = 'unknown'
-TRUE = 'true'
-ERROR = 'error'
+FALSE = 'FALSE'
+UNKNOWN = 'UNKNOWN'
+TRUE = 'TRUE'
+ERROR = 'ERROR'
 
 MACHINE_MODEL_32 = MachineModel(32, "32 bit linux", 2, 4, 4, 8, 4, 8, 12,
                                 '-m32')
