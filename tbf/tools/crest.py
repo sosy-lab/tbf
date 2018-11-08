@@ -100,7 +100,7 @@ class InputGenerator(BaseInputGenerator):
     def create_input_generation_cmds(self, filename, cli_options):
         compile_cmd = [os.path.join(bin_dir, 'crestc'), filename]
         # the output file name created by crestc is 'input file name - '.c'
-        instrumented_file = filename[:-2]
+        instrumented_file = os.path.abspath(filename[:-2])
         input_gen_cmd = [
             os.path.join(bin_dir, 'run_crest'), instrumented_file,
             str(self.num_iterations)
