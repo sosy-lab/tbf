@@ -8,7 +8,7 @@ import logging
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 bin_dir = os.path.join(module_dir, 'afl/bin')
-findings_dir = 'findings'
+findings_dir = './findings'
 name = 'afl-fuzz'
 tests_dir = '.'
 
@@ -16,7 +16,7 @@ tests_dir = '.'
 class InputGenerator(BaseInputGenerator):
 
     def create_input_generation_cmds(self, program_file, cli_options):
-        instrumented_program = 'tested.out'
+        instrumented_program = './tested.out'
         compiler = self._get_compiler()
         compile_cmd = [
             os.path.join(bin_dir,
@@ -39,7 +39,7 @@ class InputGenerator(BaseInputGenerator):
         return [compile_cmd, input_gen_cmd]
 
     def _create_testcase_dir(self):
-        testcase_dir = 'initial_testcases'
+        testcase_dir = './initial_testcases'
         os.mkdir(testcase_dir)
         initial_testcase = os.path.join(testcase_dir, '0.afl-test')
         with open(initial_testcase, 'w+') as outp:
