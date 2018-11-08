@@ -334,10 +334,20 @@ def run(args, stop_all_event=None):
     validator_stats = None
     generator_stats = None
     old_dir_abs = os.path.abspath('.')
-    tmp_dir = utils.create_temp()
+
+    if args.keep_files:
+        created_dir = utils.get_output_path('created_files')
+        if os.path.exists(created_dir):
+            # despite the name, ignore_errors=True allows removal of non-empty directories
+            shutil.rmtree(created_dir, ignore_errors=True)
+        os.mkdir(created_dir)
+        work_dir = created_dir
+    else:
+        work_dir = utils.create_temp()
+
     try:
-        logging.debug("Changing to directory %s", tmp_dir)
-        os.chdir(tmp_dir)
+        logging.debug("Changing to directory %s", work_dir)
+        os.chdir(work_dir)
 
         if error_method:
             error_method_exclude = [error_method]
@@ -468,19 +478,8 @@ def run(args, stop_all_event=None):
             print(statistics)
         print(verdict_str)
 
-        if args.keep_files:
-            created_dir = utils.get_output_path('created_files')
-            logging.info("Moving created files to %s .", created_dir)
-            if os.path.exists(created_dir):
-                # despite the name, ignore_errors=True allows removal of non-empty directories
-                shutil.rmtree(created_dir, ignore_errors=True)
-            if os.stat(tmp_dir).st_dev == os.stat(os.path.dirname(created_dir)).st_dev:
-                shutil.move(tmp_dir, created_dir)
-            else:
-                shutil.copytree(tmp_dir, created_dir)
-                shutil.rmtree(tmp_dir, ignore_errors=True)
-        else:
-            shutil.rmtree(tmp_dir, ignore_errors=True)
+        if not args.keep_files:
+            shutil.rmtree(work_dir, ignore_errors=True)
 
 
 def _is_validation_used(arguments):
