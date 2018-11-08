@@ -11,19 +11,19 @@ class BaseInputGenerator(object):
 
     @abstractmethod
     def create_input_generation_cmds(self, filename, cli_options):
-        return list()
+        raise NotImplementedError()
 
     @abstractmethod
     def get_name(self):
-        return ''
+        raise NotImplementedError()
 
     @abstractmethod
     def get_run_env(self):
-        return os.environ
+        raise NotImplementedError()
 
     @abstractmethod
     def get_test_cases(self, exclude=(), directory=None):
-        return list()
+        raise NotImplementedError()
 
     @staticmethod
     def failed(result):

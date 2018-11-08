@@ -63,191 +63,191 @@ class AstVisitor(object):
 
     @abstractmethod
     def visit_ArrayDecl(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_ArrayRef(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Assignment(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_BinaryOp(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Break(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Case(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Cast(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Compound(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_CompoundLiteral(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Constant(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Continue(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Decl(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_DeclList(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Default(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_DoWhile(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_EllipsisParam(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_EmptyStatement(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Enum(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Enumerator(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_EnumeratorList(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_ExprList(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_FileAST(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_For(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_FuncCall(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_FuncDecl(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_FuncDef(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Goto(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_ID(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_IdentifierType(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_If(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_InitList(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Label(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_NamedInitializer(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_ParamList(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_PtrDecl(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Return(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Struct(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_StructRef(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Switch(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_TernaryOp(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_TypeDecl(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Typedef(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Typename(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_UnaryOp(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Union(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_While(self, item):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def visit_Pragma(self, item):
-        pass
+        raise NotImplementedError()
 
 
 class DfsVisitor(AstVisitor):
@@ -467,7 +467,7 @@ class NondetIdentifierCollector(DfsVisitor):
 
     @abstractmethod
     def get_var_name_from_function(self, item):
-        pass
+        raise NotImplementedError()
 
     def visit_FuncCall(self, item):
         func_name = get_name(item)
@@ -581,4 +581,4 @@ class FuncDeclCollector(a.NodeVisitor):
         pass  # Don't go deeper so we don't collect function pointer
 
     def visit_Typedef(self, node):
-        pass  # Don't go deeper so we don't collect typedef functions
+        raise NotImplementedError()  # Don't go deeper so we don't collect typedef functions

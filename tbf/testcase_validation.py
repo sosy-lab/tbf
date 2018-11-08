@@ -120,7 +120,7 @@ class TestValidator(object):
 
     @abstractmethod
     def get_name(self):
-        pass
+        raise NotImplementedError()
 
     def create_all_witnesses(self, program_file, new_test_cases, nondet_methods):
         created_content = []
@@ -214,7 +214,7 @@ class TestValidator(object):
 
     @abstractmethod
     def _get_test_vector(self, test_case, nondet_methods):
-        pass
+        raise NotImplementedError()
 
     def get_test_vector(self, test_case, nondet_methods):
         self.timer_vector_gen.start()
@@ -669,7 +669,7 @@ class Validator(object):
 
     @abstractmethod
     def _get_cmd(self, program_file, witness_file):
-        pass
+        raise NotImplementedError()
 
 
 class CPAcheckerValidator(Validator):
