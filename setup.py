@@ -40,18 +40,18 @@ setup(
     },
     entry_points={"console_scripts": ['tbf = tbf:main']},
     install_requires=[
-        'benchexec==1.16',
-        'pycparser==2.18',
-        'tempita==0.5.2',
+        'benchexec>=1.16',
+        'pycparser>=2.18',
+        'tempita>=0.5.2',
     ],
     setup_requires=[
-        'pytest-runner',
-        'pytest-pylint',
+        'nose>=1.0',
     ],
     tests_require=[
-        'pytest',
         'pylint',
+        'nose>=1.0',
     ],
+    test_suite = 'nose.collector',
     license='multiple',
     keywords='test execution test-case generation verification',
     classifiers=[

@@ -4,9 +4,9 @@ verify_ssl = true
 url = "https://pypi.org/simple"
 
 [packages]
-pycparser = "==2.18"
-BenchExec = "==1.16"
-Tempita = "==0.5.2"
+pycparser = ">=2.18"
+BenchExec = ">=1.16"
+Tempita = ">=0.5.2"
 
 [requires]
 python_version = "3.5"
