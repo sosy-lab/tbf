@@ -426,7 +426,7 @@ def run(args, stop_all_event=None):
         _change_dir(old_dir_abs)
         if validation_result.is_positive():
             test_name = os.path.basename(validation_result.test_vector.origin)
-            persistent_test = utils.get_output_path(test_name),
+            persistent_test = utils.get_output_path(test_name)
             shutil.copy(validation_result.test_vector.origin, persistent_test)
 
             if validation_result.harness is not None:
