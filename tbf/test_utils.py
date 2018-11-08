@@ -1,44 +1,33 @@
-import unittest
 import tbf.utils as utils
+import nose.tools as n
 
 method_name = '__VERIFIER_nondet_int'
 bool_method_name = '__VERIFIER_nondet_bool'
 
+test_values = [
+    (b'\x00\x00\x00\x00', 0),
+    (b'\x01\x01\x01\x01', 16843009),
+    (b'\xff\xff\xff\x7f', 2147483647),
+    (b'\x00', 0),
+    (b'\x01', 1),
+]
 
-class TestUtils(unittest.TestCase):
+nondet_methods = [{
+    'name': method_name,
+    'type': 'int',
+    'params': []
+}, {
+    'name': bool_method_name,
+    'type': '_Bool',
+    'params': []
+}]
 
-    @classmethod
-    def setUpClass(cls):
-        global nondet_methods
-        nondet_methods = [{
-            'name': method_name,
-            'type': 'int',
-            'params': []
-        }, {
-            'name': bool_method_name,
-            'type': '_Bool',
-            'params': []
-        }]
 
-    def test_multicharacter_conversion(self):
-        value = b'\x00\x00\x00\x00'
-        expected = 0
-        actual, = utils.convert_to_int(value, method_name, nondet_methods)
-        self.assertEqual(actual, expected)
-        value = b'\x01\x01\x01\x01'
-        expected = 16843009
-        actual, = utils.convert_to_int(value, method_name, nondet_methods)
-        self.assertEqual(actual, expected)
-        value = b'\xff\xff\xff\x7f'
-        expected = 2147483647
-        actual, = utils.convert_to_int(value, method_name, nondet_methods)
-        self.assertEqual(actual, expected)
+def test_multicharacter_conversion():
+    for input, expected in test_values:
+        yield _check_conversion, input, expected
 
-        value = b'\x00'
-        expected = 0
-        actual, = utils.convert_to_int(value, bool_method_name, nondet_methods)
-        self.assertEqual(actual, expected)
-        value = b'\x01'
-        expected = 1
-        actual, = utils.convert_to_int(value, bool_method_name, nondet_methods)
-        self.assertEqual(actual, expected)
+
+def _check_conversion(input_value, expected_value):
+    actual, = utils.convert_to_int(input_value, method_name, nondet_methods)
+    n.eq_(actual, expected_value)

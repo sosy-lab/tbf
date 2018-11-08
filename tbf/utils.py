@@ -1380,8 +1380,13 @@ def convert_to_int(value, method_name, nondet_methods):
         logging.debug('Converting type %s using type unsigned long ',
                       value_type)
         data_format += 'Q'
+
+    while len(value) < 4:
+        value += b'\x00'
+
     logging.debug("Converting value %s according to data format %s", value,
                   data_format)
+
     return unpack(data_format, value)
 
 
