@@ -1002,6 +1002,19 @@ def get_env():
     return os.environ.copy()
 
 
+def add_ld_path_to_env(env, lib_dir):
+    new_env = env.copy()
+    new_ld_path = [str(lib_dir)]
+    if 'LD_LIBRARY_PATH' in env:
+        if type(env['LD_LIBRARY_PATH']) is list:
+            new_ld_path = new_ld_path + env['LD_LIBRARY_PATH']
+        else:
+            new_ld_path = new_ld_path + [env['LD_LIBRARY_PATH']]
+
+    env['LD_LIBRARY_PATH'] = ':'.join(new_ld_path)
+    return new_env
+
+
 def get_env_with_path_added(path_addition):
     env = os.environ.copy()
     env['PATH'] = path_addition + os.pathsep + env['PATH']

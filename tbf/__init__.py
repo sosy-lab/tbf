@@ -346,8 +346,7 @@ def run(args, stop_all_event=None):
         work_dir = utils.create_temp()
 
     try:
-        logging.debug("Changing to directory %s", work_dir)
-        os.chdir(work_dir)
+        _change_dir(work_dir)
 
         if error_method:
             error_method_exclude = [error_method]
@@ -419,8 +418,7 @@ def run(args, stop_all_event=None):
             generator_pool.terminate()
         logging.debug("Input generation terminated and got results")
 
-        logging.debug("Changing to directory %s", old_dir_abs)
-        os.chdir(old_dir_abs)
+        _change_dir(old_dir_abs)
         if validation_result.is_positive():
             test_name = os.path.basename(validation_result.test_vector.origin)
             persistent_test = utils.get_output_path(test_name),
@@ -455,8 +453,7 @@ def run(args, stop_all_event=None):
         logging.error("File not found: %s", e.filename)
     finally:
         # In case an exception occurred before we went back to the original directory
-        logging.debug("Changing to directory %s", old_dir_abs)
-        os.chdir(old_dir_abs)
+        _change_dir(old_dir_abs)
 
         statistics = ""
         if generator_stats:
@@ -486,30 +483,14 @@ def _is_validation_used(arguments):
     return arguments.execution_validation or arguments.klee_replay_validation or arguments.witness_validation
 
 
-def _setup_environment():
-    script = pathlib.Path(__file__).resolve()
-    module_dir = script.parent
-    tool_dir = module_dir / "tools"
-
-    klee_lib = tool_dir / "klee" / "lib"
-    os.environ['KLEE_RUNTIME_LIBRARY_PATH'] = str(klee_lib)
-
-    crest_lib = tool_dir / "crest" / "lib"
-
-    new_ld_path = [str(klee_lib), str(crest_lib)]
-    if 'LD_LIBRARY_PATH' in os.environ:
-        if type(os.environ['LD_LIBRARY_PATH']) is list:
-            new_ld_path = new_ld_path + os.environ['LD_LIBRARY_PATH']
-        else:
-            new_ld_path = new_ld_path + [os.environ['LD_LIBRARY_PATH']]
-    os.environ['LD_LIBRARY_PATH'] = ':'.join(new_ld_path)
+def _change_dir(directory):
+    logging.debug("Changing to directory %s", directory)
+    os.chdir(directory)
 
 
 def main():
     timeout_watch = utils.Stopwatch()
     timeout_watch.start()
-
-    _setup_environment()
 
     args = _parse_cli_args(sys.argv[1:])
 

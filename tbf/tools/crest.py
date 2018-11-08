@@ -25,6 +25,7 @@ class InputGenerator(BaseInputGenerator):
         self.log_verbose = log_verbose
 
         self._run_env = utils.get_env_with_path_added(bin_dir)
+        self._run_env = utils.add_ld_path_to_env(self._run_env, lib_dir)
 
         self.num_iterations = 100000
 
