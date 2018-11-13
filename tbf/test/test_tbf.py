@@ -9,7 +9,7 @@ import tbf
 timelimit_per_test = 10
 
 class TestTbf(object):
-    tools = ["afl", "cpatiger", "crest", "fshell", "klee", "random"]
+    tools = ["afl", "cpatiger", "crest", "fshell", "klee", "random", "dummy"]
     machine_models = ["-32", "-64"]
 
     @classmethod

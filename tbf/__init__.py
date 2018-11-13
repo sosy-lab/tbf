@@ -1,10 +1,14 @@
 #!/usr/bin/python3
 
-import sys
-import os
-import logging
 import argparse
-import pathlib
+import logging
+import multiprocessing.dummy as mp
+import os
+import shutil
+import sys
+from ctypes import c_bool
+from multiprocessing.context import TimeoutError
+from time import sleep
 
 import tbf.tools.afl as afl
 import tbf.tools.cpatiger as cpatiger
@@ -12,14 +16,8 @@ import tbf.tools.crest as crest
 import tbf.tools.fshell as fshell
 import tbf.tools.klee as klee
 import tbf.tools.random_tester as random_tester
+import tbf.tools.dummy as dummy
 import tbf.utils as utils
-import shutil
-
-from ctypes import c_bool
-import multiprocessing.dummy as mp
-from multiprocessing.context import TimeoutError
-from time import sleep
-
 from tbf.testcase_validation import ValidationConfig, ExecutionRunner
 
 __VERSION__ = "0.2-dev"
@@ -54,7 +52,7 @@ def _create_cli_arg_parser():
         dest="input_generator",
         action="store",
         required=True,
-        choices=['afl', 'fshell', 'klee', 'crest', 'cpatiger', 'random'],
+        choices=['afl', 'fshell', 'klee', 'crest', 'cpatiger', 'random', "dummy"],
         help="input generator to use")
 
     input_generator_args.add_argument(
@@ -295,6 +293,13 @@ def _get_input_generator(args):
 
     elif input_generator == 'random':
         return random_tester.InputGenerator(args.machine_model, args.log_verbose, args.ig_options)
+
+    elif input_generator == "dummy":
+        return dummy.InputGenerator(
+            args.machine_model,
+            args.log_verbose,
+            args.ig_options
+        )
     else:
         raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 
@@ -316,6 +321,8 @@ def _get_validator(args, input_generator):
     elif validator == 'random':
         return random_tester.RandomTestValidator(validation_config,
                                                  input_generator)
+    elif validator == "dummy":
+        return dummy.TestValidator(validation_config, input_generator)
     else:
         raise AssertionError('Unhandled validator: ' + validator)
 
