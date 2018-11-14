@@ -38,7 +38,7 @@ class InputGenerator(BaseInputGenerator):
         method_body = ['{']
         if method_type != 'void':
             method_body += [
-                'return 0;'
+                'return *(({}*) 0);'.format(method_type)
             ]
         method_body = '\n    '.join(method_body)
         method_body += '\n}\n'
