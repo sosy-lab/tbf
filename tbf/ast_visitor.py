@@ -581,4 +581,4 @@ class FuncDeclCollector(a.NodeVisitor):
         pass  # Don't go deeper so we don't collect function pointer
 
     def visit_Typedef(self, node):
-        raise NotImplementedError()  # Don't go deeper so we don't collect typedef functions
+        pass # Don't go deeper so we don't collect typedef functions
