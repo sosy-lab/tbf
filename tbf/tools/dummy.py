@@ -34,7 +34,7 @@ class InputGenerator(BaseInputGenerator):
         return self._create_nondet_method(method_name, m_type, param_types)
 
     def _create_nondet_method(self, method_name, method_type, param_types):
-        method_head = utils.get_method_head(method_name, 'int', param_types)
+        method_head = utils.get_method_head(method_name, method_type, param_types)
         method_body = ['{']
         if method_type != 'void':
             method_body += [
