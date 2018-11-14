@@ -3,7 +3,10 @@
 #include<string.h>
 #include<time.h>
 
+#define MAX_TEST_SIZE 1000
+
 int requires_seed = 1;
+int test_size = 0;
 
 unsigned int get_rand_seed() {
   struct timespec curr_time;
@@ -29,4 +32,9 @@ void input(void * var, size_t var_size, const char * var_name) {
 
   fprintf(vector, "\n");
   fclose(vector);
+  test_size++;
+
+  if (test_size > MAX_TEST_SIZE) {
+    fprintf(stderr, "Maximum test vector size of %d reached, aborting.\n", MAX_TEST_SIZE);
+  }
 }
