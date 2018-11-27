@@ -8,6 +8,8 @@ from time import sleep
 import re
 from tbf.utils import FALSE, UNKNOWN, ERROR
 
+from typing import List
+
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 
 
@@ -216,7 +218,14 @@ class TestValidator(object):
     def _get_test_vector(self, test_case, nondet_methods):
         raise NotImplementedError()
 
-    def get_test_vector(self, test_case, nondet_methods):
+    def get_test_vector(self, test_case: utils.TestCase, nondet_methods: List[str]) -> utils.TestVector:
+        """Returns the test vector for the given test case and the given non-deterministic methods.
+
+        :param utils.TestCase test_case: test case to transform to test vector.
+        :param List[str] nondet_methods: list of the names of non-deterministic methods that should be considered as
+            input methods.
+        :return: a test-vector representation of the given test case.
+        """
         self.timer_vector_gen.start()
         try:
             return self._get_test_vector(test_case, nondet_methods)

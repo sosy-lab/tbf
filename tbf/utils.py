@@ -831,14 +831,35 @@ class VerdictUnknown(Verdict):
 
 
 class TestVector(object):
+    """Test vector.
+
+    Consists of a unique name, the original file that
+    describes the test vector,
+    and the vector as a sequence of test inputs.
+    Each test input is a dictionary and consists
+    of a 'value' and a 'name'.
+    """
 
     def __init__(self, name, origin_file):
         self.name = name
         self.origin = origin_file
-        self.vector = list()
+        self._vector = list()
 
     def add(self, value, method=None):
-        self.vector.append({'value': value, 'name': method})
+        self._vector.append({'value': value, 'name': method})
+
+    @property
+    def vector(self):
+        """The sequence of test inputs of this test vector.
+
+        Each element of this sequence is a dict
+        and consists of two entries: 'value' and 'name'.
+        The 'value' entry describes the input value, as it should be given
+        to the program as input.
+        The 'name' entry describes the program input method
+        through which the value is retrieved. The value of this entry may be None.
+        """
+        return self._vector
 
     def __len__(self):
         return len(self.vector)
