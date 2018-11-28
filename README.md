@@ -3,9 +3,7 @@
 TBF is an automatic test-case generation and execution framework for C programs.
 It is able to prepare C programs for a handful of prominent
 test-case generators, create a test harness for generated tests
-and execute them (as well as create [violation witnesses][3]).
-
-[3]: https://github.com/sosy-lab/sv-witnesses
+and execute them.
 
 ## Requirements
 

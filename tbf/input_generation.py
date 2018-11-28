@@ -40,8 +40,6 @@ class BaseInputGenerator(object):
         self.timer_input_gen = utils.Stopwatch()
         self.timer_generator = utils.Stopwatch()
 
-        self.number_generated_tests = utils.Constant()
-
         self.statistics.add_value('Time for full input generation',
                                   self.timer_input_gen)
         self.statistics.add_value('Time for test-case generator',
@@ -50,6 +48,7 @@ class BaseInputGenerator(object):
                                   self.timer_file_access)
         self.statistics.add_value('Time for file preparation',
                                   self.timer_prepare)
+        # TODO: Move to extractor or similar
         self.statistics.add_value('Number of generated test cases',
                                   self.number_generated_tests)
 
@@ -128,8 +127,6 @@ class BaseInputGenerator(object):
             for n, s in self.statistics.stats:
                 if type(s) is utils.Stopwatch and s.is_running():
                     s.stop()
-
-            self.number_generated_tests.value = len(self.get_test_cases())
 
     def _get_failed_and_stats(self):
         return False, self.statistics

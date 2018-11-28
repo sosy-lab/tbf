@@ -1,5 +1,4 @@
 from abc import abstractmethod, ABCMeta
-import tbf.witness_generation as wit_gen
 import tbf.harness_generation as harness_gen
 import logging
 import tbf.utils as utils
@@ -10,6 +9,8 @@ from tbf.utils import FALSE, UNKNOWN, ERROR
 
 from typing import List
 
+from testcase_extractor import TestConverter
+
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 
 
@@ -19,8 +20,6 @@ class ValidationConfig(object):
         self.machine_model = args.machine_model
 
         self.use_execution = args.execution_validation
-        self.use_witness_validation = args.witness_validation
-        self.witness_validators = args.validators if args.validators else []
 
         self.use_klee_replay = False
         if args.klee_replay_validation:
@@ -33,25 +32,11 @@ class ValidationConfig(object):
                 )
                 self.use_klee_replay = True
 
-        if self.witness_validators and not self.use_witness_validation:
-            raise utils.ConfigError(
-                "Validators specified but no witness validation used (--witness-validation)."
-            )
-        elif self.use_witness_validation and not self.witness_validators:
-            logging.warning(
-                "Witness validation used and no validator specified. Only generating witnesses."
-            )
-        elif self.witness_validators:
-            for validator in self.witness_validators:
-                if validator.lower() not in valid_validators:
-                    raise utils.ConfigError(
-                        "Validator not in list of known validators:"
-                        "{0} not in {1}".format(validator, valid_validators))
-        elif not self.use_witness_validation and not self.use_execution and not self.use_klee_replay:
+        elif not self.use_execution and not self.use_klee_replay:
             logging.info(
                 "No validation technique specified. If you want TBF to check whether generated tests"
                 " uncover a specification violation, provide one of the following parameters:"
-                " --execution, --witness-validation, --klee-replay (KLEE only)")
+                " --execution, --klee-replay (KLEE only)")
 
         self.convert_to_int = args.write_integers
         self.naive_verification = args.naive_verification
@@ -68,7 +53,6 @@ class TestValidator(object):
         self._nondet_var_map = None
         self.machine_model = validation_config.machine_model
         self.config = validation_config
-        self.witness_creator = wit_gen.WitnessCreator()
         self.harness_creator = harness_gen.HarnessCreator()
         self._input_generator = input_generator
 
@@ -83,12 +67,6 @@ class TestValidator(object):
         self.statistics = utils.Statistics('Test Validator ' + self.get_name())
         self.timer_validation = utils.Stopwatch()
         self.statistics.add_value('Time for validation', self.timer_validation)
-        self.timer_witness_validation = utils.Stopwatch()
-        self.statistics.add_value('Time for witness validation',
-                                  self.timer_witness_validation)
-        self.counter_size_witnesses = utils.Counter()
-        self.statistics.add_value('Total size of witnesses',
-                                  self.counter_size_witnesses)
         self.timer_execution_validation = utils.Stopwatch()
         self.statistics.add_value('Time for execution validation',
                                   self.timer_execution_validation)
@@ -123,54 +101,6 @@ class TestValidator(object):
     @abstractmethod
     def get_name(self):
         raise NotImplementedError()
-
-    def create_all_witnesses(self, program_file, new_test_cases, nondet_methods):
-        created_content = []
-        if len(new_test_cases) > 0:
-            logging.info("Looking at %s new test file(s).", len(new_test_cases))
-        empty_case_handled = False
-        for test_case in new_test_cases:
-            logging.debug('Looking at test case %s .', test_case)
-            test_vector = self.get_test_vector(test_case, nondet_methods)
-            if test_vector or not empty_case_handled:
-                if not test_vector:
-                    test_vector = utils.TestVector(test_case.name,
-                                                   test_case.origin)
-                    empty_case_handled = True
-                new_content = self.create_witness(program_file, test_case.name,
-                                                  test_vector, nondet_methods)
-                new_content['vector'] = test_vector
-                new_content['origin'] = test_case.origin
-                created_content.append(new_content)
-            else:
-                logging.info("Test vector was not generated for %s", test_case)
-        return created_content
-
-    def create_witness(self, program_file, test_name, test_vector,
-                       nondet_methods):
-        """
-        Creates a witness for the test file produced by crest.
-        Test files produced by our version of crest specify one test value per
-        line, without any mention of the variable the value is assigned to.
-        Because of this, we have to build a fancy witness automaton of the
-        following format: For each test value specified in the test file, there
-        is one precessor and one successor state. These two states are
-        connected by one transition for each call to a CREST_x(..) function.
-        Each of these transitions has the assumption, that the variable
-        specified in the corresponding CREST_x(..) function has the current
-        test value.
-        """
-        witness = self.witness_creator.create_witness(
-            producer=self.get_name(),
-            program_file=program_file,
-            test_vector=test_vector,
-            nondet_methods=nondet_methods,
-            machine_model=self.machine_model,
-            error_lines=self.get_error_lines(program_file))
-
-        witness_file = test_name + ".witness.graphml"
-
-        return {'name': witness_file, 'content': witness}
 
     @staticmethod
     def _decide_single_verdict(result, test_origin, test_vector=None):
@@ -232,13 +162,6 @@ class TestValidator(object):
         finally:
             self.timer_vector_gen.stop()
 
-    def _get_test_cases(self, visited_tests, tests_directory):
-        if tests_directory is None:
-            return self._input_generator.get_test_cases(visited_tests)
-        else:
-            return self._input_generator.get_test_cases(visited_tests,
-                                                        tests_directory)
-
     def _perform_validation(self, program_file, validator, validator_method,
                             is_ready_func, stop_event, tests_directory, error_method, nondet_methods):
         visited_tests = set()
@@ -296,13 +219,6 @@ class TestValidator(object):
                 if branch_taken:
                     self.statistics.add_value("Branches covered", branch_taken)
 
-    def perform_witness_validation(self, program_file, is_ready_func,
-                                   stop_event, tests_directory, error_method, nondet_methods):
-        validator = ValidationRunner(self.config.witness_validators)
-        return self._perform_validation(program_file, validator, self._m,
-                                        is_ready_func, stop_event,
-                                        tests_directory, error_method, nondet_methods)
-
     def _hs(self, program_file, validator, new_test_cases, error_method, nondet_methods):
         test_vectors = self.create_all_test_vectors(new_test_cases, nondet_methods)
 
@@ -354,45 +270,6 @@ class TestValidator(object):
                 return results
         return results
 
-    def _m(self, program_file, validator, new_test_cases, error_method, nondet_methods):
-        """
-          Returns the verdicts for the given set of test cases. Uses a witness validation technique to do so.
-
-          :param program_file: the program file to check against
-          :param validator: the validator used to check the test cases
-          :param new_test_cases: the sequence of test cases to check
-          :param error_method: the error method to check for
-          :param nondet_methods: the non-deterministic methods that should be stubbed
-          :return: The sequence of verdicts, corresponding to the given test cases.
-                   A verdict is 'false' if the test case reaches the error method. It is 'unknown', otherwise.
-          """
-        produced_witnesses = self.create_all_witnesses(program_file,
-                                                       new_test_cases, nondet_methods)
-        results = list()
-        for witness in produced_witnesses:
-            logging.debug('Looking at witness %s .', witness['name'])
-            witness_name = witness['name']
-            content_to_write = witness['content']
-            self.counter_size_witnesses.inc(len(content_to_write))
-            with open(witness_name, 'w+') as outp:
-                outp.write(witness['content'])
-            self.timer_witness_validation.start()
-            self.timer_validation.start()
-            try:
-                next_result = validator.run(program_file, witness_name, error_method, nondet_methods)
-                results.append(self._decide_single_verdict(next_result, witness['origin'], witness['vector']))
-            finally:
-                self.timer_witness_validation.stop()
-                self.timer_validation.stop()
-
-            self.counter_handled_test_cases.inc()
-            logging.debug('Results for %s: %s', witness_name, str(next_result))
-            if self.config.stop_after_success and next_result == FALSE:
-                self.final_test_vector_size.value = len(witness['vector'])
-                return results
-
-        return results
-
     def check_inputs(self,
                      program_file,
                      error_method,
@@ -415,25 +292,12 @@ class TestValidator(object):
                 program_file, is_ready_func, stop_event, tests_directory, error_method, nondet_methods)
             logging.info("Execution validation says: " + str(result))
 
-        if (not result or not result.is_positive()
-           ) and self.config.use_witness_validation:
-            result = self.perform_witness_validation(
-                program_file, is_ready_func, stop_event, tests_directory, error_method, nondet_methods)
-            logging.info("Witness validation says: " + str(result))
-
         if result is None:
             return utils.VerdictUnknown(), None
 
         elif result.is_positive():
             if result.test_vector is None:
                 result.test_vector = self.get_test_vector(result.test, nondet_methods)
-            # This currently won't work with AFL due to its string-style input
-            if result.witness is None and 'afl' not in self.get_name().lower():
-                witness = self.create_witness(program_file, result.test.origin,
-                                              result.test_vector, nondet_methods)
-                with open(witness['name'], 'w+') as outp:
-                    outp.write(witness['content'])
-                result.witness = witness['name']
             if result.harness is None:
                 harness = self.create_harness(result.test_vector.origin,
                                               result.test_vector, error_method, nondet_methods)
@@ -609,158 +473,3 @@ class KleeReplayRunner(object):
             return [FALSE]
         else:
             return [UNKNOWN]
-
-
-class ValidationRunner(object):
-
-    def __init__(self, validators):
-        self.validators = list()
-        validators_used = set()
-        for val in [v.lower() for v in validators]:
-            if val == 'cpachecker' and 'cpachecker' not in validators_used:
-                self.validators.append(CPAcheckerValidator())
-                validators_used.add('cpachecker')
-            elif val == 'uautomizer' and 'uautomizer' not in validators_used:
-                self.validators.append(UAutomizerValidator())
-                validators_used.add('uautomizer')
-            elif val == 'cpa-w2t' and 'cpa-w2t' not in validators_used:
-                self.validators.append(CpaW2t())
-                validators_used.add('cpa-w2t')
-            elif val == 'fshell-w2t' and 'fshell-w2t' not in validators_used:
-                self.validators.append(FShellW2t())
-                validators_used.add('fshell-w2t')
-            else:
-                raise utils.ConfigError('Invalid validator list: ' + validators)
-
-    def run(self, program_file, witness_file):
-        results = []
-        for validator in self.validators:
-            logging.debug("Running %s on %s", validator, witness_file)
-            result = validator.validate(program_file, witness_file)
-            results.append(result)
-
-        return results
-
-
-class Validator(object):
-
-    __metaclass__ = ABCMeta
-
-    def __init__(self, tool_name):
-        self.tool = utils.import_tool(tool_name)
-
-    def validate(self, program_file, witness_file):
-        # err_to_output=True is important so that messages to stderr are in correct relation to messages to stdout!
-        # This may be important for determining the run result.
-        cmd_result = utils.execute(
-            self._get_cmd(program_file, witness_file),
-            quiet=True,
-            err_to_output=True)
-
-        returncode = cmd_result.returncode
-        # Execute returns a negative returncode -N if the process was killed by signal N
-        if returncode < 0:
-            returnsignal = -returncode
-        else:
-            returnsignal = 0
-
-        if cmd_result.stderr:
-            tool_output = cmd_result.stderr.split('\n')
-        else:
-            tool_output = list()
-        tool_output += cmd_result.stdout.split('\n')
-        # Remove last line if empty. FShell expects no empty line at the end.
-        if len(tool_output) >= 1 and not tool_output[-1]:
-            tool_output = tool_output[:-1]
-        validation_result = self.tool.determine_result(
-            returncode, returnsignal, tool_output, isTimeout=False)
-        return validation_result
-
-    @abstractmethod
-    def _get_cmd(self, program_file, witness_file):
-        raise NotImplementedError()
-
-
-class CPAcheckerValidator(Validator):
-
-    def __init__(self):
-        super().__init__('cpachecker')
-        self.executable = None  # executable will compile CPAchecker when called, so only do this if we really validate
-        self.cpa_directory = None
-
-    def _get_cmd(self, program_file, witness_file):
-        if not self.executable:
-            import shutil
-            self.executable = self.tool.executable()
-            self.cpa_directory = os.path.join(
-                os.path.dirname(self.executable), '..')
-            config_copy_dir = 'config'
-            if not os.path.exists(config_copy_dir):
-                copy_dir = os.path.join(self.cpa_directory, 'config')
-                shutil.copytree(copy_dir, config_copy_dir)
-        return [self.executable] + \
-               utils.get_cpachecker_options(witness_file) +\
-               ['-witnessValidation', program_file]
-
-
-class UAutomizerValidator(Validator):
-
-    def __init__(self):
-        super().__init__('ultimateautomizer')
-        self.executable = self.tool.executable()
-
-    def _get_cmd(self, program_file, witness_file):
-        machine_model = utils.get_machine_model(witness_file)
-        if machine_model.is_32:
-            machine_model = '32bit'
-        elif machine_model.is_64:
-            machine_model = '64bit'
-        else:
-            raise AssertionError("Unhandled machine model: " + machine_model)
-
-        cmd = [
-            self.executable, '--validate', witness_file, utils.spec_file,
-            machine_model, program_file
-        ]
-        return cmd
-
-
-class CpaW2t(Validator):
-
-    def __init__(self):
-        super().__init__('cpa-witness2test')
-        self.executable = None  # executable will compile CPAchecker when called, so only do this if we really validate
-
-    def _get_cmd(self, program_file, witness_file):
-        if not self.executable:
-            self.executable = self.tool.executable()
-        return [self.executable] + \
-               utils.get_cpachecker_options(witness_file) +\
-               ['-witness2test', program_file]
-
-
-class FShellW2t(Validator):
-
-    def __init__(self):
-        super().__init__('witness2test')
-        self.executable = self.tool.executable()
-        self.repo = os.path.dirname(os.path.abspath(self.executable))
-
-    def _get_cmd(self, program_file, witness_file):
-        machine_model = utils.get_machine_model(witness_file)
-        machine_model = machine_model.compile_parameter
-
-        return [
-            self.executable, '--propertyfile', utils.spec_file,
-            '--graphml-witness', witness_file, machine_model, program_file
-        ]
-
-    def validate(self, program_file, witness_file):
-        """Overwrites Validator.validate(...)."""
-        # FShell-w2t only works if it is run from its repository. Because of this,
-        # we always have to change directories, first.
-        old_dir = os.path.abspath('.')
-        os.chdir(self.repo)
-        result = super().validate(program_file, witness_file)
-        os.chdir(old_dir)  # And we change directories back to the original one
-        return result

@@ -684,10 +684,6 @@ class MachineModel(object):
     def name(self):
         return self._name
 
-    @property
-    def witness_key(self):
-        return str(self._wordsize) + "bit"
-
     def get_size(self, data_type):
         if 'short' in data_type:
             return self.short_size
@@ -783,19 +779,17 @@ class ExecutionResult(object):
 
 
 class Verdict(object):
-    """Results of a test validation, either witness validation or test execution validation currently."""
+    """Results of a test validation, test execution or klee-replay currently."""
 
     def __init__(self,
                  verdict,
                  test=None,
                  test_vector=None,
-                 harness=None,
-                 witness=None):
+                 harness=None):
         self.verdict = verdict
         self.test = test
         self.test_vector = test_vector
         self.harness = harness
-        self.witness = witness
 
     def is_positive(self):
         """
@@ -819,9 +813,8 @@ class VerdictFalse(Verdict):
     def __init__(self,
                  test_origin,
                  test_vector=None,
-                 harness=None,
-                 witness=None):
-        super().__init__(FALSE, test_origin, test_vector, harness, witness)
+                 harness=None):
+        super().__init__(FALSE, test_origin, test_vector, harness)
 
 
 class VerdictUnknown(Verdict):
@@ -959,55 +952,12 @@ def get_hash(filename):
     return sha1.hexdigest()
 
 
-def get_machine_model(witness_file):
-    with open(witness_file, 'r') as inp:
-        for line in inp.readlines():
-            if 'architecture' in line:
-                if '32' in line:
-                    return MACHINE_MODEL_32
-                elif '64' in line:
-                    return MACHINE_MODEL_64
-                else:
-                    raise AssertionError(
-                        'Unknown architecture in witness line: ' + line)
-
-
 def import_tool(tool_name):
     if '.' in tool_name:
         tool_module = tool_name
     else:
         tool_module = 'benchexec.tools.' + tool_name
     return __import__(tool_module, fromlist=['Tool']).Tool()
-
-
-def get_cpachecker_options(witness_file):
-    machine_model = get_machine_model(witness_file)
-    if machine_model.is_32:
-        machine_model = '-32'
-    elif machine_model.is_64:
-        machine_model = '-64'
-    else:
-        raise AssertionError('Unknown machine model: ' + machine_model.name)
-
-    # yapf: disable
-    return [
-        '-setprop', 'witness.checkProgramHash=false',
-        '-disable-java-assertions',
-        '-heap', '4000M',
-        '-setprop', 'cfa.simplifyCfa=false',
-        '-setprop', 'cfa.allowBranchSwapping=false',
-        '-setprop', 'cpa.predicate.ignoreIrrelevantVariables=false',
-        '-setprop', 'cpa.predicate.refinement.performInitialStaticRefinement=false',
-        '-setprop', 'counterexample.export.compressWitness=false',
-        '-setprop', 'counterexample.export.assumptions.includeConstantsForPointers=false',
-        '-setprop', 'analysis.summaryEdge=true',
-        '-setprop', 'cpa.callstack.skipVoidRecursion=true',
-        '-setprop', 'cpa.callstack.skipFunctionPointerRecursion=true',
-        '-setprop', 'cpa.predicate.memoryAllocationsAlwaysSucceed=true',
-        '-witness', witness_file,
-        machine_model,
-        '-spec', spec_file]
-    # yapf: enable
 
 
 def get_output_path(filename):

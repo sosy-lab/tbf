@@ -91,22 +91,6 @@ def _create_cli_arg_parser():
     )
 
     validation_args = run_args.add_argument_group('Validation')
-    witness_validation_args = validation_args.add_argument_group(
-        'Witness validation')
-    witness_validation_args.add_argument(
-        '--witness-validation',
-        dest="witness_validation",
-        action='store_true',
-        default=False,
-        help="use witness validation to find successful test vector")
-
-    witness_validation_args.add_argument(
-        '--validators',
-        dest="validators",
-        nargs="+",
-        help="witness validators to use for witness validation."
-        " Requires parameter --witness-validation to be specified to be effective."
-    )
 
     validation_args.add_argument(
         '--execution',
@@ -447,10 +431,6 @@ def run(args, stop_all_event=None):
                 final_harness_name = utils.get_output_path('a.out')
                 validator_for_compilation.compile(filename, persistent_harness, final_harness_name)
 
-            if validation_result.witness is not None:
-                persistent_witness = utils.get_output_path('witness.graphml')
-                shutil.copy(validation_result.witness, persistent_witness)
-
         elif not generation_done:
             validation_result = utils.VerdictUnknown()
 
@@ -492,7 +472,7 @@ def run(args, stop_all_event=None):
 
 
 def _is_validation_used(arguments):
-    return arguments.execution_validation or arguments.klee_replay_validation or arguments.witness_validation
+    return arguments.execution_validation or arguments.klee_replay_validation
 
 
 def _change_dir(directory):
