@@ -1316,66 +1316,6 @@ def get_corresponding_method_name(sym_var_name):
     return name
 
 
-def convert_to_int(value, method_name, nondet_methods):
-    if type(value) is str and value.startswith('\'') and value.endswith('\''):
-        value = value[1:-1]
-    value = codecs.decode(value, 'unicode_escape').encode('latin1')
-    corresponding_method_singleton_list = [
-        m for m in nondet_methods if m['name'] == method_name
-    ]
-    if len(corresponding_method_singleton_list) == 0:
-        raise AssertionError(
-            "Didn't find {} in list of undefined methods: {}".format(
-                method_name, nondet_methods))
-    corresponding_method = corresponding_method_singleton_list[0]
-    # The type of the symbolic variable may be different from the method return type,
-    # but must be ultimately cast to the method return type,
-    # so this is fine - unless we have undefined behavior prior to this point due to a downcast of the variable type.
-    # In that case, hope is already lost.
-    value_type = corresponding_method['type']
-    data_format = '<'  # Klee output uses little endian format
-    if value_type == 'char' or value_type == 'signed char':
-
-        # b == signed char. There's also 'c' == 'char', but that translates to a python character and not to an int
-        data_format += 'b'
-    elif value_type == 'unsigned char':
-        data_format += 'B'
-    elif value_type == '_Bool' or value_type == 'bool':
-        data_format += 'b'
-    elif value_type == 'short' or value_type == 'signed short':
-        data_format += 'h'
-    elif value_type == 'unsigned short':
-        data_format += 'H'
-    elif value_type == 'int' or value_type == 'signed int':
-        data_format += 'i'
-    elif value_type == 'unsigned int':
-        data_format += 'I'
-    elif value_type == 'float':
-        data_format += 'f'
-    elif value_type == 'double':
-        data_format += 'd'
-    elif '*' in value_type:
-        data_format = 'P'
-    elif value_type == 'long long' or value_type == 'signed long long':
-        data_format += 'q'
-    elif value_type == 'unsigned long long':
-        data_format += 'Q'
-    elif value_type == 'long' or value_type == 'signed long':
-        data_format += 'q'
-    else:
-        logging.debug('Converting type %s using type unsigned long ',
-                      value_type)
-        data_format += 'Q'
-
-    while len(value) < 4:
-        value += b'\x00'
-
-    logging.debug("Converting value %s according to data format %s", value,
-                  data_format)
-
-    return unpack(data_format, value)
-
-
 def get_format_specifier(method_type):
     specifier = '%'
     # Length modifiers
