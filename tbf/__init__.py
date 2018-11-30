@@ -288,7 +288,7 @@ def _get_input_generator(args):
         raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 
 
-def _get_validator(args, input_generator):
+def _get_validator(args):
     validator = args.input_generator.lower()
     validation_config = ValidationConfig(args)
     if validator == 'afl':
@@ -330,7 +330,7 @@ def run(args, stop_all_event=None):
 
     filename = args.file
     input_generator = _get_input_generator(args)
-    validator = _get_validator(args, input_generator)
+    validator = _get_validator(args)
 
     validator_stats = None
     generator_stats = None
