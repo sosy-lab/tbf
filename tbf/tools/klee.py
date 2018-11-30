@@ -1,16 +1,16 @@
-from tbf.input_generation import BaseInputGenerator
-from tbf.testcase_validation import TestValidator
-import tbf.utils as utils
 import glob
-import os
 import logging
+import os
+
+import tbf.utils as utils
+from tbf.input_generation import BaseInputGenerator
+from tbf.testcase_converter import TestConverter
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 include_dir = os.path.join(module_dir, 'klee/include')
 lib_dir = os.path.join(module_dir, 'klee/lib')
 bin_dir = os.path.join(module_dir, 'klee/bin')
-tests_output = '.'
-tests_dir = os.path.join(tests_output, 'klee-tests')
+tests_dir = 'klee-tests'
 klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
 
@@ -96,36 +96,45 @@ class InputGenerator(BaseInputGenerator):
 
         return [compile_cmd, input_generation_cmd]
 
-    def get_test_cases(self, exclude=(), directory=tests_dir):
+
+class KleeTestConverter(TestConverter):
+
+    def _get_test_cases_in_dir(self, directory=None, exclude=None):
+        if directory is None:
+            directory = tests_dir
+        print(directory)
         all_tests = [t for t in glob.glob(directory + '/*.ktest')]
         tcs = list()
         for t in [
-                t for t in all_tests if utils.get_file_name(t) not in exclude
+            t for t in all_tests if self._get_test_name(t) not in exclude
         ]:
-            file_name = utils.get_file_name(t)
-            with open(t, mode='rb') as inp:
-                content = inp.read()
-            tcs.append(utils.TestCase(file_name, t, content))
+            tcs.append(self._get_test_case_from_file(t))
+        print(tcs)
         return tcs
 
+    def _get_test_case_from_file(self, test_file):
+        file_name = self._get_test_name(test_file)
+        with open(test_file, mode='rb') as inp:
+            content = inp.read()
+        return utils.TestCase(file_name, test_file, content)
 
-class KleeTestValidator(TestValidator):
-
-    def get_name(self):
-        return name
-
-    def _get_var_number(self, test_info_line):
-        assert 'object' in test_info_line
-        return test_info_line.split(':')[0].split(' ')[
-            -1]  # Object number should be at end, e.g. 'object  1: ...'
-
-    def _get_test_vector(self, test, nondet_methods):
-
+    def get_test_vector(self, test):
         def _get_value(single_line):
             var_name = single_line.split(':')[2].strip()
             prefix_end = var_name.find("'")
             var_name = var_name[prefix_end + 1:-1]
             return var_name
+
+        def _convert_bytestring_to_hex(bytestring):
+            bytes = bytestring.split(r'\x')
+            value = ''.join(reversed(bytes))
+            value = '0x' + value
+            return value
+
+        def _get_var_number(test_info_line):
+            assert 'object' in test_info_line
+            # Object number should be at end, e.g. 'object  1: ...'
+            return test_info_line.split(':')[0].split(' ')[-1]
 
         ktest_tool = [os.path.join(bin_dir, 'ktest-tool')]
         exec_output = utils.execute(
@@ -138,23 +147,24 @@ class KleeTestValidator(TestValidator):
         for line in [l for l in test_info if l.startswith('object')]:
             logging.debug("Looking at line: %s", line)
             if 'name:' in line:
-                #assert len(line.split(':')) == 3
-                var_number = int(self._get_var_number(line))
+                # assert len(line.split(':')) == 3
+                var_number = int(_get_var_number(line))
                 assert var_number > last_number
                 last_number = var_number
                 var_name = _get_value(line)
                 assert last_nondet_method is None, \
-                        "Last nondet method already or still assigned: %s" % last_nondet_method
+                    "Last nondet method already or still assigned: %s" % last_nondet_method
                 assert "'" not in var_name, \
-                        "Variable name contains \"'\": %s" % var_name
+                    "Variable name contains \"'\": %s" % var_name
                 last_nondet_method = utils.get_corresponding_method_name(
                     var_name)
             elif 'data:' in line:
-                #assert len(line.split(':')) == 3
-                var_number = self._get_var_number(line)
+                # assert len(line.split(':')) == 3
+                var_number = _get_var_number(line)
                 assert last_nondet_method is not None
+                # we get the value in bytestring notation, so we have to convert it afterwards
                 value = _get_value(line)
-                value, = utils.convert_to_int(value, last_nondet_method, nondet_methods)
+                value = _convert_bytestring_to_hex(value)
                 assert last_value is None
                 last_value = str(value)
             if last_nondet_method is not None and last_value is not None:
@@ -163,3 +173,7 @@ class KleeTestValidator(TestValidator):
                 last_value = None
 
         return vector
+
+    @staticmethod
+    def _get_test_name(test_file):
+        return os.path.basename(test_file)

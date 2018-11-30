@@ -4,7 +4,7 @@ import re
 
 import tbf.utils as utils
 from tbf.input_generation import BaseInputGenerator
-from tbf.testcase_validation import TestValidator
+from tbf.testcase_converter import TestConverter
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 bin_dir = os.path.join(module_dir, 'crest/bin')
@@ -111,29 +111,31 @@ class InputGenerator(BaseInputGenerator):
             input_gen_cmd.append('-ppc')
         return [compile_cmd, input_gen_cmd]
 
-    def get_test_cases(self, exclude=(), directory=tests_dir):
+
+class CrestTestConverter(TestConverter):
+
+    def _get_test_cases_in_dir(self, directory=None, exclude=None):
+        if directory is None:
+            directory = tests_dir
         all_tests = [
             t for t in os.listdir(directory)
             if test_name_pattern.match(utils.get_file_name(t))
         ]
         tcs = list()
         for t in [
-                t for t in all_tests if utils.get_file_name(t) not in exclude
+            t for t in all_tests if utils.get_file_name(t) not in exclude
         ]:
-            with open(t, 'r') as inp:
-                content = inp.read()
-            tcs.append(utils.TestCase(utils.get_file_name(t), t, content))
+            tcs.append(self._get_test_case_from_file(t))
         return tcs
 
+    def _get_test_case_from_file(self, test_file):
+        with open(test_file, 'r') as inp:
+            content = inp.read()
+        return utils.TestCase(utils.get_file_name(test_file), test_file, content)
 
-class CrestTestValidator(TestValidator):
-
-    def get_name(self):
-        return name
-
-    def _get_test_vector(self, test, nondet_methods):
-        test_vector = utils.TestVector(test.name, test.origin)
-        for line in test.content.split('\n'):
+    def get_test_vector(self, test_case):
+        test_vector = utils.TestVector(test_case.name, test_case.origin)
+        for line in test_case.content.split('\n'):
             value = line.strip()
             if value:
                 test_vector.add(value)

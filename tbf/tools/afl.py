@@ -1,10 +1,11 @@
-from tbf.input_generation import BaseInputGenerator
-from tbf.testcase_validation import TestValidator as BaseTestValidator
-import os
-import tbf.utils as utils
 import glob
-from tbf.harness_generation import HarnessCreator
 import logging
+import os
+
+import tbf.utils as utils
+from tbf.harness_generation import HarnessCreator
+from tbf.input_generation import BaseInputGenerator
+from tbf.testcase_converter import TestConverter
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 bin_dir = os.path.join(module_dir, 'afl/bin')
@@ -68,23 +69,6 @@ class InputGenerator(BaseInputGenerator):
         content = filecontent + '\n' + harness.decode()
         return content
 
-    def _get_test_name(self, test_file):
-        return os.path.basename(test_file)
-
-    def get_test_cases(self, exclude=(), directory=tests_dir):
-        # 'crashes' and 'hangs' cannot lead to an error as long as we don't abort in __VERIFIER_error()
-        interesting_subdirs = ['queue']
-        tcs = list()
-        for s in interesting_subdirs:
-            abs_dir = os.path.join(findings_dir, s)
-            for t in glob.glob(abs_dir + '/id:*'):
-                test_name = self._get_test_name(t)
-                if test_name not in exclude:
-                    with open(t, 'rb') as inp:
-                        content = inp.read()
-                    tcs.append(utils.TestCase(test_name, t, content))
-        return tcs
-
     def _get_compiler(self):
         env = self.get_run_env()
         if 'AFL_CC' in env.keys():
@@ -99,13 +83,30 @@ class InputGenerator(BaseInputGenerator):
             return 'afl-gcc'
 
 
-class AflTestValidator(BaseTestValidator):
+class AflTestConverter(TestConverter):
 
-    def _get_test_vector(self, test_case, nondet_methods):
-        raise NotImplementedError("Should use method get_test_vector")
+    def _get_test_name(self, test_file):
+        return os.path.basename(test_file)
 
-    def get_name(self):
-        return name
+    def _get_test_cases_in_dir(self, directory=None, exclude=None):
+        if directory is None:
+            directory = tests_dir
+        # 'crashes' and 'hangs' cannot lead to an error as long as we don't abort in __VERIFIER_error()
+        interesting_subdirs = (os.path.join(directory, d) for d in ('queue'))
+        tcs = list()
+        for s in interesting_subdirs:
+            abs_dir = os.path.join(findings_dir, s)
+            for t in glob.glob(abs_dir + '/id:*'):
+                test_name = self._get_test_name(t)
+                if test_name not in exclude:
+                    tcs.append(self._get_test_case_from_file(t))
+        return tcs
+
+    def _get_test_case_from_file(self, test_file):
+        test_name = self._get_test_name(test_file)
+        with open(test_file, 'rb') as inp:
+            content = inp.read()
+        utils.TestCase(test_name, test_file, content)
 
     def get_test_vector(self, test_case, nondet_methods):
         vector = utils.TestVector(test_case.name, test_case.origin)

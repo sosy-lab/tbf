@@ -21,10 +21,6 @@ class BaseInputGenerator(object):
     def get_run_env(self):
         raise NotImplementedError()
 
-    @abstractmethod
-    def get_test_cases(self, exclude=(), directory=None):
-        raise NotImplementedError()
-
     @staticmethod
     def failed(result):
         return result.returncode != 0
@@ -48,9 +44,6 @@ class BaseInputGenerator(object):
                                   self.timer_file_access)
         self.statistics.add_value('Time for file preparation',
                                   self.timer_prepare)
-        # TODO: Move to extractor or similar
-        self.statistics.add_value('Number of generated test cases',
-                                  self.number_generated_tests)
 
     @abstractmethod
     def prepare(self, filecontent, nondet_methods_used):

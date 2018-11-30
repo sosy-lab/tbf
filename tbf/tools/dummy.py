@@ -1,7 +1,6 @@
 import tbf.utils as utils
-from tbf.harness_generation import HarnessCreator
 from tbf.input_generation import BaseInputGenerator
-from tbf.testcase_validation import TestValidator as BaseTestValidator
+from tbf.testcase_converter import TestConverter
 
 name = "Dummy"
 
@@ -45,17 +44,14 @@ class InputGenerator(BaseInputGenerator):
 
         return method_head + method_body
 
-    def get_test_cases(self, exclude=(), directory=None):
-        return list()
 
+class DummyTestConverter(TestConverter):
 
-class TestValidator(BaseTestValidator):
+    def _get_test_cases_in_dir(self, directory=None, exclude=None):
+        return ()
 
-    def _get_test_vector(self, test_case, nondet_methods):
+    def _get_test_case_from_file(self, test_file):
         raise NotImplementedError("Should never be called")
 
-    def get_name(self):
-        return name
-
-    def get_test_vector(self, test_case, nondet_methods):
+    def get_test_vector(self, test_case):
         raise NotImplementedError("Should never be called")

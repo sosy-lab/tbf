@@ -292,23 +292,23 @@ def _get_validator(args, input_generator):
     validator = args.input_generator.lower()
     validation_config = ValidationConfig(args)
     if validator == 'afl':
-        return afl.AflTestValidator(validation_config, input_generator)
+        extractor = afl.AflTestConverter()
     elif validator == "fshell":
-        return fshell.FshellTestValidator(validation_config, input_generator)
+        extractor = fshell.FshellTestConverter()
     elif validator == 'klee':
-        return klee.KleeTestValidator(validation_config, input_generator)
+        extractor = klee.KleeTestConverter()
     elif validator == 'crest':
-        return crest.CrestTestValidator(validation_config, input_generator)
+        extractor = crest.CrestTestConverter()
     elif validator == 'cpatiger':
-        return cpatiger.CpaTigerTestValidator(validation_config,
-                                              input_generator)
+        extractor = cpatiger.CpaTigerTestConverter()
     elif validator == 'random':
-        return random_tester.RandomTestValidator(validation_config,
-                                                 input_generator)
+        extractor = random_tester.RandomTestConverter()
     elif validator == "dummy":
-        return dummy.TestValidator(validation_config, input_generator)
+        extractor = dummy.DummyTestConverter()
     else:
         raise AssertionError('Unhandled validator: ' + validator)
+
+    return testcase_validation.TestValidator(validation_config, extractor)
 
 
 def run(args, stop_all_event=None):

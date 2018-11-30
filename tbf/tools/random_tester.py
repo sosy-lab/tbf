@@ -1,9 +1,10 @@
-import os
 import glob
+import os
+import pathlib
+
 import tbf.utils as utils
 from tbf.input_generation import BaseInputGenerator
-from tbf.testcase_validation import TestValidator
-import pathlib
+from tbf.testcase_converter import TestConverter
 
 name = "prtest"
 module_dir = pathlib.Path(__file__).resolve().parent
@@ -66,36 +67,41 @@ class InputGenerator(BaseInputGenerator):
 
         return [compile_cmd, input_generation_cmd]
 
-    def get_test_cases(self, exclude=(), directory='.'):
+
+class RandomTestConverter(TestConverter):
+
+    @staticmethod
+    def _get_test_name(test_file):
+        return os.path.basename(test_file)
+
+    def _get_test_case_from_file(self, test_file):
+        with open(test_file, 'r') as inp:
+            content = inp.read()
+        return utils.TestCase(self._get_test_name(test_file), test_file, content)
+
+    def _get_test_cases_in_dir(self, directory=None, exclude=()):
+        if directory is None:
+            directory = '.'
         all_tests = [t for t in glob.glob(directory + '/vector[0-9]*.test')]
         tcs = list()
         for t in [
-                t for t in all_tests if utils.get_file_name(t) not in exclude
+            t for t in all_tests if self._get_test_name(t) not in exclude
         ]:
-            with open(t, 'r') as inp:
-                content = inp.read()
-            tcs.append(utils.TestCase(utils.get_file_name(t), t, content))
+            tcs.append(self._get_test_case_from_file(t))
         return tcs
 
-
-class RandomTestValidator(TestValidator):
-
-    def get_name(self):
-        return name
-
-    def _get_var_number(self, test_info_line):
+    @staticmethod
+    def _get_var_number(test_info_line):
         assert 'object' in test_info_line
-        return test_info_line.split(':')[0].split(' ')[
-            -1]  # Object number should be at end, e.g. 'object  1: ...'
+        # Object number should be at end, e.g. 'object  1: ...'
+        return test_info_line.split(':')[0].split(' ')[-1]
 
-    def _get_test_vector(self, test, nondet_methods):
-        test_info = [t for t in test.content.split('\n') if t]
-        vector = utils.TestVector(test.name, test.origin)
+    def get_test_vector(self, test_case):
+        test_info = [t for t in test_case.content.split('\n') if t]
+        vector = utils.TestVector(test_case.name, test_case.origin)
         for idx, line in enumerate(test_info):
-            var_name = line.split(':')[0].strip()  # Line format is var: value
-            nondet_method_name = utils.get_corresponding_method_name(var_name)
-            value = line.split(':')[1].strip(
-            )  # is in C hex notation, e.g. '\x00\x00' (WITH the ''!)
-            vector.add(value, nondet_method_name)
+            # is in C hex notation, e.g. '0xffffff' (WITH the ''!)
+            value = line.split(':')[1].strip()
+            vector.add(value)
 
         return vector

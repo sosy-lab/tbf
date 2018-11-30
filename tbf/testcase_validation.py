@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABCMeta
 import tbf.harness_generation as harness_gen
+from tbf.testcase_converter import TestConverter
 import logging
 import tbf.utils as utils
 import os
@@ -7,9 +8,7 @@ from time import sleep
 import re
 from tbf.utils import FALSE, UNKNOWN, ERROR
 
-from typing import List
-
-from testcase_extractor import TestConverter
+from typing import List, Iterable, Any
 
 valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
 
@@ -47,14 +46,12 @@ class ValidationConfig(object):
 
 class TestValidator(object):
 
-    __metaclass__ = ABCMeta
-
-    def __init__(self, validation_config, input_generator):
+    def __init__(self, validation_config, extractor: TestConverter):
         self._nondet_var_map = None
         self.machine_model = validation_config.machine_model
         self.config = validation_config
         self.harness_creator = harness_gen.HarnessCreator()
-        self._input_generator = input_generator
+        self._extractor = extractor
 
         self.naive_verification = validation_config.naive_verification
 
@@ -74,9 +71,6 @@ class TestValidator(object):
         self.statistics.add_value('Total size of harnesses',
                                   self.counter_size_harnesses)
 
-        self.timer_vector_gen = utils.Stopwatch()
-        self.statistics.add_value("Time for test vector generation",
-                                  self.timer_vector_gen)
         self.counter_handled_test_cases = utils.Counter()
         self.statistics.add_value('Number of looked-at test cases',
                                   self.counter_handled_test_cases)
@@ -98,9 +92,8 @@ class TestValidator(object):
         assert err_lines  # Asser that there is at least one error call
         return err_lines
 
-    @abstractmethod
     def get_name(self):
-        raise NotImplementedError()
+        return "Test Validator"
 
     @staticmethod
     def _decide_single_verdict(result, test_origin, test_vector=None):
@@ -131,7 +124,7 @@ class TestValidator(object):
         for test_case in new_test_cases:
             logging.debug('Looking at test case %s .', test_case)
             assert os.path.exists(test_case.origin)
-            test_vector = self.get_test_vector(test_case, nondet_methods)
+            test_vector = self._extractor.get_test_vector(test_case)
             all_vectors.append(test_vector)
         return all_vectors
 
@@ -144,52 +137,31 @@ class TestValidator(object):
 
         return {'name': harness_file, 'content': harness}
 
-    @abstractmethod
-    def _get_test_vector(self, test_case, nondet_methods):
-        raise NotImplementedError()
-
-    def get_test_vector(self, test_case: utils.TestCase, nondet_methods: List[str]) -> utils.TestVector:
-        """Returns the test vector for the given test case and the given non-deterministic methods.
-
-        :param utils.TestCase test_case: test case to transform to test vector.
-        :param List[str] nondet_methods: list of the names of non-deterministic methods that should be considered as
-            input methods.
-        :return: a test-vector representation of the given test case.
-        """
-        self.timer_vector_gen.start()
-        try:
-            return self._get_test_vector(test_case, nondet_methods)
-        finally:
-            self.timer_vector_gen.stop()
-
-    def _perform_validation(self, program_file, validator, validator_method,
+    def _perform_validation(self, program_file, validator,
                             is_ready_func, stop_event, tests_directory, error_method, nondet_methods):
         visited_tests = set()
         verdicts = list()
         while not is_ready_func() and not stop_event.is_set():
-            new_test_cases = self._get_test_cases(visited_tests,
-                                                  tests_directory)
-            next_verdict_list = validator_method(program_file, validator,
-                                                 new_test_cases, error_method, nondet_methods)
+            new_test_vectors = self._extractor.get_test_vectors(tests_directory, visited_tests)
+            next_verdict_list = self._k(program_file, validator, new_test_vectors, error_method, nondet_methods)
             verdicts += next_verdict_list
             if self.config.stop_after_success and any(r.is_positive() for r in next_verdict_list):
                 return self.decide_final_verdict(verdicts)
             else:
-                new_test_case_names = [t.name for t in new_test_cases]
-                visited_tests = visited_tests.union(new_test_case_names)
+                new_test_names = [t.name for t in new_test_vectors]
+                visited_tests = visited_tests.union(new_test_names)
             sleep(0.001)  # Sleep for 1 millisecond
 
         if not stop_event.is_set():
-            new_test_cases = self._get_test_cases(visited_tests,
-                                                  tests_directory)
-            next_verdict_list = validator_method(program_file, validator, new_test_cases, error_method, nondet_methods)
+            new_test_vectors = self._extractor.get_test_vectors(tests_directory, visited_tests)
+            next_verdict_list = self._k(program_file, validator, new_test_vectors, error_method, nondet_methods)
             verdicts += next_verdict_list
         return self.decide_final_verdict(verdicts)
 
     def perform_klee_replay_validation(self, program_file, is_ready_func,
                                        stop_event, tests_directory, error_method, nondet_methods):
         validator = KleeReplayRunner(self.config.machine_model)
-        return self._perform_validation(program_file, validator, self._k,
+        return self._perform_validation(program_file, validator,
                                         is_ready_func, stop_event,
                                         tests_directory, error_method, nondet_methods)
 
@@ -204,7 +176,7 @@ class TestValidator(object):
                                         self.get_name())
 
         try:
-            return self._perform_validation(program_file, validator, self._hs,
+            return self._perform_validation(program_file, validator,
                                             is_ready_func, stop_event,
                                             tests_directory, error_method, nondet_methods)
         finally:
@@ -219,54 +191,34 @@ class TestValidator(object):
                 if branch_taken:
                     self.statistics.add_value("Branches covered", branch_taken)
 
-    def _hs(self, program_file, validator, new_test_cases, error_method, nondet_methods):
-        test_vectors = self.create_all_test_vectors(new_test_cases, nondet_methods)
-
-        results = list()
-        for vector in test_vectors:
-            self.timer_execution_validation.start()
-            self.timer_validation.start()
-            try:
-                next_result = validator.run(program_file, vector, error_method, nondet_methods)
-                results.append(self._decide_single_verdict(next_result, vector, vector))
-            finally:
-                self.timer_execution_validation.stop()
-                self.timer_validation.stop()
-            self.counter_handled_test_cases.inc()
-
-            logging.debug('Results for %s: %s', vector, str(next_result))
-            if self.config.stop_after_success and next_result == FALSE:
-                self.final_test_vector_size.value = len(vector)
-                return results
-
-        return results
-
-    def _k(self, program_file, validator, new_test_cases, error_method, nondet_methods):
+    def _k(self, program_file: str, validator: Any, test_vectors: Iterable[utils.TestVector], error_method: str,
+           nondet_methods: List[str]) -> Iterable[utils.Verdict]:
         """
-        Returns the verdicts for the given set of test cases
+        Return the verdicts for the given test vectors.
 
         :param program_file: the program file to check against
         :param validator: the validator used to check the test cases
-        :param new_test_cases: the sequence of test cases to check
+        :param test_cases: the sequence of test cases to check
         :param error_method: the error method to check for
         :param nondet_methods: the non-deterministic methods that should be stubbed
         :return: The sequence of verdicts, corresponding to the given test cases.
                  A verdict is 'false' if the test case reaches the error method. It is 'unknown', otherwise.
         """
         results = list()
-        for test in new_test_cases:
+        for test in test_vectors:
             self.timer_execution_validation.start()
             self.timer_validation.start()
             try:
                 next_result = validator.run(program_file, test, error_method, nondet_methods)
-                results.append(self._decide_single_verdict(next_result, test))
+                results.append(self._decide_single_verdict(next_result, test.origin, test))
             finally:
                 self.timer_execution_validation.stop()
                 self.timer_validation.stop()
             self.counter_handled_test_cases.inc()
 
-            logging.debug('Result for %s: %s', test, str(next_result))
+            logging.debug('Result for %s: %s', test.origin, str(next_result))
             if self.config.stop_after_success and next_result == FALSE:
+                self.final_test_vector_size = len(test)
                 return results
         return results
 
@@ -297,7 +249,7 @@ class TestValidator(object):
 
         elif result.is_positive():
             if result.test_vector is None:
-                result.test_vector = self.get_test_vector(result.test, nondet_methods)
+                result.test_vector = self._extractor.get_test_vector(result.test)
             if result.harness is None:
                 harness = self.create_harness(result.test_vector.origin,
                                               result.test_vector, error_method, nondet_methods)
@@ -437,7 +389,7 @@ class KleeReplayRunner(object):
         if os.path.exists(self.executable_name):
             os.remove(self.executable_name)
 
-    def run(self, program_file, test_case, error_method, nondet_methods):
+    def run(self, program_file, test_vector, error_method, nondet_methods):
         from tbf.tools import klee
 
         klee_prepared_file = utils.get_prepared_name(program_file, klee.name)
@@ -464,7 +416,7 @@ class KleeReplayRunner(object):
             return [ERROR]
 
         curr_env = utils.get_env()
-        curr_env['KTEST_FILE'] = test_case.origin
+        curr_env['KTEST_FILE'] = test_vector.origin
 
         result = utils.execute(
             [self.executable], env=curr_env, err_to_output=False)

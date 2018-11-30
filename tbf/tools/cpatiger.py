@@ -1,7 +1,8 @@
-from tbf.input_generation import BaseInputGenerator
-from tbf.testcase_validation import TestValidator
-import tbf.utils as utils
 import os
+
+import tbf.utils as utils
+from tbf.input_generation import BaseInputGenerator
+from tbf.testcase_converter import TestConverter
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 base_dir = os.path.join(module_dir, 'cpatiger')
@@ -71,15 +72,20 @@ class InputGenerator(BaseInputGenerator):
         if not cli_options or '-tiger-variants' not in cli_options:
             input_generation_cmd += ['-tiger-variants']
         input_generation_cmd += ['-outputpath', tests_dir, '-spec',
-            utils.spec_file
-        ]
+                                 utils.spec_file
+                                 ]
         if cli_options:
             input_generation_cmd += cli_options
         input_generation_cmd.append(filename)
 
         return [input_generation_cmd]
 
-    def get_test_cases(self, exclude=(), directory=tests_dir):
+
+class CpaTigerTestConverter(TestConverter):
+
+    def _get_test_cases_in_dir(self, directory=None, exclude=()):
+        if directory is None:
+            directory = tests_dir
         tests_file = os.path.join(directory, 'testsuite.txt')
         if os.path.exists(tests_file):
             with open(tests_file, 'r') as inp:
@@ -96,18 +102,22 @@ class InputGenerator(BaseInputGenerator):
         else:
             return []
 
+    def _get_test_case_from_file(self, test_file):
+        """
+        Not supported. It is not possible to create a single test case.
 
-class CpaTigerTestValidator(TestValidator):
+        see _get_test_cases_in_dir instead.
 
-    def _get_test_vector(self, test, nondet_methods):
-        assert len(test.content.split('\n')) == 1
-        assert test.content.startswith('[') and test.content.endswith(']')
-        test_vector = utils.TestVector(test.name, test.origin)
-        processed_line = test.content[1:-1]
+        :raises NotImplementedError: when called
+        """
+        raise NotImplementedError("CPATiger can only create test cases for the full test suite")
+
+    def get_test_vector(self, test_case):
+        assert len(test_case.content.split('\n')) == 1
+        assert test_case.content.startswith('[') and test_case.content.endswith(']')
+        test_vector = utils.TestVector(test_case.name, test_case.origin)
+        processed_line = test_case.content[1:-1]
         test_values = processed_line.split(', ')
         for value in test_values:
             test_vector.add(value)
         return test_vector
-
-    def get_name(self):
-        return name

@@ -1,8 +1,8 @@
 import os
+
 import tbf.utils as utils
 from tbf.input_generation import BaseInputGenerator
-from tbf.testcase_validation import TestValidator
-import pathlib
+from tbf.testcase_converter import TestConverter
 
 name = "fshell"
 module_dir = os.path.dirname(os.path.realpath(__file__))
@@ -86,7 +86,12 @@ class InputGenerator(BaseInputGenerator):
 
         return [input_generation_cmd]
 
-    def get_test_cases(self, exclude=(), directory=tests_dir):
+
+class FshellTestConverter(TestConverter):
+
+    def _get_test_cases_in_dir(self, directory=None, exclude=None):
+        if directory is None:
+            directory = tests_dir
         tests_file = os.path.join(directory, 'testsuite.txt')
         if os.path.exists(tests_file):
             with open(tests_file, 'r') as inp:
@@ -117,15 +122,19 @@ class InputGenerator(BaseInputGenerator):
         else:
             return []
 
+    def _get_test_case_from_file(self, test_file):
+        """
+        Not supported. It is not possible to create a single test case.
 
-class FshellTestValidator(TestValidator):
+        see _get_test_cases_in_dir instead.
 
-    def get_name(self):
-        return name
+        :raises NotImplementedError: when called
+        """
+        raise NotImplementedError("FShell can only create test cases for the full test suite")
 
-    def _get_test_vector(self, test, nondet_methods):
-        vector = utils.TestVector(test.name, test.origin)
-        for tv in test.content:
+    def get_test_vector(self, test_case):
+        vector = utils.TestVector(test_case.name, test_case.origin)
+        for tv in test_case.content:
             vector.add(tv)
 
         return vector
