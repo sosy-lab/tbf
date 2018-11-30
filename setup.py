@@ -40,9 +40,7 @@ setup(
     },
     entry_points={"console_scripts": ['tbf = tbf:main']},
     install_requires=[
-        'benchexec>=1.16',
         'pycparser>=2.18',
-        'tempita>=0.5.2',
     ],
     setup_requires=[
         'nose>=1.0',
