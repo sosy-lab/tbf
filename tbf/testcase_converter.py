@@ -60,12 +60,14 @@ class TestConverter:
 class XmlWritingTestConverter:
     """A test converter that writes testcase XML files for each retrieved test vector."""
 
-    def __init__(self, delegate):
+    def __init__(self, delegate, output_directory='.'):
         """Create new XmlWritingTestConverter
 
         :param TestConverter delegate: delegate test converter
+        :param str output_directory: directory that XMLs are written to.
         """
         self.delegate = delegate
+        self.output_directory = os.path.abspath(output_directory)
 
     def _get_test_cases_in_dir(self, directory=None, exclude=None):
         return self.delegate._get_test_cases_in_dir(directory, exclude)
@@ -75,17 +77,17 @@ class XmlWritingTestConverter:
 
     def get_test_vector(self, test_case):
         test_vector = self.delegate.get_test_vector(test_case)
-        write_testvector(test_vector)
+        write_testvector(test_vector, self.output_directory)
         return test_vector
 
     def get_test_vectors(self, directory, exclude=None):
         vectors = self.delegate.get_test_vectors(directory, exclude)
         for v in vectors:
-            write_testvector(v)
+            write_testvector(v, self.output_directory)
         return vectors
 
 
-def write_metadata(program, producer, specification, architecture, start_time=None):
+def write_metadata(program, producer, specification, architecture, start_time=None, directory='.'):
     """Writes a metadata XML file for a test suite with the given information.
 
     If no start time is given, the current time is taken.
@@ -109,22 +111,31 @@ def write_metadata(program, producer, specification, architecture, start_time=No
         start_time
     ).build()
 
-    with open(METADATA_FILE, 'bw+') as outp:
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
+    with open(os.path.join(directory, METADATA_FILE), 'bw+') as outp:
         outp.write(metadata_xml)
 
 
-def write_testvector(test_vector, force_write=False):
+def write_testvector(test_vector, directory='.', force_write=False):
     """Write a testcase XML for the given test vector.
 
     :param utils.TestVector test_vector: the test vector to write the test case XML for.
+    :param str directory: the directory to write the resulting XML into.
+    :param bool force_write: whether to overwrite an existing file.
+    :raises ValueError: if force_write=False and the filename of the resulting XML already exists.
     """
     builder = tfbuilder.TestcaseBuilder().test_case_start()
     for element in test_vector.vector:
         builder.input_val(element['value'])
     testcase_xml = builder.build()
 
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
     unique_name = test_vector.name
-    output_name = unique_name + ".xml"
+    output_name = os.path.join(directory, unique_name + ".xml")
     if os.path.exists(output_name) and not force_write:
         raise ValueError("XML file with name of test vector already exists: %s" % output_name)
     with open(output_name, 'bw+') as outp:

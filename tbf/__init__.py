@@ -24,6 +24,9 @@ from tbf.testcase_processing import ProcessingConfig, ExecutionRunner
 __VERSION__ = "0.2-dev"
 
 
+XML_DIR = utils.get_output_path('test-suite')
+
+
 class StopEvent(object):
 
     def __init__(self):
@@ -317,7 +320,7 @@ def _get_test_processor(args, write_xml):
         raise AssertionError('Unhandled validator: ' + generator)
 
     if write_xml:
-        extractor = testcase_converter.XmlWritingTestConverter(extractor)
+        extractor = testcase_converter.XmlWritingTestConverter(extractor, XML_DIR)
 
     return testcase_processing.TestProcessor(processing_config, extractor)
 
@@ -366,7 +369,8 @@ def run(args, stop_all_event=None):
                 filename,
                 input_generator.get_name(),
                 specification,
-                args.machine_model
+                args.machine_model,
+                directory=XML_DIR
             )
 
         nondet_methods = utils.find_nondet_methods(filename, args.svcomp_nondets_only, error_method_exclude)
