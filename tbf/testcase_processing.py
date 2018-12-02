@@ -1,19 +1,16 @@
-from abc import abstractmethod, ABCMeta
-import tbf.harness_generation as harness_gen
-from tbf.testcase_converter import TestConverter
 import logging
-import tbf.utils as utils
 import os
-from time import sleep
 import re
-from tbf.utils import FALSE, UNKNOWN, ERROR
-
+from time import sleep
 from typing import List, Iterable, Any
 
-valid_validators = ['cpachecker', 'uautomizer', 'cpa-w2t', 'fshell-w2t']
+import tbf.harness_generation as harness_gen
+import tbf.utils as utils
+from tbf.testcase_converter import TestConverter
+from tbf.utils import FALSE, UNKNOWN, ERROR
 
 
-class ValidationConfig(object):
+class ProcessingConfig(object):
 
     def __init__(self, args):
         self.machine_model = args.machine_model
@@ -37,6 +34,8 @@ class ValidationConfig(object):
                 " uncover a specification violation, provide one of the following parameters:"
                 " --execution, --klee-replay (KLEE only)")
 
+        self.write_xml = args.write_xml
+
         self.convert_to_int = args.write_integers
         self.naive_verification = args.naive_verification
         self.stop_after_success = args.stop_after_success
@@ -44,16 +43,16 @@ class ValidationConfig(object):
         self.measure_coverage = args.report_coverage
 
 
-class TestValidator(object):
+class TestProcessor(object):
 
-    def __init__(self, validation_config, extractor: TestConverter):
+    def __init__(self, processing_config, extractor: TestConverter):
         self._nondet_var_map = None
-        self.machine_model = validation_config.machine_model
-        self.config = validation_config
+        self.machine_model = processing_config.machine_model
+        self.config = processing_config
         self.harness_creator = harness_gen.HarnessCreator()
         self._extractor = extractor
 
-        self.naive_verification = validation_config.naive_verification
+        self.naive_verification = processing_config.naive_verification
 
         # If a void appears in a line, there must be something between
         # the void and the __VERIFIER_error() symbol - otherwise
@@ -137,31 +136,33 @@ class TestValidator(object):
 
         return {'name': harness_file, 'content': harness}
 
-    def _perform_validation(self, program_file, validator,
+    def _perform_processing(self, program_file, validator,
                             is_ready_func, stop_event, tests_directory, error_method, nondet_methods):
+        # validator may be None
         visited_tests = set()
         verdicts = list()
         while not is_ready_func() and not stop_event.is_set():
             new_test_vectors = self._extractor.get_test_vectors(tests_directory, visited_tests)
-            next_verdict_list = self._k(program_file, validator, new_test_vectors, error_method, nondet_methods)
-            verdicts += next_verdict_list
-            if self.config.stop_after_success and any(r.is_positive() for r in next_verdict_list):
-                return self.decide_final_verdict(verdicts)
-            else:
-                new_test_names = [t.name for t in new_test_vectors]
-                visited_tests = visited_tests.union(new_test_names)
+            if validator:
+                next_verdict_list = self._k(program_file, validator, new_test_vectors, error_method, nondet_methods)
+                verdicts += next_verdict_list
+                if self.config.stop_after_success and any(r.is_positive() for r in next_verdict_list):
+                    return self.decide_final_verdict(verdicts)
+            new_test_names = [t.name for t in new_test_vectors]
+            visited_tests = visited_tests.union(new_test_names)
             sleep(0.001)  # Sleep for 1 millisecond
 
         if not stop_event.is_set():
             new_test_vectors = self._extractor.get_test_vectors(tests_directory, visited_tests)
-            next_verdict_list = self._k(program_file, validator, new_test_vectors, error_method, nondet_methods)
-            verdicts += next_verdict_list
+            if validator:
+                next_verdict_list = self._k(program_file, validator, new_test_vectors, error_method, nondet_methods)
+                verdicts += next_verdict_list
         return self.decide_final_verdict(verdicts)
 
     def perform_klee_replay_validation(self, program_file, is_ready_func,
                                        stop_event, tests_directory, error_method, nondet_methods):
         validator = KleeReplayRunner(self.config.machine_model)
-        return self._perform_validation(program_file, validator,
+        return self._perform_processing(program_file, validator,
                                         is_ready_func, stop_event,
                                         tests_directory, error_method, nondet_methods)
 
@@ -176,7 +177,7 @@ class TestValidator(object):
                                         self.get_name())
 
         try:
-            return self._perform_validation(program_file, validator,
+            return self._perform_processing(program_file, validator,
                                             is_ready_func, stop_event,
                                             tests_directory, error_method, nondet_methods)
         finally:
@@ -190,6 +191,17 @@ class TestValidator(object):
                                               branch_ex)
                 if branch_taken:
                     self.statistics.add_value("Branches covered", branch_taken)
+
+    def get_testvectors_continuously(self, program_file, is_ready_func, stop_event, tests_directory, error_method,
+                                     nondet_methods):
+        """Get testvectors and don't do anything with them, continuously.
+
+        Stops when is_ready_func signalises that no more tests are created.
+        Can be used to trigger certain behavior from the test vector extractor,
+        e.g., XML writing.
+        """
+        self._perform_processing(program_file, None, is_ready_func, stop_event, tests_directory, error_method,
+                                 nondet_methods)
 
     def _k(self, program_file: str, validator: Any, test_vectors: Iterable[utils.TestVector], error_method: str,
            nondet_methods: List[str]) -> Iterable[utils.Verdict]:
@@ -222,13 +234,13 @@ class TestValidator(object):
                 return results
         return results
 
-    def check_inputs(self,
-                     program_file,
-                     error_method,
-                     nondet_methods,
-                     is_ready_func,
-                     stop_event,
-                     tests_directory=None):
+    def process_inputs(self,
+                       program_file,
+                       error_method,
+                       nondet_methods,
+                       is_ready_func,
+                       stop_event,
+                       tests_directory=None):
         logging.debug('Checking inputs for file %s', program_file)
         logging.debug('Considering test-case directory: %s', tests_directory)
         result = None
@@ -239,10 +251,14 @@ class TestValidator(object):
             logging.info("Klee-replay validation says: " + str(result))
 
         if (not result or
-                not result.is_positive()) and self.config.use_execution:
+            not result.is_positive()) and self.config.use_execution:
             result = self.perform_execution_validation(
                 program_file, is_ready_func, stop_event, tests_directory, error_method, nondet_methods)
             logging.info("Execution validation says: " + str(result))
+
+        if not result and self.config.write_xml:
+            self.get_testvectors_continuously(program_file, is_ready_func, stop_event, tests_directory, error_method,
+                                              nondet_methods)
 
         if result is None:
             return utils.VerdictUnknown(), None

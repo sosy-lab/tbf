@@ -703,7 +703,7 @@ class MachineModel(object):
             raise AssertionError("Unhandled data type: " + data_type)
 
     def __str__(self):
-        return "MachineModel(%s bit)" % self._wordsize
+        return "%s bit" % self._wordsize
 
 
 class TestCase(object):
@@ -1452,3 +1452,11 @@ def provide_directory(directory):
         shutil.rmtree(directory, ignore_errors=True)
     os.mkdir(directory)
     return directory
+
+
+def get_error_spec(error_method):
+    return "COVER(init(main()), FQL(COVER EDGES( @ CALL(%s))) )" % error_method
+
+
+def get_coverage_spec():
+    return "COVER( init(main()), FQL(COVER EDGES(@BASICBLOCKENTRY)) )"

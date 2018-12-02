@@ -10,6 +10,7 @@ from ctypes import c_bool
 from multiprocessing.context import TimeoutError
 from time import sleep
 
+import tbf.testcase_converter as testcase_converter
 import tbf.tools.afl as afl
 import tbf.tools.cpatiger as cpatiger
 import tbf.tools.crest as crest
@@ -18,7 +19,7 @@ import tbf.tools.klee as klee
 import tbf.tools.random_tester as random_tester
 import tbf.tools.dummy as dummy
 import tbf.utils as utils
-from tbf.testcase_validation import ValidationConfig, ExecutionRunner
+from tbf.testcase_processing import ProcessingConfig, ExecutionRunner
 
 __VERSION__ = "0.2-dev"
 
@@ -70,17 +71,17 @@ def _create_cli_arg_parser():
         "--ig-timelimit",
         dest="ig_timelimit",
         help="time limit (in s) for input generation.\n" +
-        "After this limit, input generation" +
-        " stops and analysis is performed\nwith the inputs generated up" +
-        " to this point.")
+             "After this limit, input generation" +
+             " stops and analysis is performed\nwith the inputs generated up" +
+             " to this point.")
     input_generator_args.add_argument(
         "--no-write-integers",
         dest="write_integers",
         action='store_false',
         default=True,
         help="don't write test vector values as integer values."
-        "E.g., klee uses multi-character chars by default."
-        "Given this argument, these values are converted to integers.")
+             "E.g., klee uses multi-character chars by default."
+             "Given this argument, these values are converted to integers.")
     input_generator_args.add_argument(
         "--svcomp-nondets",
         dest="svcomp_nondets_only",
@@ -199,6 +200,14 @@ def _create_cli_arg_parser():
         help="do not terminate TBF after a test case covering the error method was found"
     )
 
+    run_args.add_argument(
+        '--write-xml',
+        dest="write_xml",
+        action='store_true',
+        default=False,
+        help="write test-format XML files for created tests"
+    )
+
     run_args.add_argument("file", type=str, help="file to verify")
 
     args.add_argument(
@@ -208,11 +217,10 @@ def _create_cli_arg_parser():
 
 
 def _parse_cli_args(argv):
-
     try:
         end_idx = argv.index('--')
         known_args = argv[:end_idx]
-        input_gen_args = argv[(end_idx+1):]
+        input_gen_args = argv[(end_idx + 1):]
     except ValueError:
         known_args = argv
         input_gen_args = None
@@ -288,27 +296,30 @@ def _get_input_generator(args):
         raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 
 
-def _get_validator(args):
-    validator = args.input_generator.lower()
-    validation_config = ValidationConfig(args)
-    if validator == 'afl':
+def _get_test_processor(args, write_xml):
+    generator = args.input_generator.lower()
+    processing_config = ProcessingConfig(args)
+    if generator == 'afl':
         extractor = afl.AflTestConverter()
-    elif validator == "fshell":
+    elif generator == "fshell":
         extractor = fshell.FshellTestConverter()
-    elif validator == 'klee':
+    elif generator == 'klee':
         extractor = klee.KleeTestConverter()
-    elif validator == 'crest':
+    elif generator == 'crest':
         extractor = crest.CrestTestConverter()
-    elif validator == 'cpatiger':
+    elif generator == 'cpatiger':
         extractor = cpatiger.CpaTigerTestConverter()
-    elif validator == 'random':
+    elif generator == 'random':
         extractor = random_tester.RandomTestConverter()
-    elif validator == "dummy":
+    elif generator == "dummy":
         extractor = dummy.DummyTestConverter()
     else:
-        raise AssertionError('Unhandled validator: ' + validator)
+        raise AssertionError('Unhandled validator: ' + generator)
 
-    return testcase_validation.TestValidator(validation_config, extractor)
+    if write_xml:
+        extractor = testcase_converter.XmlWritingTestConverter(extractor)
+
+    return testcase_processing.TestProcessor(processing_config, extractor)
 
 
 def run(args, stop_all_event=None):
@@ -326,13 +337,10 @@ def run(args, stop_all_event=None):
         error_method = None
     default_err = "Unknown error"
 
-    validation_result = utils.VerdictUnknown()
+    processing_result = utils.VerdictUnknown()
 
     filename = args.file
-    input_generator = _get_input_generator(args)
-    validator = _get_validator(args)
-
-    validator_stats = None
+    processing_stats = None
     generator_stats = None
     old_dir_abs = os.path.abspath('.')
     if args.keep_files:
@@ -343,11 +351,24 @@ def run(args, stop_all_event=None):
 
     try:
         _change_dir(work_dir)
+        input_generator = _get_input_generator(args)
+        test_processor = _get_test_processor(args, args.write_xml)
 
         if error_method:
             error_method_exclude = [error_method]
+            specification = utils.get_error_spec(error_method)
         else:
             error_method_exclude = None
+            specification = utils.get_coverage_spec()
+
+        if args.write_xml:
+            testcase_converter.write_metadata(
+                filename,
+                input_generator.get_name(),
+                specification,
+                args.machine_model
+            )
+
         nondet_methods = utils.find_nondet_methods(filename, args.svcomp_nondets_only, error_method_exclude)
 
         assert not stop_all_event.is_set(
@@ -356,8 +377,8 @@ def run(args, stop_all_event=None):
         stop_input_generator_event = StopEvent()
         generator_pool = mp.Pool(processes=1)
         if args.existing_tests_dir is None:
-            # Define the methods for running input generation and validation in parallel/sequentially
-            if args.run_parallel and _is_validation_used(args):
+            # Define the methods for running test generation and test processing in parallel/sequentially
+            if args.run_parallel and _is_processing_necessary(args):
                 generator_function = generator_pool.apply_async
 
                 def get_generation_result(res):
@@ -398,11 +419,11 @@ def run(args, stop_all_event=None):
             logging.info("Stop-all event is set, returning from execution")
             return
 
-        validation_result, validator_stats = validator.check_inputs(
+        processing_result, processing_stats = test_processor.process_inputs(
             filename, error_method, nondet_methods, is_ready, stop_all_event, args.existing_tests_dir)
         stop_input_generator_event.set()
         stop_all_event.set()
-        logging.debug("Validation terminated and got results")
+        logging.debug("Processing terminated and got results")
 
         try:
             generation_success, generator_stats = get_generation_result(
@@ -415,24 +436,24 @@ def run(args, stop_all_event=None):
         logging.debug("Input generation terminated and got results")
 
         _change_dir(old_dir_abs)
-        if validation_result.is_positive():
-            test_name = os.path.basename(validation_result.test_vector.origin)
+        if processing_result.is_positive():
+            test_name = os.path.basename(processing_result.test_vector.origin)
             persistent_test = utils.get_output_path(test_name)
-            shutil.copy(validation_result.test_vector.origin, persistent_test)
+            shutil.copy(processing_result.test_vector.origin, persistent_test)
 
-            if validation_result.harness is not None:
+            if processing_result.harness is not None:
                 persistent_harness = utils.get_output_path('harness.c')
-                shutil.copy(validation_result.harness, persistent_harness)
+                shutil.copy(processing_result.harness, persistent_harness)
 
                 # Create an ExecutionRunner only for the purpose of
                 # compiling the persistent harness
                 validator_for_compilation = ExecutionRunner(args.machine_model,
-                                                            validation_result.test)
+                                                            processing_result.test)
                 final_harness_name = utils.get_output_path('a.out')
                 validator_for_compilation.compile(filename, persistent_harness, final_harness_name)
 
         elif not generation_done:
-            validation_result = utils.VerdictUnknown()
+            processing_result = utils.VerdictUnknown()
 
     except utils.CompileError as e:
         # This is a proper error because the program can't be compiled, so no tests can be executed
@@ -450,11 +471,11 @@ def run(args, stop_all_event=None):
         statistics = ""
         if generator_stats:
             statistics += str(generator_stats)
-        if validator_stats:
+        if processing_stats:
             if statistics:  # If other statistics are there, add some spacing
                 statistics += "\n\n"
-            statistics += str(validator_stats)
-        verdict_str = "\nTBF verdict: " + validation_result.verdict.upper()
+            statistics += str(processing_stats)
+        verdict_str = "\nTBF verdict: " + processing_result.verdict.upper()
         with open(utils.get_output_path('Statistics.txt'),
                   'w+') as stats:
             stats.write(statistics)
@@ -471,8 +492,9 @@ def run(args, stop_all_event=None):
             shutil.rmtree(work_dir, ignore_errors=True)
 
 
-def _is_validation_used(arguments):
-    return arguments.execution_validation or arguments.klee_replay_validation
+def _is_processing_necessary(arguments):
+    return arguments.execution_validation or arguments.klee_replay_validation \
+           or arguments.write_xml
 
 
 def _change_dir(directory):

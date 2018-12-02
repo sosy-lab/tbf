@@ -102,14 +102,12 @@ class KleeTestConverter(TestConverter):
     def _get_test_cases_in_dir(self, directory=None, exclude=None):
         if directory is None:
             directory = tests_dir
-        print(directory)
         all_tests = [t for t in glob.glob(directory + '/*.ktest')]
         tcs = list()
         for t in [
             t for t in all_tests if self._get_test_name(t) not in exclude
         ]:
             tcs.append(self._get_test_case_from_file(t))
-        print(tcs)
         return tcs
 
     def _get_test_case_from_file(self, test_file):
