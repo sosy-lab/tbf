@@ -703,7 +703,7 @@ class MachineModel(object):
             raise AssertionError("Unhandled data type: " + data_type)
 
     def __str__(self):
-        return "%s bit" % self._wordsize
+        return "%sbit" % self._wordsize
 
 
 class TestCase(object):

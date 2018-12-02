@@ -174,4 +174,4 @@ class KleeTestConverter(TestConverter):
 
     @staticmethod
     def _get_test_name(test_file):
-        return os.path.basename(test_file)
+        return os.path.basename(test_file).split('.')[0]
