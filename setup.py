@@ -28,10 +28,10 @@ for tool in tools:
 validator_data = get_files('tbf/validators', 'tbf')
 
 setup(
-    name='TBF-test',
+    name='tbf-test',
     version=version,
     author='Dirk Beyer',
-    description='TBF, an Automatic Test-Case Generation and Execution Framework',
+    description='tbf, an Automatic Test-Case Generation and Execution Framework',
     url='https://github.com/sosy-lab/tbf',
     packages=['tbf', 'tbf.tools'],
     package_data={
