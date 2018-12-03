@@ -823,6 +823,11 @@ class VerdictUnknown(Verdict):
         super().__init__(UNKNOWN)
 
 
+class VerdictCover(Verdict):
+
+    def __init__(self):
+        super().__init__(COVER)
+
 class TestVector(object):
     """Test vector.
 
@@ -1427,6 +1432,7 @@ FALSE = 'FALSE'
 UNKNOWN = 'UNKNOWN'
 TRUE = 'TRUE'
 ERROR = 'ERROR'
+COVER = 'COVER'
 
 MACHINE_MODEL_32 = MachineModel(32, "32 bit linux", 2, 4, 4, 8, 4, 8, 12,
                                 '-m32')

@@ -456,8 +456,12 @@ def run(args, stop_all_event=None):
                 final_harness_name = utils.get_output_path('a.out')
                 validator_for_compilation.compile(filename, persistent_harness, final_harness_name)
 
-        elif not generation_done:
+        elif not generation_done and error_method:
+            # Looking for some specific error method, and not found
             processing_result = utils.VerdictUnknown()
+        else:
+            # Not looking for error method -> Trying to create large coverage
+            processing_result = utils.VerdictCover()
 
     except utils.CompileError as e:
         # This is a proper error because the program can't be compiled, so no tests can be executed
