@@ -41,6 +41,7 @@ setup(
     entry_points={"console_scripts": ['tbf = tbf:main']},
     install_requires=[
         'pycparser>=2.18',
+        'lxml>=4.2',
     ],
     setup_requires=[
         'nose>=1.0',
