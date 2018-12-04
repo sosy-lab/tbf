@@ -15,56 +15,27 @@ test_name_pattern = re.compile('input[0-9]+$')
 tests_dir = '.'
 
 
-class InputGenerator(BaseInputGenerator):
+class Preprocessor:
 
-    def __init__(self,
-                 log_verbose=False,
-                 additional_cli_options="",
-                 machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(machine_model, log_verbose, additional_cli_options)
-        self.log_verbose = log_verbose
-
-        self._run_env = utils.get_env_with_path_added(bin_dir)
-        self._run_env = utils.add_ld_path_to_env(self._run_env, lib_dir)
-
-        self.num_iterations = 100000
-
-    def get_name(self):
-        return name
-
-    def get_run_env(self):
-        return self._run_env
-
-    def prepare(self, filecontent, nondet_methods_used):
-        content = ''
-        for line in filecontent.split('\n'):
-            prepared_line = line
-            if '//' in prepared_line:
-                start = prepared_line.find('//')
-                prepared_line = prepared_line[:start]
-            content += prepared_line + '\n'
-        content = '#include<crest.h>\n' + content
+    def prepare(self, filecontent,  nondet_methods_used, error_method=None):
+        content = filecontent
         content += '\n'
-        for method in nondet_methods_used:  # append method definition at end of file content
-            nondet_method_definition = self._get_nondet_method(method)
+        content += '#include<crest.h>\n'
+        content += '\n'
+        content += utils.EXTERNAL_DECLARATIONS
+        content += '\n'
+        content += utils.get_assume_method()
+        content += '\n'
+        if error_method:
+            content += utils.get_error_method_definition(error_method)
+        for method in nondet_methods_used:
+            # append method definition at end of file content
+            nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
+                                                                          method['params'])
             content += nondet_method_definition
         return content
 
-    def _get_nondet_method(self, method_information):
-        method_name = method_information['name']
-        m_type = method_information['type']
-        param_types = method_information['params']
-        return self._create_nondet_method(method_name, m_type, param_types)
-
-    def is_supported_type(self, method_type):
-        return method_type in [
-            '_Bool', 'long long', 'long long int', 'long', 'long int', 'int',
-            'short', 'char', 'unsigned long long', 'unsigned long long int',
-            'unsigned long', 'unsigned long int', 'unsigned int',
-            'unsigned short', 'unsigned char'
-        ]
-
-    def _create_nondet_method(self, method_name, method_type, param_types):
+    def _get_nondet_method_definition(self, method_name, method_type, param_types):
         if not (method_type == 'void' or self.is_supported_type(method_type)):
             logging.warning('Crest can\'t handle symbolic values of type %s',
                             method_type)
@@ -96,6 +67,36 @@ class InputGenerator(BaseInputGenerator):
         method_body += '\n}\n'
 
         return method_head + method_body
+
+    @staticmethod
+    def is_supported_type(method_type):
+        return method_type in [
+            '_Bool', 'long long', 'long long int', 'long', 'long int', 'int',
+            'short', 'char', 'unsigned long long', 'unsigned long long int',
+            'unsigned long', 'unsigned long int', 'unsigned int',
+            'unsigned short', 'unsigned char'
+        ]
+
+
+class InputGenerator(BaseInputGenerator):
+
+    def __init__(self,
+                 log_verbose=False,
+                 additional_cli_options="",
+                 machine_model=utils.MACHINE_MODEL_32):
+        super().__init__(machine_model, log_verbose, additional_cli_options, Preprocessor())
+        self.log_verbose = log_verbose
+
+        self._run_env = utils.get_env_with_path_added(bin_dir)
+        self._run_env = utils.add_ld_path_to_env(self._run_env, lib_dir)
+
+        self.num_iterations = 100000
+
+    def get_name(self):
+        return name
+
+    def get_run_env(self):
+        return self._run_env
 
     def create_input_generation_cmds(self, filename, cli_options):
         compile_cmd = [os.path.join(bin_dir, 'crestc'), filename]

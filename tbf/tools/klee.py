@@ -15,6 +15,41 @@ klee_make_symbolic = 'klee_make_symbolic'
 name = 'klee'
 
 
+class Preprocessor:
+
+    def prepare(self, filecontent, nondet_methods_used, error_method=None):
+        content = filecontent
+        content += '\n'
+        content += utils.EXTERNAL_DECLARATIONS
+        content += '\n'
+        content += utils.get_assume_method()
+        if error_method:
+            content += utils.get_error_method_definition(error_method)
+        for method in nondet_methods_used:
+            # append method definition at end of file content
+            nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
+                                                                          method['params'])
+            content += nondet_method_definition
+        return content
+
+    @staticmethod
+    def _get_nondet_method_definition(method_name, method_type, param_types):
+        var_name = utils.get_sym_var_name(method_name)
+        method_head = utils.get_method_head(method_name, method_type,
+                                            param_types)
+        method_body = ['{']
+        if method_type != 'void':
+            method_body += [
+                method_type + ' ' + var_name + ';',
+                'klee_make_symbolic(&{0}, sizeof({0}), \"{0}\");'.format(
+                    var_name), 'return {0};'.format(var_name)
+            ]
+        method_body = '\n    '.join(method_body)
+        method_body += '\n}\n'
+
+        return method_head + method_body
+
+
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self,
@@ -22,7 +57,7 @@ class InputGenerator(BaseInputGenerator):
                  log_verbose=False,
                  additional_cli_options="",
                  machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(machine_model, log_verbose, additional_cli_options)
+        super().__init__(machine_model, log_verbose, additional_cli_options, Preprocessor())
         self.log_verbose = log_verbose
 
         run_env = utils.get_env_with_path_added(bin_dir)
@@ -36,37 +71,6 @@ class InputGenerator(BaseInputGenerator):
 
     def get_name(self):
         return name
-
-    def prepare(self, filecontent, nondet_methods_used):
-        content = filecontent
-        content += '\n'
-        for method in nondet_methods_used:
-            # append method definition at end of file content
-            nondet_method_definition = self._get_nondet_method(method)
-            content += nondet_method_definition
-        return content
-
-    def _get_nondet_method(self, method_information):
-        method_name = method_information['name']
-        m_type = method_information['type']
-        param_types = method_information['params']
-        return self._create_nondet_method(method_name, m_type, param_types)
-
-    def _create_nondet_method(self, method_name, method_type, param_types):
-        var_name = utils.get_sym_var_name(method_name)
-        method_head = utils.get_method_head(method_name, method_type,
-                                            param_types)
-        method_body = ['{']
-        if method_type != 'void':
-            method_body += [
-                '{0} {1};'.format(method_type, var_name),
-                'klee_make_symbolic(&{0}, sizeof({0}), \"{0}\");'.format(
-                    var_name), 'return {0};'.format(var_name)
-            ]
-        method_body = '\n    '.join(method_body)
-        method_body += '\n}\n'
-
-        return method_head + method_body
 
     def create_input_generation_cmds(self, filename, cli_options):
         if self.machine_model.is_32:

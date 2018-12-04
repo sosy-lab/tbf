@@ -3,7 +3,6 @@ import logging
 import os
 
 import tbf.utils as utils
-from tbf.harness_generation import HarnessCreator
 from tbf.input_generation import BaseInputGenerator
 from tbf.testcase_converter import TestConverter
 
@@ -12,6 +11,75 @@ bin_dir = os.path.join(module_dir, 'afl/bin')
 findings_dir = './findings'
 name = 'afl-fuzz'
 tests_dir = '.'
+
+
+class Preprocessor:
+
+    def prepare(self, filecontent, nondet_methods_used, error_method=None):
+        content = filecontent
+        content += '\n'
+        content += utils.EXTERNAL_DECLARATIONS
+        content += '\n'
+        content += utils.get_assume_method()
+        content += '\n'
+        content += self._get_vector_read_method()
+        if error_method:
+            content += utils.get_error_method_definition(error_method)
+        for method in nondet_methods_used:
+            # append method definition at end of file content
+            nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
+                                                                          method['params'])
+            content += nondet_method_definition
+        return content
+
+    @staticmethod
+    def _get_vector_read_method():
+        return """char * parse_inp(char * __inp_var) {
+        unsigned int input_length = strlen(__inp_var)-1;
+        /* Remove '\\n' at end of input */
+        if (__inp_var[input_length] == '\\n') {
+            __inp_var[input_length] = '\\0';
+        }
+
+        char * parseEnd;
+        char * value_pointer = malloc(16);
+
+        unsigned long long intVal = strtoull(__inp_var, &parseEnd, 0);
+        if (*parseEnd != 0) {
+          long long sintVal = strtoll(__inp_var, &parseEnd, 0);
+          if (*parseEnd != 0) {
+            long double floatVal = strtold(__inp_var, &parseEnd);
+            if (*parseEnd != 0) {
+              fprintf(stderr, "Can't parse input: '%s' (failing at '%s')\\n", __inp_var, parseEnd);
+              abort();
+
+            } else {
+              memcpy(value_pointer, &floatVal, 16);
+            }
+          } else {
+            memcpy(value_pointer, &sintVal, 8);
+          }
+        } else {
+          memcpy(value_pointer, &intVal, 8);
+        }
+
+        return value_pointer;
+    }\n\n"""
+
+    @staticmethod
+    def _get_nondet_method_definition(method_name, method_type, method_param):
+        definition = ""
+        definition += utils.get_method_head(method_name, method_type,
+                                            method_param)
+        definition += ' {\n'
+        if method_type != 'void':
+            definition += "    unsigned int inp_size = 3000;\n"
+            definition += "    char * inp_var = malloc(inp_size);\n"
+            definition += "    fgets(inp_var, inp_size, stdin);\n"
+
+            definition += "    return *((" + method_type + "*) parse_inp(inp_var));\n"
+        definition += ' }\n'
+        return definition
 
 
 class InputGenerator(BaseInputGenerator):
@@ -61,14 +129,6 @@ class InputGenerator(BaseInputGenerator):
             env['AFL_SKIP_CPUFREQ'] = 'true'
         return env
 
-    def prepare(self, filecontent, nondet_methods_used):
-        harness_creator = HarnessCreator()
-        harness = harness_creator._get_vector_read_method()
-        harness += harness_creator._get_nondet_method_definitions(
-            nondet_methods_used, None)
-        content = filecontent + '\n' + harness.decode()
-        return content
-
     def _get_compiler(self):
         env = self.get_run_env()
         if 'AFL_CC' in env.keys():
@@ -108,7 +168,7 @@ class AflTestConverter(TestConverter):
             content = inp.read()
         utils.TestCase(test_name, test_file, content)
 
-    def get_test_vector(self, test_case, nondet_methods):
+    def get_test_vector(self, test_case):
         vector = utils.TestVector(test_case.name, test_case.origin)
         for line in test_case.content.split(b'\n'):
             vector.add(line)

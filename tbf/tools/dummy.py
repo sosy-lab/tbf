@@ -5,7 +5,41 @@ from tbf.testcase_converter import TestConverter
 name = "Dummy"
 
 
+class Preprocessor:
+
+    def prepare(self, filecontent,  nondet_methods_used, error_method=None):
+        content = filecontent
+        content += '\n'
+        content += utils.EXTERNAL_DECLARATIONS
+        content += '\n'
+        content += utils.get_assume_method()
+        if error_method:
+            content += utils.get_error_method_definition(error_method)
+        for method in nondet_methods_used:
+            # append method definition at end of file content
+            nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
+                                                                          method['params'])
+            content += nondet_method_definition
+        return content
+
+    @staticmethod
+    def _get_nondet_method_definition(method_name, method_type, param_types):
+        method_head = utils.get_method_head(method_name, method_type, param_types)
+        method_body = ['{']
+        if method_type != 'void':
+            method_body += [
+                'return *(({}*) 0);'.format(method_type)
+            ]
+        method_body = '\n    '.join(method_body)
+        method_body += '\n}\n'
+
+        return method_head + method_body
+
+
 class InputGenerator(BaseInputGenerator):
+
+    def __init__(self, machine_model, log_verbose, additional_options):
+        super().__init__(machine_model, log_verbose, additional_options, Preprocessor())
 
     def create_input_generation_cmds(self, program_file, cli_options):
         instrumented_program = './tested.out'
@@ -19,30 +53,6 @@ class InputGenerator(BaseInputGenerator):
 
     def get_name(self):
         return name
-
-    def prepare(self, filecontent, nondet_methods_used):
-        harness = ""
-        for nondet_method in nondet_methods_used:
-            harness = harness + self._get_nondet_method(nondet_method)
-        return filecontent + '\n' + harness
-
-    def _get_nondet_method(self, method_information):
-        method_name = method_information['name']
-        m_type = method_information['type']
-        param_types = method_information['params']
-        return self._create_nondet_method(method_name, m_type, param_types)
-
-    def _create_nondet_method(self, method_name, method_type, param_types):
-        method_head = utils.get_method_head(method_name, method_type, param_types)
-        method_body = ['{']
-        if method_type != 'void':
-            method_body += [
-                'return *(({}*) 0);'.format(method_type)
-            ]
-        method_body = '\n    '.join(method_body)
-        method_body += '\n}\n'
-
-        return method_head + method_body
 
 
 class DummyTestConverter(TestConverter):

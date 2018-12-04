@@ -13,30 +13,26 @@ generator_harness = module_dir / "random" / "random_tester.c"
 random_runner = module_dir / "random" / "run.sh"
 
 
-class InputGenerator(BaseInputGenerator):
+class Preprocessor:
 
-    def get_run_env(self):
-        return utils.get_env()
-
-    def get_name(self):
-        return name
-
-    def prepare(self, filecontent, nondet_methods_used):
+    def prepare(self, filecontent, nondet_methods_used, error_method=None):
         content = filecontent
         content += '\n'
+        content += utils.EXTERNAL_DECLARATIONS
+        content += '\n'
+        content += utils.get_assume_method()
+        content += '\n'
+        if error_method:
+            content += utils.get_error_method_definition(error_method)
         for method in nondet_methods_used:
             # append method definition at end of file content
-            nondet_method_definition = self._get_nondet_method(method)
+            nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
+                                                                          method['params'])
             content += nondet_method_definition
         return content
 
-    def _get_nondet_method(self, method_information):
-        method_name = method_information['name']
-        m_type = method_information['type']
-        param_types = method_information['params']
-        return self._create_nondet_method(method_name, m_type, param_types)
-
-    def _create_nondet_method(self, method_name, method_type, param_types):
+    @staticmethod
+    def _get_nondet_method_definition(method_name, method_type, param_types):
         var_name = utils.get_sym_var_name(method_name)
         method_head = utils.get_method_head(method_name, method_type,
                                             param_types)
@@ -51,6 +47,18 @@ class InputGenerator(BaseInputGenerator):
         method_body += '\n}\n'
 
         return method_head + method_body
+
+
+class InputGenerator(BaseInputGenerator):
+
+    def __init__(self, machine_model, log_verbose, additional_options):
+        super().__init__(machine_model, log_verbose, additional_options, Preprocessor())
+
+    def get_run_env(self):
+        return utils.get_env()
+
+    def get_name(self):
+        return name
 
     def create_input_generation_cmds(self, filename, cli_options):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1])

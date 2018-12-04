@@ -14,32 +14,30 @@ tests_dir = '.'
 tests_file = os.path.join(tests_dir, 'testsuite.txt')
 
 
-class InputGenerator(BaseInputGenerator):
+class Preprocessor:
 
-    def get_run_env(self):
-        return utils.get_env_with_path_added(bin_dir)
-
-    def get_name(self):
-        return name
-
-    def prepare(self, filecontent, nondet_methods_used):
+    def prepare(self, filecontent, nondet_methods_used, error_method=None):
         content = filecontent
         content += '\n'
-        for m in nondet_methods_used:
-            content += self._get_nondet_method(m)
+        content += utils.EXTERNAL_DECLARATIONS
+        content += '\n'
+        content += utils.get_assume_method()
+        content += '\n'
+        if error_method:
+            content += utils.get_error_method_definition(error_method)
+        for method in nondet_methods_used:
+            # append method definition at end of file content
+            nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
+                                                                          method['params'])
+            content += nondet_method_definition
 
         # FShell ignores __VERIFIER_nondet methods. We rename them so that they are analyzed correctly
-        content = content.replace("__VERIFIER_", "___VERIFIER_")
+        content = content.replace("__VERIFIER_nondet", "___VERIFIER_nondet")
 
         return content
 
-    def _get_nondet_method(self, method_information):
-        method_name = method_information['name']
-        m_type = method_information['type']
-        param_types = method_information['params']
-        return self._create_nondet_method(method_name, m_type, param_types)
-
-    def _create_nondet_method(self, method_name, method_type, param_types):
+    @staticmethod
+    def _get_nondet_method_definition(method_name, method_type, param_types):
         var_name = utils.get_sym_var_name(method_name)
         method_head = utils.get_method_head(method_name, method_type,
                                             param_types)
@@ -62,10 +60,21 @@ class InputGenerator(BaseInputGenerator):
 
         return method_head + method_body
 
-    def _get_error_method_dummy(self, error_method):
-        # overwrite the default error method dummy to *not* exit. Somehow, Fshell doesn't like exit or aborts.
-        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(
-            utils.error_string)
+    @staticmethod
+    def _get_error_method_definition(error_method):
+        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(utils.error_string)
+
+
+class InputGenerator(BaseInputGenerator):
+
+    def __init__(self, machine_model, log_verbose, additional_options):
+        super().__init__(machine_model, log_verbose, additional_options, Preprocessor())
+
+    def get_run_env(self):
+        return utils.get_env_with_path_added(bin_dir)
+
+    def get_name(self):
+        return name
 
     def create_input_generation_cmds(self, filename, cli_options):
         if self.machine_model.is_32:

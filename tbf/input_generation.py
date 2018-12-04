@@ -25,10 +25,12 @@ class BaseInputGenerator(object):
     def failed(result):
         return result.returncode != 0
 
-    def __init__(self, machine_model, log_verbose, additional_options):
+    def __init__(self, machine_model, log_verbose, additional_options, preprocessor):
         self.machine_model = machine_model
         self.log_verbose = log_verbose
         self.cli_options = additional_options
+        self.program_preprocessor = preprocessor
+
         self.statistics = utils.Statistics("Input Generator " + self.get_name())
 
         self.timer_file_access = utils.Stopwatch()
@@ -44,24 +46,6 @@ class BaseInputGenerator(object):
                                   self.timer_file_access)
         self.statistics.add_value('Time for file preparation',
                                   self.timer_prepare)
-
-    @abstractmethod
-    def prepare(self, filecontent, nondet_methods_used):
-        pass
-
-    def prepare0(self, filecontent, error_method, nondet_methods):
-        content = filecontent
-        content = utils.rewrite_cproblems(content)
-        content += '\n'
-        content += utils.EXTERNAL_DECLARATIONS
-        if error_method:
-            content += self._get_error_method_dummy(error_method)
-        content += utils.get_assume_method()
-        return self.prepare(content, nondet_methods)
-
-    def _get_error_method_dummy(self, error_method):
-        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit(1); }}\n'.format(
-            utils.error_string)
 
     def generate_input(self, filename, error_method, nondet_methods, stop_flag):
         default_err = "Unknown error"
@@ -79,7 +63,7 @@ class BaseInputGenerator(object):
                     "Prepared file already exists. Not preparing again.")
             else:
                 self.timer_prepare.start()
-                prepared_content = self.prepare0(filecontent, error_method, nondet_methods)
+                prepared_content = self.program_preprocessor.prepare(filecontent, nondet_methods, error_method)
                 self.timer_file_access.start()
                 with open(file_to_analyze, 'w+') as new_file:
                     new_file.write(prepared_content)
@@ -109,7 +93,7 @@ class BaseInputGenerator(object):
         except utils.InputGenerationError as e:
             # Should be error because an error in input generation is not expected
             logging.error("Input generation error: %s", e.msg
-                          if e.msg else default_err)
+            if e.msg else default_err)
             return self._get_failed_and_stats()
         except utils.ParseError as e:
             logging.error("Parse error: %s", e.msg if e.msg else default_err)

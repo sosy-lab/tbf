@@ -13,41 +13,29 @@ input_method = 'input'
 name = 'cpatiger'
 
 
-class InputGenerator(BaseInputGenerator):
+class Preprocessor:
 
-    def __init__(self,
-                 timelimit=None,
-                 log_verbose=False,
-                 additional_cli_options='',
-                 machine_model=utils.MACHINE_MODEL_32):
-        super().__init__(machine_model, log_verbose, additional_cli_options)
-
-        self._run_env = utils.get_env_with_path_added(binary_dir)
-        # Make sure that timelimit is never None
-        self.timelimit = timelimit if timelimit else 0
-
-    def get_run_env(self):
-        return self._run_env
-
-    def get_name(self):
-        return name
-
-    def prepare(self, filecontent, nondet_methods_used):
+    def prepare(self, filecontent, nondet_methods_used, error_method=None):
         content = filecontent
         content += '\n'
+        content += utils.EXTERNAL_DECLARATIONS
+        content += '\n'
+        content += utils.get_assume_method()
+        content += '\n'
         content += 'extern int input();\n'
-        for method in nondet_methods_used:  # append method definition at end of file content
-            nondet_method_definition = self._get_nondet_method(method)
+        content += ''
+        if error_method:
+            content += utils.get_error_method_definition(error_method)
+        for method in nondet_methods_used:
+            # append method definition at end of file content
+            nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
+                                                                          method['params'])
             content += nondet_method_definition
+
         return content
 
-    def _get_nondet_method(self, method_information):
-        method_name = method_information['name']
-        m_type = method_information['type']
-        param_types = method_information['params']
-        return self._create_nondet_method(method_name, m_type, param_types)
-
-    def _create_nondet_method(self, method_name, method_type, param_types):
+    @staticmethod
+    def _get_nondet_method_definition(method_name, method_type, param_types):
         method_head = utils.get_method_head(method_name, method_type, param_types)
         method_body = ['{']
         if method_type != 'void':
@@ -58,6 +46,26 @@ class InputGenerator(BaseInputGenerator):
         method_body += '\n}\n'
 
         return method_head + method_body
+
+
+class InputGenerator(BaseInputGenerator):
+
+    def __init__(self,
+                 timelimit=None,
+                 log_verbose=False,
+                 additional_cli_options='',
+                 machine_model=utils.MACHINE_MODEL_32):
+        super().__init__(machine_model, log_verbose, additional_cli_options, Preprocessor())
+
+        self._run_env = utils.get_env_with_path_added(binary_dir)
+        # Make sure that timelimit is never None
+        self.timelimit = timelimit if timelimit else 0
+
+    def get_run_env(self):
+        return self._run_env
+
+    def get_name(self):
+        return name
 
     def create_input_generation_cmds(self, filename, cli_options):
         import shutil
