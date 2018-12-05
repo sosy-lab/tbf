@@ -62,7 +62,7 @@ class Preprocessor:
 
     @staticmethod
     def _get_error_method_definition(error_method):
-        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(utils.error_string)
+        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(utils.ERROR_STRING)
 
 
 class InputGenerator(BaseInputGenerator):

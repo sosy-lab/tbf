@@ -51,7 +51,7 @@ class HarnessCreator(object):
     def _get_error_definition(self, method_name):
         definition = 'void {0}() {{\n'.format(method_name)
         definition += '    fprintf(stderr, \"{0}\\n\");\n'.format(
-            utils.error_string)
+            utils.ERROR_STRING)
         definition += '    exit(1);\n}\n\n'
         return definition.encode()
 

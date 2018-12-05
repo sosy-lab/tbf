@@ -336,7 +336,7 @@ class ExecutionRunner(object):
 
     def run(self, program_file, test_vector, error_method, nondet_methods):
         executable = self.get_executable_harness(program_file, error_method, nondet_methods)
-        input_vector = utils.get_input_vector(test_vector)
+        input_vector = self._get_input_vector(test_vector)
 
         if executable and os.path.exists(executable):
             run_cmd = self._get_run_cmd(executable)
@@ -353,6 +353,22 @@ class ExecutionRunner(object):
                 return [UNKNOWN]
         else:
             return [ERROR]
+
+    def _get_input_vector(self, test_vector, escape_newline=False):
+        input_vector = ''
+        if escape_newline:
+            newline = '\\n'
+        else:
+            newline = '\n'
+        for item in test_vector.vector:
+            if type(item['value']) is bytes and type(newline) is not bytes:
+                newline = newline.encode()
+                input_vector = input_vector.encode()
+            input_vector += item['value'] + newline
+
+        logging.debug("Input for test %s:", test_vector.name)
+        logging.debug([l for l in input_vector.split(newline)][:-1])
+        return input_vector
 
 
 class CoverageMeasuringExecutionRunner(ExecutionRunner):
