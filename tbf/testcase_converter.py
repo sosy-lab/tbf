@@ -77,13 +77,13 @@ class XmlWritingTestConverter:
 
     def get_test_vector(self, test_case):
         test_vector = self.delegate.get_test_vector(test_case)
-        write_testvector(test_vector, self.output_directory)
+        write_testvector(test_vector, self.output_directory, force_write=True)
         return test_vector
 
     def get_test_vectors(self, directory, exclude=None):
         vectors = self.delegate.get_test_vectors(directory, exclude)
         for v in vectors:
-            write_testvector(v, self.output_directory)
+            write_testvector(v, self.output_directory, force_write=True)
         return vectors
 
 
