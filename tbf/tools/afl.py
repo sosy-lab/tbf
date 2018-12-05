@@ -155,10 +155,11 @@ class AflTestConverter(TestConverter):
         if directory is None:
             directory = tests_dir
         # 'crashes' and 'hangs' cannot lead to an error as long as we don't abort in __VERIFIER_error()
-        interesting_subdirs = (os.path.join(directory, d) for d in ('queue'))
+        interesting_subdirs = (os.path.join(directory, d) for d in ['queue'])
         tcs = list()
         for s in interesting_subdirs:
-            abs_dir = os.path.join(findings_dir, s)
+            abs_dir = os.path.abspath(s)
+            assert os.path.exists(abs_dir), "Directory doesn't exist: %s" % abs_dir
             for t in glob.glob(abs_dir + '/id:*'):
                 test_name = self._get_test_name(t)
                 if test_name not in exclude:
@@ -169,7 +170,7 @@ class AflTestConverter(TestConverter):
         test_name = self._get_test_name(test_file)
         with open(test_file, 'rb') as inp:
             content = inp.read()
-        utils.TestCase(test_name, test_file, content)
+        return utils.TestCase(test_name, test_file, content)
 
     def get_test_vector(self, test_case):
         vector = utils.TestVector(test_case.name, test_case.origin)
