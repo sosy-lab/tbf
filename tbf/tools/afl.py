@@ -84,6 +84,9 @@ class Preprocessor:
 
 class InputGenerator(BaseInputGenerator):
 
+    def __init__(self, machine_model, log_verbose, additional_options):
+        super().__init__(machine_model, log_verbose, additional_options, Preprocessor())
+
     def create_input_generation_cmds(self, program_file, cli_options):
         instrumented_program = './tested.out'
         compiler = self._get_compiler()
