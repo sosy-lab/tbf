@@ -479,7 +479,12 @@ def run(args, stop_all_event=None):
             if statistics:  # If other statistics are there, add some spacing
                 statistics += "\n\n"
             statistics += str(processing_stats)
-        verdict_str = "\nTBF verdict: " + processing_result.verdict.upper()
+
+        if not error_method:
+            verdict = utils.DONE
+        else:
+            verdict = processing_result.verdict.upper()
+        verdict_str = "\nTBF verdict: " + verdict
         with open(utils.get_output_path('Statistics.txt'),
                   'w+') as stats:
             stats.write(statistics)
