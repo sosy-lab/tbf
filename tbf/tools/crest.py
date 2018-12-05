@@ -1,3 +1,4 @@
+import glob
 import logging
 import os
 import re
@@ -17,7 +18,7 @@ tests_dir = '.'
 
 class Preprocessor:
 
-    def prepare(self, filecontent,  nondet_methods_used, error_method=None):
+    def prepare(self, filecontent, nondet_methods_used, error_method=None):
         content = filecontent
         content += '\n'
         content += '#include<crest.h>\n'
@@ -118,21 +119,16 @@ class CrestTestConverter(TestConverter):
     def _get_test_cases_in_dir(self, directory=None, exclude=None):
         if directory is None:
             directory = tests_dir
-        all_tests = [
-            t for t in os.listdir(directory)
-            if test_name_pattern.match(utils.get_file_name(t))
-        ]
         tcs = list()
-        for t in [
-            t for t in all_tests if utils.get_file_name(t) not in exclude
-        ]:
-            tcs.append(self._get_test_case_from_file(t))
+        for t in glob.glob(directory + '/input*'):
+            if self._get_file_name(t) not in exclude:
+                tcs.append(self._get_test_case_from_file(t))
         return tcs
 
     def _get_test_case_from_file(self, test_file):
         with open(test_file, 'r') as inp:
             content = inp.read()
-        return utils.TestCase(utils.get_file_name(test_file), test_file, content)
+        return utils.TestCase(self.get_file_name(test_file), test_file, content)
 
     def get_test_vector(self, test_case):
         test_vector = utils.TestVector(test_case.name, test_case.origin)
@@ -141,3 +137,7 @@ class CrestTestConverter(TestConverter):
             if value:
                 test_vector.add(value)
         return test_vector
+
+    @staticmethod
+    def _get_file_name(test_file):
+        return os.path.basename(test_file)
