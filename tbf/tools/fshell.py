@@ -111,11 +111,11 @@ class FshellTestConverter(TestConverter):
 
             curr_test = list()
             test_cases = list()
-            count = 1
+            count = 0
             for line in content:
                 if line.startswith("IN:"):
                     test_name = str(count)
-                    if test_name not in exclude:
+                    if test_name not in exclude and count > 0:
                         test_cases.append(
                             utils.TestCase(test_name, tests_file, curr_test))
                     curr_test = list()
