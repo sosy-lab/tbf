@@ -1,0 +1,14 @@
+# This is a Docker image for running the tests.
+# It should be pushed to registry.gitlab.com/sosy-lab/software/tbf/test
+# and will be used by CI as declared in .gitlab-ci.yml.
+#
+# Commands for updating the image:
+# docker build -t registry.gitlab.com/sosy-lab/software/tbf/test:python-3.4 - < test/Dockerfile.python-3.4
+# docker push registry.gitlab.com/sosy-lab/software/tbf/test
+
+FROM python:3.4
+
+RUN pip install \
+  coverage \
+  lxml \
+  nose

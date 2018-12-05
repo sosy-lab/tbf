@@ -1,0 +1,9 @@
+[GENERAL]
+extension-pkg-whitelist=lxml
+
+[REPORTS]
+output-format = colorized
+reports = yes
+
+[MESSAGES CONTROL]
+disable=too-many-instance-attributes,too-many-arguments,too-few-public-methods
