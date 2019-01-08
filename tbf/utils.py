@@ -260,11 +260,27 @@ def execute(command,
             stop_flag=None,
             input_str=None,
             timelimit=None):
-    def shut_down(process):
-        process.kill()
-        returncode = process.wait()
 
-        return returncode
+    def wait_and_terminate(timelimit, stop_flag, process):
+        def shut_down(process):
+            process.kill()
+            returncode = process.wait()
+
+            return returncode
+
+        if timelimit:
+            stopwatch = Stopwatch()
+            stopwatch.start()
+
+        returncode = process.poll()
+        while returncode is None:
+            if (stop_flag and stop_flag.is_set()) \
+                    or (timelimit and stopwatch.curr_s() > timelimit):
+                logging.info("Timeout of %ss expired or told to stop. Killing process.", timelimit if timelimit else "- ")
+                returncode = shut_down(process)
+            else:
+                time.sleep(0.001)
+                returncode = process.poll()
 
     log_cmd = logging.debug if quiet else logging.info
 
@@ -281,36 +297,22 @@ def execute(command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT if err_to_output else subprocess.PIPE,
         universal_newlines=False,
-        env=env)
+        env=env,
+        start_new_session=True)
 
-    output = None
-    err_output = None
-    if stop_flag:
-        stopwatch = Stopwatch()
-        stopwatch.start()
-        returncode = p.poll()
-        while returncode is None:
-            if stop_flag.is_set() or (timelimit and
-                                      stopwatch.curr_s() > timelimit):
-                returncode = shut_down(p)
-            else:
-                time.sleep(0.001)
-                returncode = p.poll()
-        output, err_output = p.communicate()
-    else:
-        try:
-            if input_str and type(input_str) is not bytes:
-                input_str = input_str.encode()
-            output, err_output = p.communicate(
-                input=input_str, timeout=timelimit if timelimit else None)
-            returncode = p.poll()
-        except subprocess.TimeoutExpired:
-            logging.info("Timeout of %s s expired. Killing process.", timelimit)
-            returncode = shut_down(p)
+    waiter = threading.Thread(target=wait_and_terminate, args=(timelimit, stop_flag, p))
+    waiter.start()
+    if input_str and type(input_str) is not bytes:
+        input_str = input_str.encode()
+    output, err_output = p.communicate(input=input_str)
+    returncode = p.poll()
+
     # Decode output, but we can't decode error output, since it may contain undecodable bytes.
     output = output.decode() if output else ''
-    logging.debug(output)
-    logging.debug(err_output)
+    if output:
+        logging.debug(output)
+    if err_output:
+        logging.debug(err_output)
 
     return ExecutionResult(returncode, output, err_output)
 
