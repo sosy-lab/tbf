@@ -17,6 +17,12 @@ if ! command -v "$PROG"; then
     PROG="./${PROG}"
 fi
 
+exit_message() {
+    echo "Created tests: $COUNT"
+}
+
+trap exit_message SIGINT SIGTERM SIGKILL
+
 while true; do
   touch 'vector.test'
   "$PROG"
