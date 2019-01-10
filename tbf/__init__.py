@@ -29,12 +29,13 @@ XML_DIR = utils.get_output_path('test-suite')
 
 class StopEvent(object):
 
-    def __init__(self):
+    def __init__(self, parent=None):
         m = mp.Manager()
         self.val = m.Value(c_bool, False)
+        self._parent = parent
 
     def is_set(self):
-        return self.val.value
+        return self.val.value or (self._parent and self._parent.val.value)
 
     def set(self):
         self.val.value = True
@@ -378,7 +379,7 @@ def run(args, stop_all_event=None):
         assert not stop_all_event.is_set(
         ), "Stop event is already set before starting input generation"
 
-        stop_input_generator_event = StopEvent()
+        stop_input_generator_event = StopEvent(stop_all_event)
         generator_pool = mp.Pool(processes=1)
         if args.existing_tests_dir is None:
             # Define the methods for running test generation and test processing in parallel/sequentially
