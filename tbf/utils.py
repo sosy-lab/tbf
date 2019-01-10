@@ -297,8 +297,7 @@ def execute(command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT if err_to_output else subprocess.PIPE,
         universal_newlines=False,
-        env=env,
-        start_new_session=True)
+        env=env)
 
     waiter = threading.Thread(target=wait_and_terminate, args=(timelimit, stop_flag, p))
     waiter.start()
