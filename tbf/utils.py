@@ -600,6 +600,9 @@ def _find_nondet_methods(file_content, excludes):
             'type': method_type,
             'params': []
         })
+    svcomp_error_name = '__VERIFIER_error'
+    if svcomp_error_name not in excludes:
+        functions.append({'name': '__VERIFIER_error', 'type': 'void', 'params': []})
     return functions
 
 
