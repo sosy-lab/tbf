@@ -4,14 +4,19 @@
 #include<time.h>
 
 #define MAX_TEST_SIZE 1000
+// #define FIXED_SEED 1618033988
 
 int requires_seed = 1;
 int test_size = 0;
 
 unsigned int get_rand_seed() {
+#ifdef FIXED_SEED
+  return FIXED_SEED;
+#else
   struct timespec curr_time;
   clock_gettime(CLOCK_REALTIME, &curr_time);
   return curr_time.tv_nsec;
+#endif
 }
 
 void input(void * var, size_t var_size, const char * var_name) {
