@@ -362,7 +362,7 @@ def run(args, stop_all_event=None):
             error_method_exclude = [error_method]
             specification = utils.get_error_spec(error_method)
         else:
-            error_method_exclude = None
+            error_method_exclude = ()
             specification = utils.get_coverage_spec()
 
         if args.write_xml:
