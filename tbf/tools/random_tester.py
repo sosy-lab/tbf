@@ -12,6 +12,8 @@ include_dir = module_dir / "random" / "include"
 generator_harness = module_dir / "random" / "random_tester.c"
 random_runner = module_dir / "random" / "run.sh"
 
+USE_GCOV = True
+"""Whether to instrument the program file for gcov."""
 
 class Preprocessor:
 
@@ -63,8 +65,11 @@ class InputGenerator(BaseInputGenerator):
     def create_input_generation_cmds(self, filename, cli_options):
         compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1])
         machinem_arg = self.machine_model.compile_parameter
-        compile_cmd = [
-            'gcc', '-std=gnu11', machinem_arg, '-I', str(include_dir), '-o',
+        compile_cmd = ['gcc', '-std=gnu11']
+        if USE_GCOV:
+            compile_cmd += ['-fprofile-arcs', '-ftest-coverage']
+        compile_cmd += [
+            machinem_arg, '-I', str(include_dir), '-o',
             compiled_file, str(generator_harness), filename, '-lm'
         ]
 
