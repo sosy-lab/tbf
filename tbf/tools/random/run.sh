@@ -17,6 +17,15 @@ if ! command -v "$PROG"; then
     PROG="./${PROG}"
 fi
 
+if ! command -v bc; then
+    echo "bc not found, but required by PRTest"
+    exit 1
+fi
+if ! command -v gcov; then
+    echo "gcov not found, but required by PRTest"
+    exit 1
+fi
+
 exit_message() {
     echo "Created tests: $COUNT"
 }
@@ -29,7 +38,6 @@ while true; do
   "$PROG" || true
   if [[ -e ${PROG}.gcno ]]; then
       LINES_COVERED_NEW=$(gcov ${PROG}.c | egrep '^Lines' | cut -d":" -f 2 | cut -d"%" -f 1)
-      echo "Looking at gcov"
   else
       LINES_COVERED_NEW=$(( $LINES_COVERED + 1))
   fi
