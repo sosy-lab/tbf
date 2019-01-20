@@ -25,7 +25,7 @@ trap exit_message SIGINT SIGTERM SIGKILL
 
 while true; do
   touch 'vector.test'
-  "$PROG"
+  "$PROG" || true
   mv 'vector.test' "vector${COUNT}.test"
   (( COUNT += 1 ))
 done
