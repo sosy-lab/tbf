@@ -17,10 +17,6 @@ if ! command -v "$PROG"; then
     PROG="./${PROG}"
 fi
 
-if ! command -v bc; then
-    echo "bc not found, but required by PRTest"
-    exit 1
-fi
 if ! command -v gcov; then
     echo "gcov not found, but required by PRTest"
     exit 1
@@ -37,11 +33,11 @@ while true; do
   touch 'vector.test'
   "$PROG" || true
   if [[ -e ${PROG}.gcno ]]; then
-      LINES_COVERED_NEW=$(gcov ${PROG}.c | egrep '^Lines' | cut -d":" -f 2 | cut -d"%" -f 1)
+      LINES_COVERED_NEW=$(gcov ${PROG}.c | egrep '^Lines' | cut -d":" -f 2 | cut -d"%" -f 1 | tr -d '.')
   else
       LINES_COVERED_NEW=$(( $LINES_COVERED + 1))
   fi
-  if (( $(echo "$LINES_COVERED_NEW > $LINES_COVERED" | bc -l) )); then
+  if [[ $LINES_COVERED_NEW -gt $LINES_COVERED ]]; then
       mv 'vector.test' "vector${COUNT}.test"
       (( COUNT += 1 ))
   fi
