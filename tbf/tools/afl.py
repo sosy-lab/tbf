@@ -8,7 +8,8 @@ from tbf.testcase_converter import TestConverter
 
 module_dir = os.path.dirname(os.path.realpath(__file__))
 bin_dir = os.path.join(module_dir, 'afl/bin')
-findings_dir = './findings'
+FINDINGS_DIR = './findings'
+QUEUE_DIR = os.path.join(FINDINGS_DIR, 'queue')
 name = 'afl-fuzz'
 tests_dir = '.'
 
@@ -155,11 +156,12 @@ class AflTestConverter(TestConverter):
         if directory is None:
             directory = tests_dir
         # 'crashes' and 'hangs' cannot lead to an error as long as we don't abort in __VERIFIER_error()
-        interesting_subdirs = (os.path.join(directory, d) for d in ['queue'])
+        interesting_subdirs = (os.path.join(directory, d) for d in [QUEUE_DIR])
         tcs = list()
         for s in interesting_subdirs:
             abs_dir = os.path.abspath(s)
-            assert os.path.exists(abs_dir), "Directory doesn't exist: %s" % abs_dir
+            if not os.path.exists(s):
+                continue
             for t in glob.glob(abs_dir + '/id:*'):
                 test_name = self._get_test_name(t)
                 if test_name not in exclude:
