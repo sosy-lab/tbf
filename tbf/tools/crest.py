@@ -110,7 +110,7 @@ class InputGenerator(BaseInputGenerator):
         if cli_options:
             input_gen_cmd += cli_options
         else:
-            input_gen_cmd.append('-ppc')
+            input_gen_cmd.append('-cfg')
         return [compile_cmd, input_gen_cmd]
 
 
