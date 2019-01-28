@@ -100,7 +100,7 @@ class InputGenerator(BaseInputGenerator):
         testcase_dir = self._create_testcase_dir()
         input_gen_cmd = [
             os.path.join(bin_dir, 'afl-fuzz'), '-i', testcase_dir, '-o',
-            findings_dir
+            FINDINGS_DIR
         ]
 
         # If cli_options is an empty string and we add it to the command,
