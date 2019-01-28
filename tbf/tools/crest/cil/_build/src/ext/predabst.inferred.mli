@@ -1,240 +1,10 @@
-module E :
-  sig
-    val logChannel : out_channel ref
-    val debugFlag : bool ref
-    val verboseFlag : bool ref
-    val colorFlag : bool ref
-    val redEscStr : string
-    val greenEscStr : string
-    val yellowEscStr : string
-    val blueEscStr : string
-    val purpleEscStr : string
-    val cyanEscStr : string
-    val whiteEscStr : string
-    val resetEscStr : string
-    val warnFlag : bool ref
-    exception Error
-    val error : ('a, unit, Pretty.doc, unit) format4 -> 'a
-    val bug : ('a, unit, Pretty.doc, unit) format4 -> 'a
-    val unimp : ('a, unit, Pretty.doc, unit) format4 -> 'a
-    val s : 'a -> 'b
-    val hadErrors : bool ref
-    val warn : ('a, unit, Pretty.doc, unit) format4 -> 'a
-    val warnOpt : ('a, unit, Pretty.doc, unit) format4 -> 'a
-    val log : ('a, unit, Pretty.doc, unit) format4 -> 'a
-    val logg : ('a, unit, Pretty.doc, unit) format4 -> 'a
-    val null : ('a, unit, Pretty.doc, unit) format4 -> 'a
-    val pushContext : (unit -> Pretty.doc) -> unit
-    val popContext : unit -> unit
-    val showContext : unit -> unit
-    val withContext : (unit -> Pretty.doc) -> ('a -> 'b) -> 'a -> 'b
-    val newline : unit -> unit
-    val newHline : unit -> unit
-    val getPosition : unit -> int * string * int
-    val getHPosition : unit -> int * string
-    val setHLine : int -> unit
-    val setHFile : string -> unit
-    val setCurrentLine : int -> unit
-    val setCurrentFile : string -> unit
-    type location =
-      Errormsg.location = {
-      file : string;
-      line : int;
-      hfile : string;
-      hline : int;
-    }
-    val d_loc : unit -> location -> Pretty.doc
-    val d_hloc : unit -> location -> Pretty.doc
-    val getLocation : unit -> location
-    val parse_error : string -> 'a
-    val locUnknown : location
-    val readingFromStdin : bool ref
-    val startParsing : ?useBasename:bool -> string -> Lexing.lexbuf
-    val startParsingFromString :
-      ?file:string -> ?line:int -> string -> Lexing.lexbuf
-    val finishParsing : unit -> unit
-  end
-module P :
-  sig
-    val debug : bool ref
-    val debug_constraints : bool ref
-    val debug_aliases : bool ref
-    val debug_may_aliases : bool ref
-    val smart_aliases : bool ref
-    val print_constraints : bool ref
-    val analyze_mono : bool ref
-    val no_sub : bool ref
-    val no_flow : bool ref
-    val show_progress : bool ref
-    val conservative_undefineds : bool ref
-    val callHasNoSideEffects : (Cil.exp -> bool) ref
-    val analyze_file : Cil.file -> unit
-    val print_types : unit -> unit
-    exception UnknownLocation
-    val may_alias : Cil.exp -> Cil.exp -> bool
-    val resolve_lval : Cil.lval -> Cil.varinfo list
-    val resolve_exp : Cil.exp -> Cil.varinfo list
-    val resolve_funptr : Cil.exp -> Cil.fundec list
-    type absloc = Ptranal.absloc
-    val absloc_of_varinfo : Cil.varinfo -> absloc
-    val absloc_of_lval : Cil.lval -> absloc
-    val absloc_eq : absloc -> absloc -> bool
-    val absloc_e_points_to : Cil.exp -> absloc list
-    val absloc_e_transitive_points_to : Cil.exp -> absloc list
-    val absloc_lval_aliases : Cil.lval -> absloc list
-    val d_absloc : unit -> absloc -> Pretty.doc
-    val compute_results : bool -> unit
-    val compute_aliases : bool -> unit
-    val feature : Cil.featureDescr
-  end
-module DF :
-  sig
-    type 'a action =
-      'a Dataflow.action =
-        Default
-      | Done of 'a
-      | Post of ('a -> 'a)
-    type 'a stmtaction =
-      'a Dataflow.stmtaction =
-        SDefault
-      | SDone
-      | SUse of 'a
-    type 'a guardaction =
-      'a Dataflow.guardaction =
-        GDefault
-      | GUse of 'a
-      | GUnreachable
-    module type ForwardsTransfer =
-      sig
-        val name : string
-        val debug : bool ref
-        type t
-        val copy : t -> t
-        val stmtStartData : t Inthash.t
-        val pretty : unit -> t -> Pretty.doc
-        val computeFirstPredecessor : Cil.stmt -> t -> t
-        val combinePredecessors : Cil.stmt -> old:t -> t -> t option
-        val doInstr : Cil.instr -> t -> t action
-        val doStmt : Cil.stmt -> t -> t stmtaction
-        val doGuard : Cil.exp -> t -> t guardaction
-        val filterStmt : Cil.stmt -> bool
-      end
-    module ForwardsDataFlow :
-      functor (T : ForwardsTransfer) ->
-        sig val compute : Cil.stmt list -> unit end
-    module type BackwardsTransfer =
-      sig
-        val name : string
-        val debug : bool ref
-        type t
-        val pretty : unit -> t -> Pretty.doc
-        val stmtStartData : t Inthash.t
-        val funcExitData : t
-        val combineStmtStartData : Cil.stmt -> old:t -> t -> t option
-        val combineSuccessors : t -> t -> t
-        val doStmt : Cil.stmt -> t action
-        val doInstr : Cil.instr -> t -> t action
-        val filterStmt : Cil.stmt -> Cil.stmt -> bool
-      end
-    module BackwardsDataFlow :
-      functor (T : BackwardsTransfer) ->
-        sig val compute : Cil.stmt list -> unit end
-    val find_stmts : Cil.fundec -> Cil.stmt list * Cil.stmt list
-  end
-module IH :
-  sig
-    type 'a t = 'a Inthash.t
-    val create : int -> 'a t
-    val clear : 'a t -> unit
-    val length : 'a t -> int
-    val copy : 'a t -> 'a t
-    val copy_into : 'a t -> 'a t -> unit
-    val add : 'a t -> int -> 'a -> unit
-    val replace : 'a t -> int -> 'a -> unit
-    val remove : 'a t -> int -> unit
-    val remove_all : 'a t -> int -> unit
-    val mem : 'a t -> int -> bool
-    val find : 'a t -> int -> 'a
-    val find_all : 'a t -> int -> 'a list
-    val tryfind : 'a t -> int -> 'a option
-    val iter : (int -> 'a -> unit) -> 'a t -> unit
-    val fold : (int -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-    val memoize : 'a t -> int -> (int -> 'a) -> 'a
-    val tolist : 'a t -> (int * 'a) list
-  end
-module H :
-  sig
-    type ('a, 'b) t = ('a, 'b) Hashtbl.t
-    val create : int -> ('a, 'b) t
-    val clear : ('a, 'b) t -> unit
-    val add : ('a, 'b) t -> 'a -> 'b -> unit
-    val copy : ('a, 'b) t -> ('a, 'b) t
-    val find : ('a, 'b) t -> 'a -> 'b
-    val find_all : ('a, 'b) t -> 'a -> 'b list
-    val mem : ('a, 'b) t -> 'a -> bool
-    val remove : ('a, 'b) t -> 'a -> unit
-    val replace : ('a, 'b) t -> 'a -> 'b -> unit
-    val iter : ('a -> 'b -> unit) -> ('a, 'b) t -> unit
-    val fold : ('a -> 'b -> 'c -> 'c) -> ('a, 'b) t -> 'c -> 'c
-    val length : ('a, 'b) t -> int
-    module type HashedType =
-      sig type t val equal : t -> t -> bool val hash : t -> int end
-    module type S =
-      sig
-        type key
-        type 'a t
-        val create : int -> 'a t
-        val clear : 'a t -> unit
-        val copy : 'a t -> 'a t
-        val add : 'a t -> key -> 'a -> unit
-        val remove : 'a t -> key -> unit
-        val find : 'a t -> key -> 'a
-        val find_all : 'a t -> key -> 'a list
-        val replace : 'a t -> key -> 'a -> unit
-        val mem : 'a t -> key -> bool
-        val iter : (key -> 'a -> unit) -> 'a t -> unit
-        val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-        val length : 'a t -> int
-      end
-    module Make :
-      functor (H : HashedType) ->
-        sig
-          type key = H.t
-          type 'a t = 'a Hashtbl.Make(H).t
-          val create : int -> 'a t
-          val clear : 'a t -> unit
-          val copy : 'a t -> 'a t
-          val add : 'a t -> key -> 'a -> unit
-          val remove : 'a t -> key -> unit
-          val find : 'a t -> key -> 'a
-          val find_all : 'a t -> key -> 'a list
-          val replace : 'a t -> key -> 'a -> unit
-          val mem : 'a t -> key -> bool
-          val iter : (key -> 'a -> unit) -> 'a t -> unit
-          val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-          val length : 'a t -> int
-        end
-    val hash : 'a -> int
-    external hash_param : int -> int -> 'a -> int = "caml_hash_univ_param"
-      "noalloc"
-  end
-module U :
-  sig
-    val list_map : ('a -> 'b) -> 'a list -> 'b list
-    val equals : 'a -> 'a -> bool
-  end
-module S :
-  sig
-    type timerModeEnum = Stats.timerModeEnum = Disabled | SoftwareTimer
-    val reset : timerModeEnum -> unit
-    val countCalls : bool ref
-    val time : string -> ('a -> 'b) -> 'a -> 'b
-    val repeattime : float -> string -> ('a -> 'b) -> 'a -> 'b
-    val print : out_channel -> string -> unit
-    val lookupTime : string -> float
-    val timethis : ('a -> 'b) -> 'a -> 'b
-    val lastTime : float ref
-  end
+module E = Errormsg
+module P = Ptranal
+module DF = Dataflow
+module IH = Inthash
+module H = Hashtbl
+module U = Util
+module S = Stats
 val debug : bool ref
 val collectPredicates : (Cil.fundec -> Cil.exp list) ref
 val ignoreInstruction : (Cil.instr -> bool) ref
@@ -246,16 +16,20 @@ module ExpIntHash :
     type 'a t
     val create : int -> 'a t
     val clear : 'a t -> unit
+    val reset : 'a t -> unit
     val copy : 'a t -> 'a t
     val add : 'a t -> key -> 'a -> unit
     val remove : 'a t -> key -> unit
     val find : 'a t -> key -> 'a
+    val find_opt : 'a t -> key -> 'a option
     val find_all : 'a t -> key -> 'a list
     val replace : 'a t -> key -> 'a -> unit
     val mem : 'a t -> key -> bool
     val iter : (key -> 'a -> unit) -> 'a t -> unit
+    val filter_map_inplace : (key -> 'a -> 'a option) -> 'a t -> unit
     val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
     val length : 'a t -> int
+    val stats : 'a t -> Hashtbl.statistics
   end
 module type TRANSLATOR =
   sig
@@ -524,7 +298,7 @@ module PredAbst :
           val debug : bool ref
           type t = stmtState
           val copy : stmtState -> stmtState
-          val stmtStartData : t IH.t
+          val stmtStartData : stmtState IH.t
           val pretty : unit -> stmtState -> Pretty.doc
           val computeFirstPredecessor : Cil.stmt -> stmtState -> stmtState
           val combinePredecessors :
@@ -536,10 +310,10 @@ module PredAbst :
         end
       module PA : sig val compute : Cil.stmt list -> unit end
       val registerFile : Cil.file -> unit
-      val makePreds : ExpIntHash.key list -> unit
+      val makePreds : Cil.exp list -> unit
       val makeAllBottom : Cil.exp IH.t -> boolLat IH.t
       val analyze : Cil.fundec -> unit
-      val getPAs : int -> PredFlow.t option
+      val getPAs : int -> stmtState option
       class paVisitorClass :
         object
           val mutable cur_pa_dat : boolLat IH.t option
@@ -565,5 +339,5 @@ module PredAbst :
           method vvdec : Cil.varinfo -> Cil.varinfo Cil.visitAction
           method vvrbl : Cil.varinfo -> Cil.varinfo Cil.visitAction
         end
-      val query : boolLat IH.t -> ExpIntHash.key -> boolLat
+      val query : boolLat IH.t -> Cil.exp -> boolLat
     end

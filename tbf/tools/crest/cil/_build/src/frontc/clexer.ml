@@ -356,7 +356,7 @@ let pragmaLine = ref false
 
 # 358 "src/frontc/clexer.ml"
 let __ocaml_lex_tables = {
-  Lexing.lex_base = 
+  Lexing.lex_base =
    "\000\000\182\255\183\255\091\000\113\000\194\000\195\255\196\255\
     \197\255\198\255\199\255\200\255\201\255\202\255\203\255\204\255\
     \205\255\035\000\067\000\070\000\071\000\177\000\092\000\072\000\
@@ -400,7 +400,7 @@ let __ocaml_lex_tables = {
     \060\005\233\015\032\016\147\005\253\255\046\011\253\255\254\255\
     \009\004\070\003\254\255\255\255\013\011\253\255\096\003\255\255\
     \095\003\078\003\085\003\254\255";
-  Lexing.lex_backtrk = 
+  Lexing.lex_backtrk =
    "\255\255\255\255\255\255\071\000\073\000\071\000\255\255\255\255\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\033\000\035\000\034\000\049\000\047\000\048\000\043\000\
@@ -444,7 +444,7 @@ let __ocaml_lex_tables = {
     \002\000\003\000\001\000\002\000\255\255\255\255\255\255\255\255\
     \000\000\255\255\255\255\255\255\255\255\255\255\002\000\255\255\
     \255\255\255\255\255\255\255\255";
-  Lexing.lex_default = 
+  Lexing.lex_default =
    "\001\000\000\000\000\000\255\255\255\255\255\255\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
@@ -488,7 +488,7 @@ let __ocaml_lex_tables = {
     \255\255\255\255\255\255\255\255\000\000\070\001\000\000\000\000\
     \255\255\074\001\000\000\000\000\077\001\000\000\255\255\000\000\
     \255\255\255\255\255\255\000\000";
-  Lexing.lex_trans = 
+  Lexing.lex_trans =
    "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\038\000\037\000\043\000\038\000\038\000\044\000\043\000\
     \000\000\000\000\044\000\000\000\000\000\000\000\000\000\000\000\
@@ -1038,7 +1038,7 @@ let __ocaml_lex_tables = {
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000";
-  Lexing.lex_check = 
+  Lexing.lex_check =
    "\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\000\000\000\000\036\000\000\000\000\000\036\000\044\000\
     \255\255\255\255\044\000\255\255\255\255\255\255\255\255\255\255\
@@ -1588,7 +1588,7 @@ let __ocaml_lex_tables = {
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255";
-  Lexing.lex_base_code = 
+  Lexing.lex_base_code =
    "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
@@ -1632,7 +1632,7 @@ let __ocaml_lex_tables = {
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000";
-  Lexing.lex_backtrk_code = 
+  Lexing.lex_backtrk_code =
    "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
@@ -1676,7 +1676,7 @@ let __ocaml_lex_tables = {
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000";
-  Lexing.lex_default_code = 
+  Lexing.lex_default_code =
    "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
@@ -1720,7 +1720,7 @@ let __ocaml_lex_tables = {
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000";
-  Lexing.lex_trans_code = 
+  Lexing.lex_trans_code =
    "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\001\000\000\000\001\000\001\000\001\000\001\000\001\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
@@ -1754,7 +1754,7 @@ let __ocaml_lex_tables = {
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000";
-  Lexing.lex_check_code = 
+  Lexing.lex_check_code =
    "\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\225\000\255\255\226\000\225\000\225\000\226\000\226\000\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
@@ -1788,12 +1788,12 @@ let __ocaml_lex_tables = {
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\255\255\255\255";
-  Lexing.lex_code = 
+  Lexing.lex_code =
    "\255\001\255\255\000\001\255";
 }
 
 let rec initial lexbuf =
-    __ocaml_lex_initial_rec lexbuf 0
+   __ocaml_lex_initial_rec lexbuf 0
 and __ocaml_lex_initial_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
@@ -2209,58 +2209,61 @@ and __ocaml_lex_initial_rec lexbuf __ocaml_lex_state =
        (E.parse_error "Invalid symbol")
 # 2211 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_initial_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_initial_rec lexbuf __ocaml_lex_state
 
 and comment lexbuf =
-    __ocaml_lex_comment_rec lexbuf 186
+   __ocaml_lex_comment_rec lexbuf 186
 and __ocaml_lex_comment_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 577 "src/frontc/clexer.mll"
                      ( addWhite lexbuf; [] )
-# 2222 "src/frontc/clexer.ml"
+# 2223 "src/frontc/clexer.ml"
 
   | 1 ->
 # 579 "src/frontc/clexer.mll"
          ( addWhite lexbuf; lex_comment comment lexbuf )
-# 2227 "src/frontc/clexer.ml"
+# 2228 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_comment_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_comment_rec lexbuf __ocaml_lex_state
 
 and onelinecomment lexbuf =
-    __ocaml_lex_onelinecomment_rec lexbuf 190
+   __ocaml_lex_onelinecomment_rec lexbuf 190
 and __ocaml_lex_onelinecomment_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 583 "src/frontc/clexer.mll"
                 (addWhite lexbuf; [])
-# 2238 "src/frontc/clexer.ml"
+# 2240 "src/frontc/clexer.ml"
 
   | 1 ->
 # 584 "src/frontc/clexer.mll"
                 (addWhite lexbuf; lex_comment onelinecomment lexbuf )
-# 2243 "src/frontc/clexer.ml"
+# 2245 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_onelinecomment_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_onelinecomment_rec lexbuf __ocaml_lex_state
 
 and matchingpars lexbuf =
-    __ocaml_lex_matchingpars_rec lexbuf 193
+   __ocaml_lex_matchingpars_rec lexbuf 193
 and __ocaml_lex_matchingpars_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 587 "src/frontc/clexer.mll"
                 ( addWhite lexbuf; E.newline (); matchingpars lexbuf )
-# 2254 "src/frontc/clexer.ml"
+# 2257 "src/frontc/clexer.ml"
 
   | 1 ->
 # 588 "src/frontc/clexer.mll"
                 ( addWhite lexbuf; matchingpars lexbuf )
-# 2259 "src/frontc/clexer.ml"
+# 2262 "src/frontc/clexer.ml"
 
   | 2 ->
 # 589 "src/frontc/clexer.mll"
                 ( addWhite lexbuf; incr matchingParsOpen; matchingpars lexbuf )
-# 2264 "src/frontc/clexer.ml"
+# 2267 "src/frontc/clexer.ml"
 
   | 3 ->
 # 590 "src/frontc/clexer.mll"
@@ -2270,7 +2273,7 @@ and __ocaml_lex_matchingpars_rec lexbuf __ocaml_lex_state =
                   else 
                      matchingpars lexbuf
                 )
-# 2274 "src/frontc/clexer.ml"
+# 2277 "src/frontc/clexer.ml"
 
   | 4 ->
 # 596 "src/frontc/clexer.mll"
@@ -2278,7 +2281,7 @@ and __ocaml_lex_matchingpars_rec lexbuf __ocaml_lex_state =
                   let sl = intlist_to_string il in
 		  addComment sl;
                   matchingpars lexbuf)
-# 2282 "src/frontc/clexer.ml"
+# 2285 "src/frontc/clexer.ml"
 
   | 5 ->
 # 600 "src/frontc/clexer.mll"
@@ -2286,28 +2289,29 @@ and __ocaml_lex_matchingpars_rec lexbuf __ocaml_lex_state =
                   let _ = str lexbuf in 
                   matchingpars lexbuf
                  )
-# 2290 "src/frontc/clexer.ml"
+# 2293 "src/frontc/clexer.ml"
 
   | 6 ->
 # 604 "src/frontc/clexer.mll"
                  ( addWhite lexbuf; matchingpars lexbuf )
-# 2295 "src/frontc/clexer.ml"
+# 2298 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_matchingpars_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_matchingpars_rec lexbuf __ocaml_lex_state
 
 and hash lexbuf =
-  lexbuf.Lexing.lex_mem <- Array.create 2 (-1) ;   __ocaml_lex_hash_rec lexbuf 202
+  lexbuf.Lexing.lex_mem <- Array.make 2 (-1); __ocaml_lex_hash_rec lexbuf 202
 and __ocaml_lex_hash_rec lexbuf __ocaml_lex_state =
   match Lexing.new_engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 608 "src/frontc/clexer.mll"
         ( addWhite lexbuf; E.newline (); initial lexbuf)
-# 2306 "src/frontc/clexer.ml"
+# 2310 "src/frontc/clexer.ml"
 
   | 1 ->
 # 609 "src/frontc/clexer.mll"
          ( addWhite lexbuf; hash lexbuf)
-# 2311 "src/frontc/clexer.ml"
+# 2315 "src/frontc/clexer.ml"
 
   | 2 ->
 # 610 "src/frontc/clexer.mll"
@@ -2324,50 +2328,51 @@ and __ocaml_lex_hash_rec lexbuf __ocaml_lex_state =
                   E.setCurrentLine (lineno - 1);
                   (* A file name may follow *)
 		  file lexbuf )
-# 2328 "src/frontc/clexer.ml"
+# 2332 "src/frontc/clexer.ml"
 
   | 3 ->
 # 623 "src/frontc/clexer.mll"
                 ( addWhite lexbuf; hash lexbuf )
-# 2333 "src/frontc/clexer.ml"
+# 2337 "src/frontc/clexer.ml"
 
   | 4 ->
 let
 # 626 "src/frontc/clexer.mll"
                                      pragmaName
-# 2339 "src/frontc/clexer.ml"
+# 2343 "src/frontc/clexer.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_mem.(0) lexbuf.Lexing.lex_curr_pos in
 # 627 "src/frontc/clexer.mll"
                 ( let here = currentLoc () in
                   PRAGMA_LINE (pragmaName ^ pragma lexbuf, here)
                 )
-# 2345 "src/frontc/clexer.ml"
+# 2349 "src/frontc/clexer.ml"
 
   | 5 ->
 # 630 "src/frontc/clexer.mll"
                 ( pragmaLine := true; PRAGMA (currentLoc ()) )
-# 2350 "src/frontc/clexer.ml"
+# 2354 "src/frontc/clexer.ml"
 
   | 6 ->
 # 631 "src/frontc/clexer.mll"
             ( addWhite lexbuf; endline lexbuf)
-# 2355 "src/frontc/clexer.ml"
+# 2359 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_hash_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_hash_rec lexbuf __ocaml_lex_state
 
 and file lexbuf =
-    __ocaml_lex_file_rec lexbuf 291
+   __ocaml_lex_file_rec lexbuf 291
 and __ocaml_lex_file_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 634 "src/frontc/clexer.mll"
                       (addWhite lexbuf; E.newline (); initial lexbuf)
-# 2366 "src/frontc/clexer.ml"
+# 2371 "src/frontc/clexer.ml"
 
   | 1 ->
 # 635 "src/frontc/clexer.mll"
           (addWhite lexbuf; file lexbuf)
-# 2371 "src/frontc/clexer.ml"
+# 2376 "src/frontc/clexer.ml"
 
   | 2 ->
 # 636 "src/frontc/clexer.mll"
@@ -2377,156 +2382,163 @@ and __ocaml_lex_file_rec lexbuf __ocaml_lex_state =
                                        ((String.length n) - 2) in
                                    E.setCurrentFile n1;
 				 endline lexbuf)
-# 2381 "src/frontc/clexer.ml"
+# 2386 "src/frontc/clexer.ml"
 
   | 3 ->
 # 643 "src/frontc/clexer.mll"
       (addWhite lexbuf; endline lexbuf)
-# 2386 "src/frontc/clexer.ml"
+# 2391 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_file_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_file_rec lexbuf __ocaml_lex_state
 
 and endline lexbuf =
-    __ocaml_lex_endline_rec lexbuf 298
+   __ocaml_lex_endline_rec lexbuf 298
 and __ocaml_lex_endline_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 646 "src/frontc/clexer.mll"
                 ( addWhite lexbuf; E.newline (); initial lexbuf)
-# 2397 "src/frontc/clexer.ml"
+# 2403 "src/frontc/clexer.ml"
 
   | 1 ->
 # 647 "src/frontc/clexer.mll"
                                 ( EOF )
-# 2402 "src/frontc/clexer.ml"
+# 2408 "src/frontc/clexer.ml"
 
   | 2 ->
 # 648 "src/frontc/clexer.mll"
       ( addWhite lexbuf; endline lexbuf)
-# 2407 "src/frontc/clexer.ml"
+# 2413 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_endline_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_endline_rec lexbuf __ocaml_lex_state
 
 and pragma lexbuf =
-    __ocaml_lex_pragma_rec lexbuf 302
+   __ocaml_lex_pragma_rec lexbuf 302
 and __ocaml_lex_pragma_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 651 "src/frontc/clexer.mll"
                         ( E.newline (); "" )
-# 2418 "src/frontc/clexer.ml"
+# 2425 "src/frontc/clexer.ml"
 
   | 1 ->
 # 652 "src/frontc/clexer.mll"
                         ( let cur = Lexing.lexeme lexbuf in 
                           cur ^ (pragma lexbuf) )
-# 2424 "src/frontc/clexer.ml"
+# 2431 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_pragma_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_pragma_rec lexbuf __ocaml_lex_state
 
 and str lexbuf =
-    __ocaml_lex_str_rec lexbuf 305
+   __ocaml_lex_str_rec lexbuf 305
 and __ocaml_lex_str_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 656 "src/frontc/clexer.mll"
                         ([])
-# 2435 "src/frontc/clexer.ml"
+# 2443 "src/frontc/clexer.ml"
 
   | 1 ->
 # 657 "src/frontc/clexer.mll"
              (addLexeme lexbuf; lex_hex_escape str lexbuf)
-# 2440 "src/frontc/clexer.ml"
+# 2448 "src/frontc/clexer.ml"
 
   | 2 ->
 # 658 "src/frontc/clexer.mll"
              (addLexeme lexbuf; lex_oct_escape str lexbuf)
-# 2445 "src/frontc/clexer.ml"
+# 2453 "src/frontc/clexer.ml"
 
   | 3 ->
 # 659 "src/frontc/clexer.mll"
           (addLexeme lexbuf; lex_simple_escape str lexbuf)
-# 2450 "src/frontc/clexer.ml"
+# 2458 "src/frontc/clexer.ml"
 
   | 4 ->
 # 660 "src/frontc/clexer.mll"
      (addLexeme lexbuf; lex_unescaped str lexbuf)
-# 2455 "src/frontc/clexer.ml"
+# 2463 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_str_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_str_rec lexbuf __ocaml_lex_state
 
 and chr lexbuf =
-    __ocaml_lex_chr_rec lexbuf 315
+   __ocaml_lex_chr_rec lexbuf 315
 and __ocaml_lex_chr_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 663 "src/frontc/clexer.mll"
               ([])
-# 2466 "src/frontc/clexer.ml"
+# 2475 "src/frontc/clexer.ml"
 
   | 1 ->
 # 664 "src/frontc/clexer.mll"
              (lex_hex_escape chr lexbuf)
-# 2471 "src/frontc/clexer.ml"
+# 2480 "src/frontc/clexer.ml"
 
   | 2 ->
 # 665 "src/frontc/clexer.mll"
              (lex_oct_escape chr lexbuf)
-# 2476 "src/frontc/clexer.ml"
+# 2485 "src/frontc/clexer.ml"
 
   | 3 ->
 # 666 "src/frontc/clexer.mll"
           (lex_simple_escape chr lexbuf)
-# 2481 "src/frontc/clexer.ml"
+# 2490 "src/frontc/clexer.ml"
 
   | 4 ->
 # 667 "src/frontc/clexer.mll"
      (lex_unescaped chr lexbuf)
-# 2486 "src/frontc/clexer.ml"
+# 2495 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_chr_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_chr_rec lexbuf __ocaml_lex_state
 
 and msasm lexbuf =
-    __ocaml_lex_msasm_rec lexbuf 325
+   __ocaml_lex_msasm_rec lexbuf 325
 and __ocaml_lex_msasm_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 670 "src/frontc/clexer.mll"
                         ( msasm lexbuf )
-# 2497 "src/frontc/clexer.ml"
+# 2507 "src/frontc/clexer.ml"
 
   | 1 ->
 # 671 "src/frontc/clexer.mll"
                         ( msasminbrace lexbuf )
-# 2502 "src/frontc/clexer.ml"
+# 2512 "src/frontc/clexer.ml"
 
   | 2 ->
 # 672 "src/frontc/clexer.mll"
                         ( let cur = Lexing.lexeme lexbuf in 
                           cur ^ (msasmnobrace lexbuf) )
-# 2508 "src/frontc/clexer.ml"
+# 2518 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_msasm_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_msasm_rec lexbuf __ocaml_lex_state
 
 and msasminbrace lexbuf =
-    __ocaml_lex_msasminbrace_rec lexbuf 329
+   __ocaml_lex_msasminbrace_rec lexbuf 329
 and __ocaml_lex_msasminbrace_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 676 "src/frontc/clexer.mll"
                         ( "" )
-# 2519 "src/frontc/clexer.ml"
+# 2530 "src/frontc/clexer.ml"
 
   | 1 ->
 # 677 "src/frontc/clexer.mll"
                         ( let cur = Lexing.lexeme lexbuf in 
                           cur ^ (msasminbrace lexbuf) )
-# 2525 "src/frontc/clexer.ml"
+# 2536 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_msasminbrace_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_msasminbrace_rec lexbuf __ocaml_lex_state
 
 and msasmnobrace lexbuf =
-    __ocaml_lex_msasmnobrace_rec lexbuf 332
+   __ocaml_lex_msasmnobrace_rec lexbuf 332
 and __ocaml_lex_msasmnobrace_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
@@ -2534,23 +2546,24 @@ and __ocaml_lex_msasmnobrace_rec lexbuf __ocaml_lex_state =
                         ( lexbuf.Lexing.lex_curr_pos <- 
                                lexbuf.Lexing.lex_curr_pos - 1;
                           "" )
-# 2538 "src/frontc/clexer.ml"
+# 2550 "src/frontc/clexer.ml"
 
   | 1 ->
 # 683 "src/frontc/clexer.mll"
                         ( lexbuf.Lexing.lex_curr_pos <- 
                                lexbuf.Lexing.lex_curr_pos - 5;
                           "" )
-# 2545 "src/frontc/clexer.ml"
+# 2557 "src/frontc/clexer.ml"
 
   | 2 ->
 # 686 "src/frontc/clexer.mll"
                         ( let cur = Lexing.lexeme lexbuf in 
 
                           cur ^ (msasmnobrace lexbuf) )
-# 2552 "src/frontc/clexer.ml"
+# 2564 "src/frontc/clexer.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_msasmnobrace_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_msasmnobrace_rec lexbuf __ocaml_lex_state
 
 ;;
 
@@ -2558,4 +2571,4 @@ and __ocaml_lex_msasmnobrace_rec lexbuf __ocaml_lex_state =
  
 
 
-# 2562 "src/frontc/clexer.ml"
+# 2575 "src/frontc/clexer.ml"

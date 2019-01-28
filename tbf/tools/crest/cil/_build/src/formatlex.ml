@@ -135,7 +135,7 @@ let getArgName (l: Lexing.lexbuf) (prefixlen: int) =
 
 # 137 "src/formatlex.ml"
 let __ocaml_lex_tables = {
-  Lexing.lex_base = 
+  Lexing.lex_base =
    "\000\000\175\255\176\255\079\000\160\000\204\255\205\255\207\255\
     \208\255\209\255\210\255\211\255\212\255\213\255\214\255\215\255\
     \003\000\031\000\159\000\160\000\222\000\035\000\076\000\077\000\
@@ -159,7 +159,7 @@ let __ocaml_lex_tables = {
     \226\255\237\255\233\255\232\255\106\015\181\015\000\016\075\016\
     \150\016\181\001\253\255\254\255\053\001\255\255\139\001\254\255\
     \255\255";
-  Lexing.lex_backtrk = 
+  Lexing.lex_backtrk =
    "\255\255\255\255\255\255\078\000\078\000\255\255\255\255\255\255\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \036\000\026\000\032\000\033\000\077\000\039\000\038\000\037\000\
@@ -183,7 +183,7 @@ let __ocaml_lex_tables = {
     \255\255\255\255\255\255\255\255\078\000\078\000\078\000\078\000\
     \052\000\255\255\255\255\255\255\002\000\255\255\255\255\255\255\
     \255\255";
-  Lexing.lex_default = 
+  Lexing.lex_default =
    "\001\000\000\000\000\000\255\255\255\255\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
@@ -207,7 +207,7 @@ let __ocaml_lex_tables = {
     \000\000\000\000\000\000\000\000\255\255\255\255\255\255\255\255\
     \255\255\170\000\000\000\000\000\255\255\000\000\175\000\000\000\
     \000\000";
-  Lexing.lex_trans = 
+  Lexing.lex_trans =
    "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\032\000\030\000\000\000\032\000\032\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
@@ -771,7 +771,7 @@ let __ocaml_lex_tables = {
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
     \000\000\000\000\000\000\000\000\000\000\000\000\000\000";
-  Lexing.lex_check = 
+  Lexing.lex_check =
    "\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\000\000\000\000\255\255\000\000\000\000\255\255\255\255\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
@@ -1335,22 +1335,22 @@ let __ocaml_lex_tables = {
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\
     \255\255\255\255\255\255\255\255\255\255\255\255\255\255";
-  Lexing.lex_base_code = 
+  Lexing.lex_base_code =
    "";
-  Lexing.lex_backtrk_code = 
+  Lexing.lex_backtrk_code =
    "";
-  Lexing.lex_default_code = 
+  Lexing.lex_default_code =
    "";
-  Lexing.lex_trans_code = 
+  Lexing.lex_trans_code =
    "";
-  Lexing.lex_check_code = 
+  Lexing.lex_check_code =
    "";
-  Lexing.lex_code = 
+  Lexing.lex_code =
    "";
 }
 
 let rec initial lexbuf =
-    __ocaml_lex_initial_rec lexbuf 0
+   __ocaml_lex_initial_rec lexbuf 0
 and __ocaml_lex_initial_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
@@ -1761,44 +1761,47 @@ and __ocaml_lex_initial_rec lexbuf __ocaml_lex_state =
                                         )
 # 1763 "src/formatlex.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_initial_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_initial_rec lexbuf __ocaml_lex_state
 
 and comment lexbuf =
-    __ocaml_lex_comment_rec lexbuf 169
+   __ocaml_lex_comment_rec lexbuf 169
 and __ocaml_lex_comment_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 301 "src/formatlex.mll"
                      ( () )
-# 1774 "src/formatlex.ml"
+# 1775 "src/formatlex.ml"
 
   | 1 ->
 # 302 "src/formatlex.mll"
                                         ( E.newline (); comment lexbuf )
-# 1779 "src/formatlex.ml"
+# 1780 "src/formatlex.ml"
 
   | 2 ->
 # 303 "src/formatlex.mll"
          ( comment lexbuf )
-# 1784 "src/formatlex.ml"
+# 1785 "src/formatlex.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_comment_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_comment_rec lexbuf __ocaml_lex_state
 
 and endline lexbuf =
-    __ocaml_lex_endline_rec lexbuf 174
+   __ocaml_lex_endline_rec lexbuf 174
 and __ocaml_lex_endline_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 307 "src/formatlex.mll"
                 ( E.newline (); initial lexbuf)
-# 1795 "src/formatlex.ml"
+# 1797 "src/formatlex.ml"
 
   | 1 ->
 # 308 "src/formatlex.mll"
       ( endline lexbuf)
-# 1800 "src/formatlex.ml"
+# 1802 "src/formatlex.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_endline_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
+      __ocaml_lex_endline_rec lexbuf __ocaml_lex_state
 
 ;;
 
