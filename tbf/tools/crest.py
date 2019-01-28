@@ -12,7 +12,7 @@ bin_dir = os.path.join(module_dir, 'crest/bin')
 lib_dir = os.path.join(module_dir, 'crest/lib')
 include_dir = os.path.join(module_dir, 'crest/include')
 name = 'crest'
-test_name_pattern = re.compile('input[0-9]+$')
+test_name_pattern = 'input[0-9]*'
 tests_dir = '.'
 
 
@@ -120,7 +120,7 @@ class CrestTestConverter(TestConverter):
         if directory is None:
             directory = tests_dir
         tcs = list()
-        for t in glob.glob(directory + '/input[0-9]+'):
+        for t in glob.glob(directory + '/' + test_name_pattern):
             if self._get_file_name(t) not in exclude:
                 tcs.append(self._get_test_case_from_file(t))
         return tcs
