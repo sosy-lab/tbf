@@ -36,7 +36,6 @@ class ProcessingConfig(object):
 
         self.write_xml = args.write_xml
 
-        self.convert_to_int = args.write_integers
         self.naive_verification = args.naive_verification
         self.stop_after_success = args.stop_after_success
 

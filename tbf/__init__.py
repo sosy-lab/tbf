@@ -79,14 +79,6 @@ def _create_cli_arg_parser():
              " stops and analysis is performed\nwith the inputs generated up" +
              " to this point.")
     input_generator_args.add_argument(
-        "--no-write-integers",
-        dest="write_integers",
-        action='store_false',
-        default=True,
-        help="don't write test vector values as integer values."
-             "E.g., klee uses multi-character chars by default."
-             "Given this argument, these values are converted to integers.")
-    input_generator_args.add_argument(
         "--svcomp-nondets",
         dest="svcomp_nondets_only",
         action="store_true",
