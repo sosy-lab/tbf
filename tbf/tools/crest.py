@@ -12,7 +12,7 @@ bin_dir = os.path.join(module_dir, 'crest/bin')
 lib_dir = os.path.join(module_dir, 'crest/lib')
 include_dir = os.path.join(module_dir, 'crest/include')
 name = 'crest'
-test_name_pattern = re.compile('input[0-9]+$')
+test_name_pattern = 'input[0-9]*'
 tests_dir = '.'
 
 
@@ -110,7 +110,7 @@ class InputGenerator(BaseInputGenerator):
         if cli_options:
             input_gen_cmd += cli_options
         else:
-            input_gen_cmd.append('-ppc')
+            input_gen_cmd.append('-cfg')
         return [compile_cmd, input_gen_cmd]
 
 
@@ -120,7 +120,7 @@ class CrestTestConverter(TestConverter):
         if directory is None:
             directory = tests_dir
         tcs = list()
-        for t in glob.glob(directory + '/input*'):
+        for t in glob.glob(directory + '/' + test_name_pattern):
             if self._get_file_name(t) not in exclude:
                 tcs.append(self._get_test_case_from_file(t))
         return tcs
@@ -128,7 +128,7 @@ class CrestTestConverter(TestConverter):
     def _get_test_case_from_file(self, test_file):
         with open(test_file, 'r') as inp:
             content = inp.read()
-        return utils.TestCase(self.get_file_name(test_file), test_file, content)
+        return utils.TestCase(self._get_file_name(test_file), test_file, content)
 
     def get_test_vector(self, test_case):
         test_vector = utils.TestVector(test_case.name, test_case.origin)

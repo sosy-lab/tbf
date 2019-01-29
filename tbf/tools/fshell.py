@@ -24,45 +24,17 @@ class Preprocessor:
         content += utils.get_assume_method()
         content += '\n'
         if error_method:
-            content += utils.get_error_method_definition(error_method)
-        for method in nondet_methods_used:
-            # append method definition at end of file content
-            nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
-                                                                          method['params'])
-            content += nondet_method_definition
+            content += self._get_error_method_definition(error_method)
 
-        # FShell ignores __VERIFIER_nondet methods. We rename them so that they are analyzed correctly
-        content = content.replace("__VERIFIER_nondet", "___VERIFIER_nondet")
+        # FShell ignores methods starting with 'nondet' and '__VERIFIER_nondet'.
+        # => rename them so that they are analyzed correctly
+        content = content.replace("nondet", "_nondet")
 
         return content
 
     @staticmethod
-    def _get_nondet_method_definition(method_name, method_type, param_types):
-        var_name = utils.get_sym_var_name(method_name)
-        method_head = utils.get_method_head(method_name, method_type,
-                                            param_types)
-        method_body = ['{']
-        if method_type != 'void':
-            if 'float' in method_type or 'double' in method_type:
-                conversion_cmd = 'strtold({0}, 0);'.format(var_name)
-            elif 'unsigned' in method_type and 'long long' in method_type:
-                conversion_cmd = 'strtoull({0}, 0, 10);'.format(var_name)
-            else:
-                conversion_cmd = 'strtoll({0}, 0, 10);'.format(var_name)
-            return_statement = 'return ({0}) {1}'.format(
-                method_type, conversion_cmd)
-            method_body += [
-                'char * {0} = malloc(1000);'.format(var_name),
-                'fgets({0}, 1000, stdin);'.format(var_name), return_statement
-            ]
-        method_body = '\n    '.join(method_body)
-        method_body += '\n}\n'
-
-        return method_head + method_body
-
-    @staticmethod
     def _get_error_method_definition(error_method):
-        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); }}\n'.format(utils.ERROR_STRING)
+        return "void {}() {{ fprintf(stderr, \"{}\\n\"); }}\n".format(error_method, utils.ERROR_STRING)
 
 
 class InputGenerator(BaseInputGenerator):
@@ -98,6 +70,9 @@ class InputGenerator(BaseInputGenerator):
 
 class FshellTestConverter(TestConverter):
 
+    def __init__(self, nondet_methods):
+        self._interesting_methods = [m['name'].replace('nondet', '_nondet') for m in nondet_methods]
+
     def _get_test_cases_in_dir(self, directory=None, exclude=None):
         if directory is None:
             directory = tests_dir
@@ -120,7 +95,7 @@ class FshellTestConverter(TestConverter):
                             utils.TestCase(test_name, tests_file, curr_test))
                     curr_test = list()
                     count += 1
-                if line.startswith("strto"):
+                if any(line.startswith(m + '(') for m in self._interesting_methods):
                     test_value = line.split("=")[1]
                     curr_test.append(test_value)
             test_name = str(count)

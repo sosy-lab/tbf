@@ -2216,11 +2216,11 @@ sub linkOutputFile {
 sub setVersion {
     my($self) = @_;
     my $cversion = "";
-    open(VER, "@{$self->{CC}} -dumpfullversion " 
+    open(VER, "@{$self->{CC}} -dumpversion " 
          . join(' ', @{$self->{PPARGS}}) ." |") 
         || die "Cannot start GNUCC";
     while(<VER>) {
-        if($_ =~ m|^(\d+\S+)| || $_ =~ m|^(egcs-\d+\S+)|) {
+        if($_ =~ m|^(\d+\S*)| || $_ =~ m|^(egcs-\d+\S*)|) {
             $cversion = "gcc_$1";
             close(VER) || die "Cannot start GNUCC\n";
             $self->{CVERSION} = $cversion;

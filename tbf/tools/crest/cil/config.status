@@ -433,7 +433,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/home/yavuz/İndirilenler/crest-master/cil'
+ac_pwd='/home/leostrakosch/Documents/SV/crest/cil'
 srcdir='.'
 INSTALL='/usr/bin/install -c'
 test -n "$AWK" || AWK=awk
@@ -631,21 +631,21 @@ S["CPP"]="gcc -E"
 S["PERL"]="perl"
 S["OCAMLFIND"]="ocamlfind"
 S["OCAMLYACC"]="ocamlyacc"
-S["OCAMLLEXDOTOPT"]="no"
-S["OCAMLLEX"]="ocamllex"
+S["OCAMLLEXDOTOPT"]="ocamllex.opt"
+S["OCAMLLEX"]="ocamllex.opt"
 S["OCAMLBUILD"]="ocamlbuild"
 S["OCAMLDOC"]="ocamldoc"
 S["OCAMLMKLIB"]="ocamlmklib"
 S["OCAMLMKTOP"]="ocamlmktop"
 S["OCAMLDEP"]="ocamldep"
 S["OCAML"]="ocaml"
-S["OCAMLOPTDOTOPT"]="no"
-S["OCAMLCDOTOPT"]="no"
+S["OCAMLOPTDOTOPT"]="ocamlopt.opt"
+S["OCAMLCDOTOPT"]="ocamlc.opt"
 S["OCAMLBEST"]="opt"
-S["OCAMLOPT"]="ocamlopt"
+S["OCAMLOPT"]="ocamlopt.opt"
 S["OCAMLLIB"]="/usr/lib/ocaml"
-S["OCAMLVERSION"]="3.12.1"
-S["OCAMLC"]="ocamlc"
+S["OCAMLVERSION"]="4.05.0"
+S["OCAMLC"]="ocamlc.opt"
 S["target_os"]="linux-gnu"
 S["target_vendor"]="unknown"
 S["target_cpu"]="x86_64"
