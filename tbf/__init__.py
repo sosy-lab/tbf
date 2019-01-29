@@ -21,7 +21,7 @@ import tbf.tools.dummy as dummy
 import tbf.utils as utils
 from tbf.testcase_processing import ProcessingConfig, ExecutionRunner
 
-__VERSION__ = "0.2-dev"
+__VERSION__ = "v0.2.2-testcomp19-18-gfb4f4d5"
 
 
 XML_DIR = utils.get_output_path('test-suite')
@@ -262,6 +262,9 @@ def _parse_cli_args(argv):
         else:
             logging.error("Unknown coverage criterion: %s", spec_content)
             exit(1)
+    else:
+        logging.error("No coverage specification given. Use '--spec' to provide a specification that tells tbf what to do.")
+        exit(1)
 
     return args
 
