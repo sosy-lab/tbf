@@ -130,6 +130,7 @@ type token =
   | PRAGMA
 
 open Parsing;;
+let _ = parse_error;;
 # 40 "src/formatparse.mly"
 open Cil
 open Pretty
@@ -320,7 +321,7 @@ type maybeInit =
   | InitExp of exp
   | InitCall of lval * exp list
 
-# 324 "src/formatparse.ml"
+# 325 "src/formatparse.ml"
 let yytransl_const = [|
     0 (* EOF *);
   264 (* CHAR *);
@@ -1662,7 +1663,7 @@ let yyact = [|
     Obj.repr(
 # 338 "src/formatparse.mly"
                (  )
-# 1666 "src/formatparse.ml"
+# 1667 "src/formatparse.ml"
                : unit))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -1678,14 +1679,14 @@ let yyact = [|
 
                              (fun e -> Some [ Fe e ]))
                          )
-# 1682 "src/formatparse.ml"
+# 1683 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
     Obj.repr(
 # 356 "src/formatparse.mly"
                    ( _1 )
-# 1689 "src/formatparse.ml"
+# 1690 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -1697,7 +1698,7 @@ let yyact = [|
                                 Lval l -> (snd _1) l 
                               | _ -> None))
                          )
-# 1701 "src/formatparse.ml"
+# 1702 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1709,7 +1710,7 @@ let yyact = [|
                              SizeOfE e' -> (snd _2) e'
                            | _ -> None)
                         )
-# 1713 "src/formatparse.ml"
+# 1714 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 1 : ((string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)) in
@@ -1721,7 +1722,7 @@ let yyact = [|
                               SizeOf t -> (snd _3) t
                            |  _ -> None))
                         )
-# 1725 "src/formatparse.ml"
+# 1726 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1732,7 +1733,7 @@ let yyact = [|
                            (fun e -> match e with
                              AlignOfE e' -> (snd _2) e' | _ -> None))
                         )
-# 1736 "src/formatparse.ml"
+# 1737 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 1 : ((string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)) in
@@ -1743,35 +1744,35 @@ let yyact = [|
                            (fun e -> match e with
                              AlignOf t' -> (snd _3) t' | _ -> None))
                         )
-# 1747 "src/formatparse.ml"
+# 1748 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
     Obj.repr(
 # 397 "src/formatparse.mly"
           ( _2 )
-# 1754 "src/formatparse.ml"
+# 1755 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
     Obj.repr(
 # 399 "src/formatparse.mly"
           ( doUnop Neg _2 )
-# 1761 "src/formatparse.ml"
+# 1762 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
     Obj.repr(
 # 402 "src/formatparse.mly"
           ( doUnop LNot _2 )
-# 1768 "src/formatparse.ml"
+# 1769 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
     Obj.repr(
 # 405 "src/formatparse.mly"
           ( doUnop BNot _2 )
-# 1775 "src/formatparse.ml"
+# 1776 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'argu) in
@@ -1790,7 +1791,7 @@ let yyact = [|
                              end
                            | _ -> None))
                         )
-# 1794 "src/formatparse.ml"
+# 1795 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1804,14 +1805,14 @@ let yyact = [|
                             AddrOf l -> (snd _2) (Lval l)
                           | e -> (snd _2) (Lval (mkMem e NoOffset))))
                          )
-# 1808 "src/formatparse.ml"
+# 1809 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
     Obj.repr(
 # 433 "src/formatparse.mly"
                         ( _2 )
-# 1815 "src/formatparse.ml"
+# 1816 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1828,7 +1829,7 @@ let yyact = [|
                             end
                           | _ -> None))
                         )
-# 1832 "src/formatparse.ml"
+# 1833 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1847,7 +1848,7 @@ let yyact = [|
                                end
                            | _ -> None))
                         )
-# 1851 "src/formatparse.ml"
+# 1852 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1871,7 +1872,7 @@ let yyact = [|
                              end
                            | _ -> None))
                         )
-# 1875 "src/formatparse.ml"
+# 1876 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1879,7 +1880,7 @@ let yyact = [|
     Obj.repr(
 # 479 "src/formatparse.mly"
    ( doBinop Mult _1 _3 )
-# 1883 "src/formatparse.ml"
+# 1884 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1887,7 +1888,7 @@ let yyact = [|
     Obj.repr(
 # 481 "src/formatparse.mly"
    ( doBinop Div _1 _3 )
-# 1891 "src/formatparse.ml"
+# 1892 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1895,7 +1896,7 @@ let yyact = [|
     Obj.repr(
 # 483 "src/formatparse.mly"
    ( doBinop Mod _1 _3 )
-# 1899 "src/formatparse.ml"
+# 1900 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1903,7 +1904,7 @@ let yyact = [|
     Obj.repr(
 # 485 "src/formatparse.mly"
    ( doBinop Shiftlt _1 _3 )
-# 1907 "src/formatparse.ml"
+# 1908 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1911,7 +1912,7 @@ let yyact = [|
     Obj.repr(
 # 487 "src/formatparse.mly"
    ( doBinop Shiftrt _1 _3 )
-# 1915 "src/formatparse.ml"
+# 1916 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1919,7 +1920,7 @@ let yyact = [|
     Obj.repr(
 # 489 "src/formatparse.mly"
    ( doBinop BAnd _1 _3 )
-# 1923 "src/formatparse.ml"
+# 1924 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1927,7 +1928,7 @@ let yyact = [|
     Obj.repr(
 # 491 "src/formatparse.mly"
    ( doBinop BOr _1 _3 )
-# 1931 "src/formatparse.ml"
+# 1932 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1935,7 +1936,7 @@ let yyact = [|
     Obj.repr(
 # 493 "src/formatparse.mly"
    ( doBinop BXor _1 _3 )
-# 1939 "src/formatparse.ml"
+# 1940 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1943,7 +1944,7 @@ let yyact = [|
     Obj.repr(
 # 495 "src/formatparse.mly"
    ( doBinop Eq _1 _3 )
-# 1947 "src/formatparse.ml"
+# 1948 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1951,7 +1952,7 @@ let yyact = [|
     Obj.repr(
 # 497 "src/formatparse.mly"
    ( doBinop Ne _1 _3 )
-# 1955 "src/formatparse.ml"
+# 1956 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1959,7 +1960,7 @@ let yyact = [|
     Obj.repr(
 # 499 "src/formatparse.mly"
    ( doBinop Lt _1 _3 )
-# 1963 "src/formatparse.ml"
+# 1964 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1967,7 +1968,7 @@ let yyact = [|
     Obj.repr(
 # 501 "src/formatparse.mly"
    ( doBinop Gt _1 _3 )
-# 1971 "src/formatparse.ml"
+# 1972 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1975,7 +1976,7 @@ let yyact = [|
     Obj.repr(
 # 503 "src/formatparse.mly"
    ( doBinop Le _1 _3 )
-# 1979 "src/formatparse.ml"
+# 1980 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -1983,7 +1984,7 @@ let yyact = [|
     Obj.repr(
 # 505 "src/formatparse.mly"
    ( doBinop Ge _1 _3 )
-# 1987 "src/formatparse.ml"
+# 1988 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)) in
@@ -2005,7 +2006,7 @@ let yyact = [|
                                 Some m1, Some m2 -> Some (m1 @ m2)
                               | _, _ -> None))
                          )
-# 2009 "src/formatparse.ml"
+# 2010 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2019,7 +2020,7 @@ let yyact = [|
 
                           fun uo -> Some [ Fu uo ])
                        )
-# 2023 "src/formatparse.ml"
+# 2024 "src/formatparse.ml"
                : 'argu))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2033,7 +2034,7 @@ let yyact = [|
 
                           fun bo -> Some [ Fb bo ])
                        )
-# 2037 "src/formatparse.ml"
+# 2038 "src/formatparse.ml"
                : 'argb))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2050,7 +2051,7 @@ let yyact = [|
                                 Some [ Fd (Int64.to_int n) ]
                             | _ -> None) 
                          )
-# 2054 "src/formatparse.ml"
+# 2055 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2067,7 +2068,7 @@ let yyact = [|
                                 Some [ Fg s ]
                             | _ -> None) 
                          )
-# 2071 "src/formatparse.ml"
+# 2072 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2081,7 +2082,7 @@ let yyact = [|
                               Const(CInt64(n', _, _)) when e' = n' -> Some []
                             | _ -> None))
                          )
-# 2085 "src/formatparse.ml"
+# 2086 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2096,7 +2097,7 @@ let yyact = [|
 
                             fun l -> Some [ Fl l ])
                          )
-# 2100 "src/formatparse.ml"
+# 2101 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'argv) in
@@ -2115,7 +2116,7 @@ let yyact = [|
                               end
                             | _ -> None))
                          )
-# 2119 "src/formatparse.ml"
+# 2120 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -2127,7 +2128,7 @@ let yyact = [|
                               Mem e, NoOffset -> (snd _2) e
                            | _, _ -> None))
                          )
-# 2131 "src/formatparse.ml"
+# 2132 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -2153,7 +2154,7 @@ let yyact = [|
                    end
                 | _, _ -> None))
              )
-# 2157 "src/formatparse.ml"
+# 2158 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -2177,7 +2178,7 @@ let yyact = [|
                   end
                 | _, _ -> None))
               )
-# 2181 "src/formatparse.ml"
+# 2182 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2191,7 +2192,7 @@ let yyact = [|
 
                           fun v -> Some [ Fv v ])
                        )
-# 2195 "src/formatparse.ml"
+# 2196 "src/formatparse.ml"
                : 'argv))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2205,7 +2206,7 @@ let yyact = [|
                          (fun v -> 
                              E.s (bug "identifiers (%s) are not supported for deconstruction" currentArg)))
                        )
-# 2209 "src/formatparse.ml"
+# 2210 "src/formatparse.ml"
                : 'argv))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2219,7 +2220,7 @@ let yyact = [|
 
                               (fun off -> Some [ Fo off ]))
                           )
-# 2223 "src/formatparse.ml"
+# 2224 "src/formatparse.ml"
                : (Cil.typ -> (string * Cil.formatArg) list -> Cil.offset) * (Cil.offset -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2230,7 +2231,7 @@ let yyact = [|
                                 NoOffset -> Some []
                               | _ -> None))
                           )
-# 2234 "src/formatparse.ml"
+# 2235 "src/formatparse.ml"
                : (Cil.typ -> (string * Cil.formatArg) list -> Cil.offset) * (Cil.offset -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : string) in
@@ -2246,7 +2247,7 @@ let yyact = [|
                                  (snd _3) off'
                             | _ -> None))
                           )
-# 2250 "src/formatparse.ml"
+# 2251 "src/formatparse.ml"
                : (Cil.typ -> (string * Cil.formatArg) list -> Cil.offset) * (Cil.offset -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -2270,7 +2271,7 @@ let yyact = [|
                       end
                     | _ -> None))
                     )
-# 2274 "src/formatparse.ml"
+# 2275 "src/formatparse.ml"
                : (Cil.typ -> (string * Cil.formatArg) list -> Cil.offset) * (Cil.offset -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'one_formal) in
@@ -2282,7 +2283,7 @@ let yyact = [|
 
                          (fun t -> (snd _1) ("", t, [])))
                       )
-# 2286 "src/formatparse.ml"
+# 2287 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)) in
@@ -2307,7 +2308,7 @@ let yyact = [|
                            end
                          | _ -> None))
                    )
-# 2311 "src/formatparse.ml"
+# 2312 "src/formatparse.ml"
                : 'one_formal))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2321,7 +2322,7 @@ let yyact = [|
 
                       (fun (fn, ft, fa) -> Some [ Ff (fn, ft, fa) ]))
                    )
-# 2325 "src/formatparse.ml"
+# 2326 "src/formatparse.ml"
                : 'one_formal))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2335,7 +2336,7 @@ let yyact = [|
                       
                       (fun t -> Some [ Ft t ]))
                       )
-# 2339 "src/formatparse.ml"
+# 2340 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2345,7 +2346,7 @@ let yyact = [|
                        (fun t -> match unrollType t with 
                            TVoid _ -> Some []
                          | _ -> None)) )
-# 2349 "src/formatparse.ml"
+# 2350 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2361,62 +2362,62 @@ let yyact = [|
                          TInt(ik, _) -> Some [ Fk ik ]
                        | _ -> None))
                     )
-# 2365 "src/formatparse.ml"
+# 2366 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 793 "src/formatparse.mly"
                     ( ((fun al args -> TInt(IChar, al)),
                        (matchIntType IChar)) )
-# 2372 "src/formatparse.ml"
+# 2373 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 795 "src/formatparse.mly"
                     ( ((fun al args -> TInt(IUChar, al)), 
                        matchIntType IUChar) )
-# 2379 "src/formatparse.ml"
+# 2380 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 798 "src/formatparse.mly"
                     ( ((fun al args -> TInt(IShort, al)), 
                        matchIntType IShort) )
-# 2386 "src/formatparse.ml"
+# 2387 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 800 "src/formatparse.mly"
                     ( ((fun al args -> TInt(IUShort, al)), 
                        matchIntType IUShort) )
-# 2393 "src/formatparse.ml"
+# 2394 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 803 "src/formatparse.mly"
                     ( ((fun al args -> TInt(IInt, al)), 
                        matchIntType IInt) )
-# 2400 "src/formatparse.ml"
+# 2401 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 805 "src/formatparse.mly"
                     ( ((fun al args -> TInt(IUInt, al)), matchIntType IUInt) )
-# 2406 "src/formatparse.ml"
+# 2407 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 807 "src/formatparse.mly"
                      ( ((fun al args -> TInt(ILong, al)), 
                         matchIntType ILong) )
-# 2413 "src/formatparse.ml"
+# 2414 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 809 "src/formatparse.mly"
                      ( ((fun al args -> TInt(IULong, al)), 
                         matchIntType IULong) )
-# 2420 "src/formatparse.ml"
+# 2421 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2425,7 +2426,7 @@ let yyact = [|
                           
                           matchIntType ILongLong)
                         )
-# 2429 "src/formatparse.ml"
+# 2430 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2434,7 +2435,7 @@ let yyact = [|
 
                              matchIntType IULongLong)
                            )
-# 2438 "src/formatparse.ml"
+# 2439 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2442,14 +2443,14 @@ let yyact = [|
                     ( ((fun al args -> TFloat(FFloat, al)),
                        matchFloatType FFloat) 
                     )
-# 2446 "src/formatparse.ml"
+# 2447 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 824 "src/formatparse.mly"
                     ( ((fun al args -> TFloat(FDouble, al)),
                        matchFloatType FDouble) )
-# 2453 "src/formatparse.ml"
+# 2454 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2465,7 +2466,7 @@ let yyact = [|
                             TComp(ci, _) -> Some [ Fc ci ]
                           | _ -> None))
                     )
-# 2469 "src/formatparse.ml"
+# 2470 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2482,7 +2483,7 @@ let yyact = [|
                           | _ -> None))
 
                    )
-# 2486 "src/formatparse.ml"
+# 2487 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 1 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -2493,7 +2494,7 @@ let yyact = [|
                     
                       (fun t -> E.s (bug "Cannot match typeof(e)\n")))
                    )
-# 2497 "src/formatparse.ml"
+# 2498 "src/formatparse.ml"
                : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : 'attributes) in
@@ -2513,14 +2514,14 @@ let yyact = [|
                            end
                          | _ -> None))
                     )
-# 2517 "src/formatparse.ml"
+# 2518 "src/formatparse.ml"
                : 'decl))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'direct_decl) in
     Obj.repr(
 # 873 "src/formatparse.mly"
                 ( _1 )
-# 2524 "src/formatparse.ml"
+# 2525 "src/formatparse.ml"
                : 'decl))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2531,7 +2532,7 @@ let yyact = [|
                       (fun (fn, ft) -> 
                          Some (unrollType ft, [])))
                    )
-# 2535 "src/formatparse.ml"
+# 2536 "src/formatparse.ml"
                : 'direct_decl))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2545,7 +2546,7 @@ let yyact = [|
                         else 
                           None))
                    )
-# 2549 "src/formatparse.ml"
+# 2550 "src/formatparse.ml"
                : 'direct_decl))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 2 : 'attributes) in
@@ -2566,7 +2567,7 @@ let yyact = [|
                         | _ -> None
                       end))
                    )
-# 2570 "src/formatparse.ml"
+# 2571 "src/formatparse.ml"
                : 'direct_decl))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : 'direct_decl) in
@@ -2585,7 +2586,7 @@ let yyact = [|
                          end 
                        | _ -> None))
                    )
-# 2589 "src/formatparse.ml"
+# 2590 "src/formatparse.ml"
                : 'direct_decl))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 5 : 'attributes) in
@@ -2608,7 +2609,7 @@ let yyact = [|
                            end
                          | _ -> None))
                    )
-# 2612 "src/formatparse.ml"
+# 2613 "src/formatparse.ml"
                : 'direct_decl))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2621,7 +2622,7 @@ let yyact = [|
                           (_, false) -> Some [] 
                         | _ -> None))
                    )
-# 2625 "src/formatparse.ml"
+# 2626 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> (string * Cil.typ * Cil.attributes) list option * bool) * ((string * Cil.typ * Cil.attributes) list option * bool -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'parameters_ne) in
@@ -2636,7 +2637,7 @@ let yyact = [|
                          ((Some pars), isva) -> (snd _1) (pars, isva)
                        |  _ -> None))
                    )
-# 2640 "src/formatparse.ml"
+# 2641 "src/formatparse.ml"
                : ((string * Cil.formatArg) list -> (string * Cil.typ * Cil.attributes) list option * bool) * ((string * Cil.typ * Cil.attributes) list option * bool -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2647,7 +2648,7 @@ let yyact = [|
                           ([], true) -> Some [] 
                         | _ -> None))
                    )
-# 2651 "src/formatparse.ml"
+# 2652 "src/formatparse.ml"
                : 'parameters_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2663,7 +2664,7 @@ let yyact = [|
                          ([], isva) -> Some [ Fva isva ] 
                        | _ -> None))
                    )
-# 2667 "src/formatparse.ml"
+# 2668 "src/formatparse.ml"
                : 'parameters_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2679,7 +2680,7 @@ let yyact = [|
                           (pars, false) -> Some [ FF pars ] 
                         | _ -> None))
                    )
-# 2683 "src/formatparse.ml"
+# 2684 "src/formatparse.ml"
                : 'parameters_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'one_formal) in
@@ -2691,7 +2692,7 @@ let yyact = [|
                          ([ f ], false) -> (snd _1) f 
                        | _ -> None))
                    )
-# 2695 "src/formatparse.ml"
+# 2696 "src/formatparse.ml"
                : 'parameters_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'one_formal) in
@@ -2711,7 +2712,7 @@ let yyact = [|
                           end
                         | _ -> None))
                    )
-# 2715 "src/formatparse.ml"
+# 2716 "src/formatparse.ml"
                : 'parameters_ne))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -2719,7 +2720,7 @@ let yyact = [|
                    ( ((fun args -> None),
                       (* Match anything if the pattern does not have a len *)
                       (fun _ -> Some [])) )
-# 2723 "src/formatparse.ml"
+# 2724 "src/formatparse.ml"
                : 'exp_opt))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -2731,7 +2732,7 @@ let yyact = [|
                         Some e -> (snd _1) e
                       | _ -> None))
                    )
-# 2735 "src/formatparse.ml"
+# 2736 "src/formatparse.ml"
                : 'exp_opt))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2745,14 +2746,14 @@ let yyact = [|
 
                       fun lo -> Some [ Feo lo ])
                    )
-# 2749 "src/formatparse.ml"
+# 2750 "src/formatparse.ml"
                : 'exp_opt))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 1047 "src/formatparse.mly"
                   ( ((fun args -> []), 
                      (fun attrs -> Some [])) )
-# 2756 "src/formatparse.ml"
+# 2757 "src/formatparse.ml"
                : 'attributes))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2766,7 +2767,7 @@ let yyact = [|
 
                      (fun al -> Some [ FA al ]))
                   )
-# 2770 "src/formatparse.ml"
+# 2771 "src/formatparse.ml"
                : 'attributes))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'attribute) in
@@ -2781,39 +2782,39 @@ let yyact = [|
                          Some m1, Some m2 -> Some (m1 @ m2)
                        | _, _ -> None))
                   )
-# 2785 "src/formatparse.ml"
+# 2786 "src/formatparse.ml"
                : 'attributes))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 1071 "src/formatparse.mly"
                                         ( doAttr "const" None )
-# 2791 "src/formatparse.ml"
+# 2792 "src/formatparse.ml"
                : 'attribute))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 1072 "src/formatparse.mly"
                                         ( doAttr "restrict" None )
-# 2797 "src/formatparse.ml"
+# 2798 "src/formatparse.ml"
                : 'attribute))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 1073 "src/formatparse.mly"
                                         ( doAttr "volatile" None )
-# 2803 "src/formatparse.ml"
+# 2804 "src/formatparse.ml"
                : 'attribute))
 ; (fun __caml_parser_env ->
     let _4 = (Parsing.peek_val __caml_parser_env 2 : 'attr) in
     Obj.repr(
 # 1075 "src/formatparse.mly"
                                         ( _4 )
-# 2810 "src/formatparse.ml"
+# 2811 "src/formatparse.ml"
                : 'attribute))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
 # 1082 "src/formatparse.mly"
                           ( doAttr _1 None )
-# 2817 "src/formatparse.ml"
+# 2818 "src/formatparse.ml"
                : 'attr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : string) in
@@ -2821,7 +2822,7 @@ let yyact = [|
     Obj.repr(
 # 1085 "src/formatparse.mly"
                           ( doAttr _1 (Some _3) )
-# 2825 "src/formatparse.ml"
+# 2826 "src/formatparse.ml"
                : 'attr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'attr_arg) in
@@ -2833,7 +2834,7 @@ let yyact = [|
                                       [ arg ] -> (snd _1) arg
                                     | _ -> None))
                                  )
-# 2837 "src/formatparse.ml"
+# 2838 "src/formatparse.ml"
                : 'attr_args_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'attr_arg) in
@@ -2852,7 +2853,7 @@ let yyact = [|
                                       end
                                     | _ -> None))
                                   )
-# 2856 "src/formatparse.ml"
+# 2857 "src/formatparse.ml"
                : 'attr_args_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2866,7 +2867,7 @@ let yyact = [|
 
                            (fun al -> Some [ FP al ]))
                         )
-# 2870 "src/formatparse.ml"
+# 2871 "src/formatparse.ml"
                : 'attr_args_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2878,7 +2879,7 @@ let yyact = [|
                             ACons(id, []) when id = _1 -> Some []
                         | _ -> None))
                      )
-# 2882 "src/formatparse.ml"
+# 2883 "src/formatparse.ml"
                : 'attr_arg))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : string) in
@@ -2892,7 +2893,7 @@ let yyact = [|
                               (snd _3) args
                         | _ -> None))
                      )
-# 2896 "src/formatparse.ml"
+# 2897 "src/formatparse.ml"
                : 'attr_arg))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -2906,7 +2907,7 @@ let yyact = [|
 
                         (fun ap -> Some [ Fp ap]))
                      )
-# 2910 "src/formatparse.ml"
+# 2911 "src/formatparse.ml"
                : 'attr_arg))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string) in
@@ -2920,7 +2921,7 @@ let yyact = [|
 
                            (fun i -> Some [ Fi i]))
                         )
-# 2924 "src/formatparse.ml"
+# 2925 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -2938,7 +2939,7 @@ let yyact = [|
                              end
                            | _ -> None))
                         )
-# 2942 "src/formatparse.ml"
+# 2943 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -2953,7 +2954,7 @@ let yyact = [|
                              (fun bop -> bop = PlusPI || bop = PlusA)
                              (snd _1) (snd _3)) 
                         )
-# 2957 "src/formatparse.ml"
+# 2958 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -2970,7 +2971,7 @@ let yyact = [|
                                                || bop = MinusPI) 
                                       (snd _1)  (snd _3)) 
                         )
-# 2974 "src/formatparse.ml"
+# 2975 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -2978,7 +2979,7 @@ let yyact = [|
     Obj.repr(
 # 1190 "src/formatparse.mly"
    ( doBinopEq Mult _1 _3 )
-# 2982 "src/formatparse.ml"
+# 2983 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -2986,7 +2987,7 @@ let yyact = [|
     Obj.repr(
 # 1193 "src/formatparse.mly"
    ( doBinopEq Div _1 _3 )
-# 2990 "src/formatparse.ml"
+# 2991 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -2994,7 +2995,7 @@ let yyact = [|
     Obj.repr(
 # 1196 "src/formatparse.mly"
    ( doBinopEq Mod _1 _3 )
-# 2998 "src/formatparse.ml"
+# 2999 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -3002,7 +3003,7 @@ let yyact = [|
     Obj.repr(
 # 1199 "src/formatparse.mly"
    ( doBinopEq BAnd _1 _3 )
-# 3006 "src/formatparse.ml"
+# 3007 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -3010,7 +3011,7 @@ let yyact = [|
     Obj.repr(
 # 1202 "src/formatparse.mly"
    ( doBinopEq BOr _1 _3 )
-# 3014 "src/formatparse.ml"
+# 3015 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -3018,7 +3019,7 @@ let yyact = [|
     Obj.repr(
 # 1205 "src/formatparse.mly"
    ( doBinopEq BXor _1 _3 )
-# 3022 "src/formatparse.ml"
+# 3023 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -3026,7 +3027,7 @@ let yyact = [|
     Obj.repr(
 # 1208 "src/formatparse.mly"
    ( doBinopEq Shiftlt _1 _3 )
-# 3030 "src/formatparse.ml"
+# 3031 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -3034,7 +3035,7 @@ let yyact = [|
     Obj.repr(
 # 1211 "src/formatparse.mly"
    ( doBinopEq Shiftrt _1 _3 )
-# 3038 "src/formatparse.ml"
+# 3039 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 6 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -3055,7 +3056,7 @@ let yyact = [|
                              end
                            | _ -> None))
                         )
-# 3059 "src/formatparse.ml"
+# 3060 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 4 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -3074,7 +3075,7 @@ let yyact = [|
                              end
                            | _ -> None))
                          )
-# 3078 "src/formatparse.ml"
+# 3079 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 5 : 'arglo) in
@@ -3095,7 +3096,7 @@ let yyact = [|
                           end
                         | _ -> None))
                      )
-# 3099 "src/formatparse.ml"
+# 3100 "src/formatparse.ml"
                : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -3112,7 +3113,7 @@ let yyact = [|
 
                             (fun lo -> Some [ Flo lo ]))
                          )
-# 3116 "src/formatparse.ml"
+# 3117 "src/formatparse.ml"
                : 'arglo))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -3123,14 +3124,14 @@ let yyact = [|
                           [] -> Some []
                          | _ -> None))
                   )
-# 3127 "src/formatparse.ml"
+# 3128 "src/formatparse.ml"
                : 'arguments))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'arguments_ne) in
     Obj.repr(
 # 1282 "src/formatparse.mly"
                   ( _1 )
-# 3134 "src/formatparse.ml"
+# 3135 "src/formatparse.ml"
                : 'arguments))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -3142,7 +3143,7 @@ let yyact = [|
                         [ h ] -> (snd _1) h
                        | _ -> None))
                   )
-# 3146 "src/formatparse.ml"
+# 3147 "src/formatparse.ml"
                : 'arguments_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -3156,7 +3157,7 @@ let yyact = [|
 
                       (fun actuals -> Some [ FE actuals ]))
                   )
-# 3160 "src/formatparse.ml"
+# 3161 "src/formatparse.ml"
                : 'arguments_ne))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -3173,7 +3174,7 @@ let yyact = [|
                          end
                        | _ -> None))
                   )
-# 3177 "src/formatparse.ml"
+# 3178 "src/formatparse.ml"
                : 'arguments_ne))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -3185,7 +3186,7 @@ let yyact = [|
                                     mkBlock [ _5 mkTemp loc args ],
                                     mkBlock [], loc)))
                   )
-# 3189 "src/formatparse.ml"
+# 3190 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 4 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -3198,7 +3199,7 @@ let yyact = [|
                                     mkBlock [ _5 mkTemp loc args ],
                                     mkBlock [ _7 mkTemp loc args], loc)))
                   )
-# 3202 "src/formatparse.ml"
+# 3203 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : 'exp_opt) in
@@ -3207,7 +3208,7 @@ let yyact = [|
                   ( (fun mkTemp loc args -> 
                          mkStmt (Return((fst _2) args, loc))) 
                   )
-# 3211 "src/formatparse.ml"
+# 3212 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -3215,7 +3216,7 @@ let yyact = [|
                   ( (fun mkTemp loc args -> 
                          mkStmt (Break loc))
                   )
-# 3219 "src/formatparse.ml"
+# 3220 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     Obj.repr(
@@ -3223,7 +3224,7 @@ let yyact = [|
                   ( (fun mkTemp loc args -> 
                          mkStmt (Continue loc))
                   )
-# 3227 "src/formatparse.ml"
+# 3228 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt list)) in
@@ -3233,7 +3234,7 @@ let yyact = [|
                          let stmts = _2 mkTemp loc args in
                          mkStmt (Block (mkBlock (stmts))))
                   )
-# 3237 "src/formatparse.ml"
+# 3238 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 2 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
@@ -3257,7 +3258,7 @@ let yyact = [|
                                            _5 mkTemp loc args ],
                                  loc, None, None)))
                    )
-# 3261 "src/formatparse.ml"
+# 3262 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'instr_list) in
@@ -3266,7 +3267,7 @@ let yyact = [|
                   ( (fun mkTemp loc args -> 
                        mkStmt (Instr (_1 loc args)))
                   )
-# 3270 "src/formatparse.ml"
+# 3271 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -3277,13 +3278,13 @@ let yyact = [|
                        match getArg currentArg args with
                          Fs s -> s
                        | a -> wrongArgType currentArg "stmt" a) )
-# 3281 "src/formatparse.ml"
+# 3282 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 1376 "src/formatparse.mly"
                  ( (fun mkTemp loc args -> []) )
-# 3287 "src/formatparse.ml"
+# 3288 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt list)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -3295,7 +3296,7 @@ let yyact = [|
                        | FS sl -> sl 
                        | a -> wrongArgType currentArg "stmts" a)
                  )
-# 3299 "src/formatparse.ml"
+# 3300 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt list)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt)) in
@@ -3306,7 +3307,7 @@ let yyact = [|
                       let this = _1 mkTemp loc args in
                       this :: (_2 mkTemp loc args))
                  )
-# 3310 "src/formatparse.ml"
+# 3311 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt list)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 5 : (Cil.attributes -> (string * Cil.formatArg) list -> Cil.typ) * (Cil.typ -> Cil.formatArg list option)) in
@@ -3339,14 +3340,14 @@ let yyact = [|
 
                                                            )
                  )
-# 3343 "src/formatparse.ml"
+# 3344 "src/formatparse.ml"
                : ((string -> Cil.typ -> Cil.varinfo) -> Cil.location -> (string * Cil.formatArg) list -> Cil.stmt list)))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)) in
     Obj.repr(
 # 1420 "src/formatparse.mly"
                  ( (fun loc args -> [ ((fst _1) loc args) ]) )
-# 3350 "src/formatparse.ml"
+# 3351 "src/formatparse.ml"
                : 'instr_list))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
@@ -3358,7 +3359,7 @@ let yyact = [|
                        | FI il -> il 
                        | a -> wrongArgType currentArg "instrs" a)
                  )
-# 3362 "src/formatparse.ml"
+# 3363 "src/formatparse.ml"
                : 'instr_list))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : (Cil.location -> (string * Cil.formatArg) list -> Cil.instr) * (Cil.instr -> Cil.formatArg list option)) in
@@ -3369,20 +3370,20 @@ let yyact = [|
                       let this = (fst _1) loc args in
                       this :: (_2 loc args))
                  )
-# 3373 "src/formatparse.ml"
+# 3374 "src/formatparse.ml"
                : 'instr_list))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 1436 "src/formatparse.mly"
                                 ( (fun args -> NoInit) )
-# 3379 "src/formatparse.ml"
+# 3380 "src/formatparse.ml"
                : 'maybe_init))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : ((string * Cil.formatArg) list -> Cil.exp) * (Cil.exp -> Cil.formatArg list option)) in
     Obj.repr(
 # 1437 "src/formatparse.mly"
                                 ( (fun args -> InitExp ((fst _2) args)) )
-# 3386 "src/formatparse.ml"
+# 3387 "src/formatparse.ml"
                : 'maybe_init))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 3 : ((string * Cil.formatArg) list -> Cil.lval) * (Cil.lval -> Cil.formatArg list option)) in
@@ -3391,7 +3392,7 @@ let yyact = [|
 # 1439 "src/formatparse.mly"
                                 ( (fun args -> 
                                     InitCall((fst _2) args, (fst _4) args)) )
-# 3395 "src/formatparse.ml"
+# 3396 "src/formatparse.ml"
                : 'maybe_init))
 (* Entry initialize *)
 ; (fun __caml_parser_env -> raise (Parsing.YYexit (Parsing.peek_val __caml_parser_env 0)))
@@ -3452,4 +3453,4 @@ let stmt_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
 
 
 
-# 3456 "src/formatparse.ml"
+# 3457 "src/formatparse.ml"

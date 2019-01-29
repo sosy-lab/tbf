@@ -28,10 +28,10 @@ for tool in tools:
 validator_data = get_files('tbf/validators', 'tbf')
 
 setup(
-    name='TBF-test',
+    name='tbf-test',
     version=version,
     author='Dirk Beyer',
-    description='TBF, an Automatic Test-Case Generation and Execution Framework',
+    description='tbf, an Automatic Test-Case Generation and Execution Framework',
     url='https://github.com/sosy-lab/tbf',
     packages=['tbf', 'tbf.tools'],
     package_data={
@@ -40,18 +40,17 @@ setup(
     },
     entry_points={"console_scripts": ['tbf = tbf:main']},
     install_requires=[
-        'benchexec==1.16',
-        'pycparser==2.18',
-        'tempita==0.5.2',
+        'pycparser>=2.18',
+        'lxml>=4.2',
     ],
     setup_requires=[
-        'pytest-runner',
-        'pytest-pylint',
+        'nose>=1.0',
     ],
     tests_require=[
-        'pytest',
         'pylint',
+        'nose>=1.0',
     ],
+    test_suite = 'nose.collector',
     license='multiple',
     keywords='test execution test-case generation verification',
     classifiers=[

@@ -3,25 +3,43 @@
 #include<string.h>
 #include<time.h>
 
+#define MAX_TEST_SIZE 1000
+// #define FIXED_SEED 1618033988
+
+int requires_seed = 1;
+int test_size = 0;
+
 unsigned int get_rand_seed() {
+#ifdef FIXED_SEED
+  return FIXED_SEED;
+#else
   struct timespec curr_time;
   clock_gettime(CLOCK_REALTIME, &curr_time);
   return curr_time.tv_nsec;
+#endif
 }
 
 void input(void * var, size_t var_size, const char * var_name) {
-  srand(get_rand_seed());
+  if (requires_seed) {
+    srand(get_rand_seed());
+    requires_seed = 0;
+  }
   FILE *vector = fopen("vector.test", "a+");
   size_t int_size = sizeof(int);
   unsigned char * new_val = malloc(var_size);
 
   fprintf(vector, "%s: 0x", var_name);
   for (int i = 0; i < var_size; i++) {
-    new_val[var_size - i] = (char) (rand() & 255);
-    fprintf(vector, "%.2x", new_val[var_size - i]);
+    new_val[var_size - i - 1] = (char) (rand() & 255);
+    fprintf(vector, "%.2x", new_val[var_size - i - 1]);
   }
-  memcpy(new_val, var, var_size);
+  memcpy(var, new_val, var_size);
 
   fprintf(vector, "\n");
   fclose(vector);
+  test_size++;
+
+  if (test_size > MAX_TEST_SIZE) {
+    fprintf(stderr, "Maximum test vector size of %d reached, aborting.\n", MAX_TEST_SIZE);
+  }
 }

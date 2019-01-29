@@ -29,7 +29,7 @@ val print_unescaped_string : string -> unit
 val print_list : (unit -> unit) -> ('a -> 'b) -> 'a list -> unit
 val print_commas : bool -> ('a -> 'b) -> 'a list -> unit
 val print_string : string -> unit
-val print_wstring : Escape.wstring -> unit
+val print_wstring : int64 list -> unit
 val print_specifiers : Cabs.specifier -> unit
 val print_type_spec : Cabs.typeSpecifier -> unit
 val print_struct_name_attr : string -> string -> Cabs.attribute list -> unit

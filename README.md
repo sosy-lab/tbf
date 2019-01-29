@@ -3,9 +3,7 @@
 TBF is an automatic test-case generation and execution framework for C programs.
 It is able to prepare C programs for a handful of prominent
 test-case generators, create a test harness for generated tests
-and execute them (as well as create [violation witnesses][3]).
-
-[3]: https://github.com/sosy-lab/sv-witnesses
+and execute them.
 
 ## Requirements
 
@@ -42,13 +40,15 @@ For example, to install the current state of tbf for the current user, run
 
 Run TBF with parameter `--help` to get an overview over all available command-line parameters.
 
-TBF allows the specification of a test-case generator and a test validation method (e.g., test-case execution).
-If both are given, TBF will run the test-case generator and execute the generated test cases in a test harness.
-If no test validation method is given, TBF will only run the test-case generator. If you do that, use
-parameter `--keep-files` to keep all generated test cases. Otherwise, TBF will remove them at the end of its run.
+tbf allows the specification of a test-case generator and a test validation method (e.g., test-case execution).
+If both are given, tbf will run the test-case generator and execute the generated test cases in a test harness.
+If no test validation method is given, tbf will only run the test-case generator. If you do that, use
+parameter `--keep-files` to keep the generated test cases and all other generated files,
+or `--write-xml` to keep test-format XMLs describing the generated test cases.
 
-### Example
-To run TBF with AFL-fuzz and test-case execution on file `examples/simple.c` from within a `pipenv shell` environment, run:
+### Examples
+#### Falsification with AFL
+To run tbf with AFL-fuzz and test-case execution on file `examples/simple.c` from within a `pipenv shell` environment, run:
 ```bash
   bin/tbf -i afl --execution --stats examples/simple.c
 ```
@@ -56,6 +56,20 @@ To run TBF with AFL-fuzz and test-case execution on file `examples/simple.c` fro
 Parameter `--stats` makes TBF print statistics on stdout.
 
 After execution, directory `output/` will contain some files of interest, e.g. the test harness as C-file (`harness.c`) and the executable test (`a.out`).
+
+#### Test-case Generation with PRTest
+To create a test suite in the XML test-format with tbf and the random tester PRTest [1],
+running for 10 seconds and using a 64bit machine model, run:
+```bash
+  bin/tbf -i random --write-xml --timelimit 10 examples/simple.c
+```
+
+After execution, there will be multiple files describing
+the test suite in directory `output/test-suite`.
+There wil be a metadata file `metadata.xml`,
+and one additional XML file for each created test case.
+
+[1]: PRTest is a very simple random-tester included with tbf.
 
 ### Supported Test-Case Generators
 

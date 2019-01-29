@@ -1,0 +1,61 @@
+# To execute a job locally, install gitlab-runner (https://docs.gitlab.com/runner/install/)
+# and run the following command:
+# gitlab-runner exec docker --docker-privileged --docker-volumes /sys/fs/cgroup:/sys/fs/cgroup:rw --env CI_REGISTRY_IMAGE=registry.gitlab.com/sosy-lab/software/tbf <<JOB_NAME>>
+
+image: ${CI_REGISTRY_IMAGE}/test:python-${PYTHON_VERSION}
+
+.unit-tests: &unit-tests
+  stage: test
+  script:
+    - COVERAGE_PROCESS_START=.coveragerc
+        ./setup.py test
+  artifacts:
+    paths:
+      - coverage.xml
+      - cover
+
+pylint:
+  stage: test
+  script:
+    - pylint tbf/
+  variables:
+    PYTHON_VERSION: '3.7'
+  allow_failure: true
+
+unit-tests:python-3.4:
+  <<: *unit-tests
+  variables:
+    PYTHON_VERSION: '3.4'
+
+unit-tests:python-3.5:
+  <<: *unit-tests
+  variables:
+    PYTHON_VERSION: '3.5'
+
+unit-tests:python-3.6:
+  <<: *unit-tests
+  variables:
+    PYTHON_VERSION: '3.6'
+
+unit-tests:python-3.7:
+  <<: *unit-tests
+  variables:
+    PYTHON_VERSION: '3.7'
+
+# 
+# deploy-coverage:
+#   stage: deploy
+#   variables:
+#     PYTHON_VERSION: '3.7'
+#   before_script:
+#     - pip install -e git+https://github.com/codacy/python-codacy-coverage.git#egg=codacy
+#   script:
+#     - python-codacy-coverage -r coverage.xml
+#   dependencies:
+#     - unit-tests:python-3.7
+#   only:
+#     refs:
+#       - master
+#     variables:
+#       - $CODACY_PROJECT_TOKEN # required for job
+#       - $CI_PROJECT_PATH == $PROJECT_PATH # not on forks
