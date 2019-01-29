@@ -27,7 +27,7 @@ class Preprocessor:
         content += 'extern int input();\n'
         content += ''
         if error_method:
-            content += utils.get_error_method_definition(error_method)
+            content += self._get_error_method_definition(error_method)
         for method in nondet_methods_used:
             # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
@@ -35,6 +35,13 @@ class Preprocessor:
             content += nondet_method_definition
 
         return content
+
+    @staticmethod
+    def _get_error_method_definition(error_method):
+        if error_method == "__VERIFIER_error":
+            return ""
+        else:
+            return "void {}() {{ __VERIFIER_error(); }}".format(error_method)
 
     @staticmethod
     def _get_nondet_method_definition(method_name, method_type, param_types):
