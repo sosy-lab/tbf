@@ -292,13 +292,13 @@ def _get_input_generator(args):
         raise utils.ConfigError('Unhandled input generator: ' + input_generator)
 
 
-def _get_test_processor(args, write_xml):
+def _get_test_processor(args, write_xml, nondet_methods):
     generator = args.input_generator.lower()
     processing_config = ProcessingConfig(args)
     if generator == 'afl':
         extractor = afl.AflTestConverter()
     elif generator == "fshell":
-        extractor = fshell.FshellTestConverter()
+        extractor = fshell.FshellTestConverter(nondet_methods)
     elif generator == 'klee':
         extractor = klee.KleeTestConverter()
     elif generator == 'crest':
@@ -347,8 +347,6 @@ def run(args, stop_all_event=None):
 
     try:
         _change_dir(work_dir)
-        input_generator = _get_input_generator(args)
-        test_processor = _get_test_processor(args, args.write_xml)
 
         if error_method:
             error_method_exclude = [error_method]
@@ -356,6 +354,11 @@ def run(args, stop_all_event=None):
         else:
             error_method_exclude = ()
             specification = utils.get_coverage_spec()
+
+        nondet_methods = utils.find_nondet_methods(filename, args.svcomp_nondets_only, error_method_exclude)
+
+        input_generator = _get_input_generator(args)
+        test_processor = _get_test_processor(args, args.write_xml, nondet_methods)
 
         if args.write_xml:
             testcase_converter.write_metadata(
@@ -365,8 +368,6 @@ def run(args, stop_all_event=None):
                 args.machine_model,
                 directory=XML_DIR
             )
-
-        nondet_methods = utils.find_nondet_methods(filename, args.svcomp_nondets_only, error_method_exclude)
 
         assert not stop_all_event.is_set(
         ), "Stop event is already set before starting input generation"
