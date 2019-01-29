@@ -8,6 +8,8 @@
 
 FROM python:3.4
 
+RUN apt update && apt install -y gcc-multilib g++-multilib
+
 RUN pip install \
   coverage \
   lxml \
