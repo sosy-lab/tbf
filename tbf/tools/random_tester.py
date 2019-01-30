@@ -10,7 +10,8 @@ name = "prtest"
 module_dir = pathlib.Path(__file__).resolve().parent
 include_dir = module_dir / "random" / "include"
 generator_harness = module_dir / "random" / "random_tester.c"
-random_runner = module_dir / "random" / "run.sh"
+
+GENERATOR_MAIN_METHOD = "generator_main"
 
 
 class Preprocessor:
@@ -61,17 +62,16 @@ class InputGenerator(BaseInputGenerator):
         return name
 
     def create_input_generation_cmds(self, filename, cli_options):
-        compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1])
+        compiled_file = os.path.join('.', '.'.join(os.path.basename(filename).split('.')[:-1]))
         machinem_arg = self.machine_model.compile_parameter
         compile_cmd = [
-            'gcc', '-std=gnu11', machinem_arg, '-I', str(include_dir), '-o',
-            compiled_file, str(generator_harness), filename, '-lm'
+            'gcc', '-e', GENERATOR_MAIN_METHOD, '-std=gnu11', machinem_arg, '-I', str(include_dir),
+            '-o', compiled_file, str(generator_harness), filename, '-lm'
         ]
 
-        input_generation_cmd = [str(random_runner)]
+        input_generation_cmd = [compiled_file]
         if cli_options:
             input_generation_cmd += cli_options
-        input_generation_cmd += [compiled_file]
 
         return [compile_cmd, input_generation_cmd]
 
