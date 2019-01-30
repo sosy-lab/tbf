@@ -13,6 +13,8 @@ generator_harness = module_dir / "random" / "random_tester.c"
 
 GENERATOR_MAIN_METHOD = "generator_main"
 
+SUCCESS_EXIT_STATUS = 147
+
 
 class Preprocessor:
 
@@ -24,13 +26,19 @@ class Preprocessor:
         content += utils.get_assume_method()
         content += '\n'
         if error_method:
-            content += utils.get_error_method_definition(error_method)
+            content += self._get_error_method_definition(error_method)
         for method in nondet_methods_used:
             # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
                                                                           method['params'])
             content += nondet_method_definition
         return content
+
+
+    @staticmethod
+    def _get_error_method_definition(error_method):
+        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit({1}); }}\n'.format(utils.ERROR_STRING, SUCCESS_EXIT_STATUS)
+
 
     @staticmethod
     def _get_nondet_method_definition(method_name, method_type, param_types):

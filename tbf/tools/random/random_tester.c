@@ -8,6 +8,8 @@
 #define MAX_TEST_SIZE 1000
 #define FIXED_SEED 1618033988
 
+#define SUCCESS_STATUS 147
+
 unsigned int test_size = 0;
 unsigned int test_runs = 0;
 
@@ -51,8 +53,12 @@ jmp_buf env;
 void abort_handler(int sig) {
   longjmp(env, 1);
 }
-void exit_handler() {
-  longjmp(env, 1);
+void exit_handler(int status, void * nullarg) {
+  if (status == SUCCESS_STATUS) {
+    return;
+  } else{
+    longjmp(env, 1);
+  }
 }
 
 int generator_main() {
@@ -60,7 +66,7 @@ int generator_main() {
   signal(SIGABRT, abort_handler);
 
   while (1) {
-    atexit(exit_handler);
+    on_exit(exit_handler, NULL);
     if (setjmp(env) == 0) {
       main();
     }
