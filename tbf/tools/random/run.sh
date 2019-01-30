@@ -28,18 +28,9 @@ exit_message() {
 
 trap exit_message SIGINT SIGTERM SIGKILL
 
-LINES_COVERED=0
 while true; do
   touch 'vector.test'
   "$PROG" || true
-  if [[ -e ${PROG}.gcno ]]; then
-      LINES_COVERED_NEW=$(gcov ${PROG}.c | egrep '^Lines' | cut -d":" -f 2 | cut -d"%" -f 1 | tr -d '.')
-  else
-      LINES_COVERED_NEW=$(( $LINES_COVERED + 1))
-  fi
-  if [[ $LINES_COVERED_NEW -gt $LINES_COVERED ]]; then
-      mv 'vector.test' "vector${COUNT}.test"
-      (( COUNT += 1 ))
-  fi
-  LINES_COVERED=$LINES_COVERED_NEW
+  mv 'vector.test' "vector${COUNT}.test"
+  (( COUNT += 1 ))
 done
