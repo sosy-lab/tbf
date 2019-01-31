@@ -55,7 +55,7 @@ void abort_handler(int sig) {
 }
 void exit_handler(int status, void * nullarg) {
   if (status == SUCCESS_STATUS) {
-    return;
+    exit(0);
   } else{
     longjmp(env, 1);
   }

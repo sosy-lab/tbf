@@ -73,7 +73,8 @@ class InputGenerator(BaseInputGenerator):
         compiled_file = os.path.join('.', '.'.join(os.path.basename(filename).split('.')[:-1]))
         machinem_arg = self.machine_model.compile_parameter
         compile_cmd = [
-            'gcc', '-e', GENERATOR_MAIN_METHOD, '-std=gnu11', machinem_arg, '-I', str(include_dir),
+            'gcc', '-e', GENERATOR_MAIN_METHOD, '-std=gnu11', machinem_arg,
+            '-DSUCCESS_STATUS=' + str(SUCCESS_EXIT_STATUS), '-I', str(include_dir),
             '-o', compiled_file, str(generator_harness), filename, '-lm'
         ]
 
