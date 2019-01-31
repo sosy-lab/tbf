@@ -58,7 +58,7 @@ void abort_handler(int sig) {
 void exit_handler(int status, void * nullarg) {
   if (status == SUCCESS_STATUS) {
     exit(0);
-  } else{
+  } else {
     longjmp(env, 1);
   }
 }
@@ -72,9 +72,9 @@ int generator_main() {
     if (setjmp(env) == 0) {
       main();
     }
+
     test_size = 0;
     test_runs++;
   }
   return 0;
-  // todo: capture exit and abort from main()
 }
