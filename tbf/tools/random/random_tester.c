@@ -4,6 +4,7 @@
 #include<time.h>
 #include<signal.h>
 #include<setjmp.h>
+#include<math.h>
 
 #define MAX_TEST_SIZE 1000
 #define FIXED_SEED 1618033988
@@ -24,8 +25,9 @@ unsigned int get_rand_seed() {
 }
 
 void input(void * var, size_t var_size, const char * var_name) {
-  // 11 characters for vector.test, 1 for \0, 9 for digits
-  char vector_name[11+9+1];
+  unsigned int digits_needed = log10(test_runs) + 1;
+  // 11 characters for vector.test, 1 for \0
+  char vector_name[11+1+digits_needed];
   sprintf(vector_name, "vector%u.test", test_runs);
   FILE *vector = fopen(vector_name, "a+");
   unsigned char * new_val = malloc(var_size);
