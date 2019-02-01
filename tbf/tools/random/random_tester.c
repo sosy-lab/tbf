@@ -7,6 +7,7 @@
 #include<math.h>
 
 #define MAX_TEST_SIZE 1000
+#define MAX_TEST_NUMBER 150000
 #define FIXED_SEED 1618033988
 
 #define SUCCESS_STATUS 147
@@ -67,7 +68,7 @@ int generator_main() {
   srand(get_rand_seed());
   signal(SIGABRT, abort_handler);
 
-  while (1) {
+  while (test_runs < MAX_TEST_NUMBER) {
     on_exit(exit_handler, NULL);
     if (setjmp(env) == 0) {
       main();
