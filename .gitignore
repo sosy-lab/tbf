@@ -98,3 +98,13 @@ ENV/
 
 # IntelliJ Idea project files
 .idea
+
+# VSCode project files
+.vscode/
+
+# Nosetest
+.noseids
+
+# Output folder of tbf and benchmarks
+output/
+test/results/
