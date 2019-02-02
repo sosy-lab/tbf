@@ -11,15 +11,13 @@ module_dir = pathlib.Path(__file__).resolve().parent
 include_dir = module_dir / "random" / "include"
 generator_harness = module_dir / "random" / "random_tester.c"
 
-GENERATOR_MAIN_METHOD = "generator_main"
-
 SUCCESS_EXIT_STATUS = 147
 
 
 class Preprocessor:
 
     def prepare(self, filecontent, nondet_methods_used, error_method=None):
-        content = filecontent
+        content = filecontent.replace("main", "__main");
         content += '\n'
         content += utils.EXTERNAL_DECLARATIONS
         content += '\n'
@@ -73,7 +71,7 @@ class InputGenerator(BaseInputGenerator):
         compiled_file = os.path.join('.', '.'.join(os.path.basename(filename).split('.')[:-1]))
         machinem_arg = self.machine_model.compile_parameter
         compile_cmd = [
-            'gcc', '-e', GENERATOR_MAIN_METHOD, '-std=gnu11', machinem_arg,
+            'clang', '-std=gnu11', "-fsanitize-coverage=trace-pc-guard", machinem_arg,
             '-DSUCCESS_STATUS=' + str(SUCCESS_EXIT_STATUS), '-I', str(include_dir),
             '-o', compiled_file, str(generator_harness), filename, '-lm'
         ]
