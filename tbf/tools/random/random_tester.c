@@ -9,7 +9,7 @@
 
 #include <sanitizer/coverage_interface.h>
 
-#define MAX_TEST_SIZE 1000
+#define MAX_TEST_SIZE 10000
 #define MAX_TEST_NUMBER 150000
 #define FIXED_SEED 1618033988
 
@@ -21,7 +21,7 @@ static unsigned int test_runs = 0;
 static int test_is_new = 0;
 static int done = 0;
 
-static char test_vector[MAX_TEST_SIZE][100] = {};
+static char test_vector[MAX_TEST_SIZE + 1][100] = {};
 
 unsigned int get_rand_seed() {
 #ifdef FIXED_SEED
@@ -43,13 +43,13 @@ void input(void * var, size_t var_size, const char * var_name) {
     char * current_pos = &input_val[i*2];
     snprintf(current_pos, 3, "%.2x", new_val[var_size - i - 1]);
   }
-  sprintf(test_vector[test_size], "%s: 0x%s", var_name, input_val);
+  snprintf(test_vector[test_size], 99, "%s: 0x%s", var_name, input_val);
   memcpy(var, new_val, var_size);
   free(new_val);
 
   test_size++;
 
-  if (test_size > MAX_TEST_SIZE) {
+  if (test_size >= MAX_TEST_SIZE) {
     fprintf(stderr, "Maximum test vector size of %d reached, aborting.\n", MAX_TEST_SIZE);
     abort();
   }
@@ -126,9 +126,10 @@ void write_test() {
   // 11 characters for vector.test, 1 for \0
   char vector_name[11+1+digits_needed];
   sprintf(vector_name, "vector%u.test", test_runs);
-  FILE *vector = fopen(vector_name, "w");
+  FILE *vector = fopen("tmp_vector", "w");
   for (int i = 0; test_vector[i][0] != '\0'; i++) {
       fprintf(vector, "%s\n", test_vector[i]);
   }
   fclose(vector);
+  rename("tmp_vector", vector_name);
 }
