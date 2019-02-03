@@ -21,7 +21,7 @@ import tbf.tools.dummy as dummy
 import tbf.utils as utils
 from tbf.testcase_processing import ProcessingConfig, ExecutionRunner
 
-__VERSION__ = "v0.2.2-testcomp19-18-gfb4f4d5"
+__VERSION__ = "0.2-dev"
 
 
 XML_DIR = utils.get_output_path('test-suite')
@@ -173,12 +173,27 @@ def _create_cli_arg_parser():
         help="print statistics on stdout")
 
     run_args.add_argument(
-        '--spec',
-        dest="spec",
+        '--error-method',
+        dest='error_method',
         action='store',
-        type=str,
-        default=None,
-        help="coverage goal specification to use for test generation and execution"
+        default='__VERIFIER_error',
+        help='name of error method to check for. If not specified, __VERIFIER_error is used'
+    )
+
+    run_args.add_argument(
+        '--no-error-method',
+        dest='use_error_method',
+        action='store_false',
+        default=True,
+        help='tells TBF not to look for a call to an error method, but just run all tests'
+    )
+
+    run_args.add_argument(
+        '--no-stop-after-success',
+        dest="stop_after_success",
+        action='store_false',
+        default=True,
+        help="do not terminate TBF after a test case covering the error method was found"
     )
 
     run_args.add_argument(
@@ -231,40 +246,6 @@ def _parse_cli_args(argv):
             args.existing_tests_dir = os.path.abspath(args.existing_tests_dir)
 
     args.file = os.path.abspath(args.file)
-
-    if args.spec:
-        if not os.path.exists(args.spec):
-            logging.error("File not found: %s", args.spec)
-            exit(1)
-        with open(args.spec) as spec_inp:
-            spec_content = spec_inp.read().strip()
-
-        if "COVER( init(main()), FQL(COVER EDGES(@DECISIONEDGE)) )" in spec_content:
-            logging.info("Using branch coverage criterion")
-            args.error_method = None
-            args.use_error_method = False
-            args.stop_after_success = False
-        elif "COVER( init(main()), FQL(COVER EDGES(@CONDITIONEDGE)) )" in spec_content:
-            logging.info("Using condition coverage criterion")
-            args.error_method = None
-            args.use_error_method = False
-            args.stop_after_success = False
-        elif "COVER( init(main()), FQL(COVER EDGES(@BASICBLOCKENTRY)) )" in spec_content:
-            logging.info("Using statement coverage criterion")
-            args.error_method = None
-            args.use_error_method = False
-            args.stop_after_success = False
-        elif "COVER( init(main()), FQL(COVER EDGES(@CALL(__VERIFIER_error))) )" in spec_content:
-            logging.info("Using error-call coverage criterion")
-            args.error_method = "__VERIFIER_error"
-            args.use_error_method = True
-            args.stop_after_success = True
-        else:
-            logging.error("Unknown coverage criterion: %s", spec_content)
-            exit(1)
-    else:
-        logging.error("No coverage specification given. Use '--spec' to provide a specification that tells tbf what to do.")
-        exit(1)
 
     return args
 
