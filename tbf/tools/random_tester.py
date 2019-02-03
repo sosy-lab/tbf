@@ -10,28 +10,33 @@ name = "prtest"
 module_dir = pathlib.Path(__file__).resolve().parent
 include_dir = module_dir / "random" / "include"
 generator_harness = module_dir / "random" / "random_tester.c"
-random_runner = module_dir / "random" / "run.sh"
 
-USE_GCOV = True
-"""Whether to instrument the program file for gcov."""
+SUCCESS_EXIT_STATUS = 147
+
 
 class Preprocessor:
 
     def prepare(self, filecontent, nondet_methods_used, error_method=None):
-        content = filecontent
+        content = filecontent.replace("main", "__main");
         content += '\n'
         content += utils.EXTERNAL_DECLARATIONS
         content += '\n'
         content += utils.get_assume_method()
         content += '\n'
         if error_method:
-            content += utils.get_error_method_definition(error_method)
+            content += self._get_error_method_definition(error_method)
         for method in nondet_methods_used:
             # append method definition at end of file content
             nondet_method_definition = self._get_nondet_method_definition(method['name'], method['type'],
                                                                           method['params'])
             content += nondet_method_definition
         return content
+
+
+    @staticmethod
+    def _get_error_method_definition(error_method):
+        return 'void ' + error_method + '() {{ fprintf(stderr, \"{0}\\n\"); exit({1}); }}\n'.format(utils.ERROR_STRING, SUCCESS_EXIT_STATUS)
+
 
     @staticmethod
     def _get_nondet_method_definition(method_name, method_type, param_types):
@@ -54,7 +59,7 @@ class Preprocessor:
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self, machine_model, log_verbose, additional_options):
-        super().__init__(machine_model, log_verbose, additional_options, Preprocessor())
+        super().__init__(machine_model, log_verbose, additional_options, Preprocessor(), show_tool_output=True)
 
     def get_run_env(self):
         return utils.get_env()
@@ -63,20 +68,17 @@ class InputGenerator(BaseInputGenerator):
         return name
 
     def create_input_generation_cmds(self, filename, cli_options):
-        compiled_file = '.'.join(os.path.basename(filename).split('.')[:-1])
+        compiled_file = os.path.join('.', '.'.join(os.path.basename(filename).split('.')[:-1]))
         machinem_arg = self.machine_model.compile_parameter
-        compile_cmd = ['gcc', '-std=gnu11']
-        if USE_GCOV:
-            compile_cmd += ['-fprofile-arcs', '-ftest-coverage']
-        compile_cmd += [
-            machinem_arg, '-I', str(include_dir), '-o',
-            compiled_file, str(generator_harness), filename, '-lm'
+        compile_cmd = [
+            'clang', '-std=gnu11', "-fsanitize-coverage=trace-pc-guard", machinem_arg,
+            '-DSUCCESS_STATUS=' + str(SUCCESS_EXIT_STATUS), '-I', str(include_dir),
+            '-o', compiled_file, str(generator_harness), filename, '-lm'
         ]
 
-        input_generation_cmd = [str(random_runner)]
+        input_generation_cmd = [compiled_file]
         if cli_options:
             input_generation_cmd += cli_options
-        input_generation_cmd += [compiled_file]
 
         return [compile_cmd, input_generation_cmd]
 

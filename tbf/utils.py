@@ -259,7 +259,8 @@ def execute(command,
             err_to_output=True,
             stop_flag=None,
             input_str=None,
-            timelimit=None):
+            timelimit=None,
+            show_output=False):
 
     def wait_and_terminate(timelimit, stop_flag, process):
         def shut_down(process):
@@ -308,10 +309,11 @@ def execute(command,
 
     # Decode output, but we can't decode error output, since it may contain undecodable bytes.
     output = output.decode() if output else ''
+    log_output = logging.info if show_output else logging.debug
     if output:
-        logging.debug(output)
+        log_output(output)
     if err_output:
-        logging.debug(err_output)
+        log_output(err_output)
 
     return ExecutionResult(returncode, output, err_output)
 

@@ -5,8 +5,7 @@ url = "https://pypi.org/simple"
 
 [packages]
 pycparser = ">=2.18"
-BenchExec = ">=1.16"
-Tempita = ">=0.5.2"
+lxml = "*"
 
 [requires]
 python_version = "3.5"
@@ -14,5 +13,4 @@ python_version = "3.5"
 [dev-packages]
 yapf = "*"
 pylint = "*"
-pytest-runner = "*"
-pytest-pylint = "*"
+nose = "*"

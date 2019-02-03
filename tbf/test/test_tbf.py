@@ -104,7 +104,7 @@ class TestTbf(object):
 
     def _run_tool(self, tool, filename, *params):
         # Run will not consider timelimit, but only ig-timelimit.
-        argv = ["--verbose", "--no-parallel", "--ig-timelimit", str(timelimit_per_test), "-i", tool]
+        argv = ["--no-parallel", "--ig-timelimit", str(timelimit_per_test), "-i", tool]
         argv += params
         argv += [filename]
         args = tbf._parse_cli_args(argv)
