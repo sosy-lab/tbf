@@ -309,9 +309,9 @@ def execute(command,
     # Decode output, but we can't decode error output, since it may contain undecodable bytes.
     output = output.decode() if output else ''
     if output:
-        logging.debug(output)
+        log_cmd(output)
     if err_output:
-        logging.debug(err_output)
+        log_cmd(err_output)
 
     return ExecutionResult(returncode, output, err_output)
 

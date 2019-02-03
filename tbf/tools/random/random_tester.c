@@ -15,8 +15,12 @@
 
 #define SUCCESS_STATUS 147
 
+// Size of current test vector
 static unsigned int test_size = 0;
+// Number of generated, meaningful tests
 static unsigned int test_runs = 0;
+// Number of program runs that tried to produce meaningful tests
+static unsigned long long total_runs = 0;
 
 static int test_is_new = 0;
 static int done = 0;
@@ -67,14 +71,22 @@ void abort_handler(int sig) {
 
 void exit_handler(int status, void * nullarg) {
   if (done) {
+    printf("\nNumber of program executions: %llu\n", total_runs);
+    printf("Number of created tests: %u\n", test_runs);
     exit(0);
   } else if (status == SUCCESS_STATUS) {
     write_test();
-    exit(0);
+    done = 1;
+    exit_handler(status, NULL);
   } else {
     on_exit(exit_handler, NULL);
     longjmp(env, 1);
   }
+}
+
+void exit_gracefully(int sig) {
+  done = 1;
+  exit(-sig);
 }
 
 void __sanitizer_cov_trace_pc_guard_init(uint32_t *start,
@@ -96,17 +108,19 @@ void __sanitizer_cov_trace_pc_guard(uint32_t * guard) {
 
 int main() {
   srand(get_rand_seed());
+  signal(SIGINT, exit_gracefully);
+  signal(SIGTERM, exit_gracefully);
   signal(SIGABRT, abort_handler);
   on_exit(exit_handler, NULL);
 
   while (test_runs < MAX_TEST_NUMBER) {
     reset_test_vector();
     if (setjmp(env) == 0) {
+      total_runs++;
       __main();
     }
     if (test_is_new) {
       write_test();
-      test_runs++;
     }
   }
   done = 1;
@@ -132,4 +146,5 @@ void write_test() {
   }
   fclose(vector);
   rename("tmp_vector", vector_name);
+  test_runs++;
 }
