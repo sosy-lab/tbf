@@ -25,9 +25,10 @@ class BaseInputGenerator(object):
     def failed(result):
         return result.returncode != 0
 
-    def __init__(self, machine_model, log_verbose, additional_options, preprocessor):
+    def __init__(self, machine_model, log_verbose, additional_options, preprocessor, show_tool_output=False):
         self.machine_model = machine_model
         self.log_verbose = log_verbose
+        self.show_tool_output = show_tool_output
         self.cli_options = additional_options
         self.program_preprocessor = preprocessor
 
@@ -78,7 +79,8 @@ class BaseInputGenerator(object):
                     env=self.get_run_env(),
                     quiet=False,
                     err_to_output=True,
-                    stop_flag=stop_flag)
+                    stop_flag=stop_flag,
+                    show_output=self.show_tool_output)
                 self.timer_generator.stop()
                 if BaseInputGenerator.failed(result) \
                         and (not stop_flag or not stop_flag.is_set()):

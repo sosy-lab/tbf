@@ -59,7 +59,7 @@ class Preprocessor:
 class InputGenerator(BaseInputGenerator):
 
     def __init__(self, machine_model, log_verbose, additional_options):
-        super().__init__(machine_model, log_verbose, additional_options, Preprocessor())
+        super().__init__(machine_model, log_verbose, additional_options, Preprocessor(), show_tool_output=True)
 
     def get_run_env(self):
         return utils.get_env()
