@@ -357,7 +357,7 @@ def get_env_with_path_added(path_addition):
 
 
 def get_assume_method():
-    return 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n        abort();\n    }\n}\n'
+    return 'void __VERIFIER_assume(int cond) {\n    if(!cond) {\n #ifdef TBF_GCOV\n  __gcov_flush();\n#endif\n   abort();\n    }\n}\n'
 
 
 def get_error_method_definition(error_method):
@@ -790,6 +790,7 @@ extern void *malloc (size_t __size) __attribute__ ((__nothrow__ , __leaf__))
     __attribute__ ((__malloc__));
 extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
     size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern void __gcov_flush(void);
 
 """
 

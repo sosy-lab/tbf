@@ -379,7 +379,7 @@ class CoverageMeasuringExecutionRunner(ExecutionRunner):
                          c_version='gnu11'):
         cmd = super()._get_compile_cmd(program_file, harness_file, output_file,
                                        c_version)
-        cmd += ['-fprofile-arcs', '-ftest-coverage']
+        cmd += ['-fprofile-arcs', '-ftest-coverage', '-DTBF_GCOV']
 
         return cmd
 

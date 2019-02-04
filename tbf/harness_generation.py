@@ -83,7 +83,7 @@ class HarnessCreator(object):
                             b': strcpy(inp_var, "', value, b'"); break;\n'
                         ])
                         # yapf: enable
-                    definitions += b"        default: abort();\n"
+                    definitions += b"        default: {\n #ifdef TBF_GCOV\n __gcov_flush();\n#endif\nabort();}\n"
                     definitions += b"    }\n"
                     definitions += b"    access_counter++;\n"
 
