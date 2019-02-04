@@ -8,7 +8,7 @@
 
 FROM python:3.6
 
-RUN apt update && apt install -y gcc-multilib g++-multilib
+RUN apt update && apt install -y gcc-multilib g++-multilib openjdk-8-jre clang
 
 RUN pip install \
   coverage \
