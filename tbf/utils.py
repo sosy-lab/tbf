@@ -307,8 +307,14 @@ def execute(command,
     output, err_output = p.communicate(input=input_str)
     returncode = p.poll()
 
-    # Decode output, but we can't decode error output, since it may contain undecodable bytes.
-    output = output.decode() if output else ''
+    try:
+        output = output.decode() if output else ''
+    except UnicodeDecodeError:
+        pass
+    try:
+        err_output = err_output.decode()  if err_output else ''
+    except UnicodeDecodeError:
+        pass
     log_output = logging.info if show_output else logging.debug
     if output:
         log_output(output)
