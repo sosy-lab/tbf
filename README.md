@@ -7,7 +7,7 @@ and execute them.
 
 ## Requirements
 
-  - Python 3.4 or later
+  - Python 3.5 or later
 
 ## Installation
 

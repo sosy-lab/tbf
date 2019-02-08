@@ -22,11 +22,6 @@ pylint:
     PYTHON_VERSION: '3.7'
   allow_failure: true
 
-unit-tests:python-3.4:
-  <<: *unit-tests
-  variables:
-    PYTHON_VERSION: '3.4'
-
 unit-tests:python-3.5:
   <<: *unit-tests
   variables:

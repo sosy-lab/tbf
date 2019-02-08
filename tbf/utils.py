@@ -731,7 +731,11 @@ class StatisticsPool(object):
 
 
 def found_err(run_result):
-    return run_result.stderr and ERROR_STRING.encode() in run_result.stderr
+    if isinstance(run_result.stderr, bytes):
+        err_out = run_result.stderr.decode()
+    else:
+        err_out = run_result.stderr
+    return run_result.stderr and ERROR_STRING in err_out
 
 
 def get_prepared_name(filename, tool_name):
