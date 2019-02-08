@@ -6,7 +6,7 @@ from os import path
 
 import tbf
 
-timelimit_per_test = 10
+timelimit_per_test = 20
 
 MACHINE_MODEL_ARGS = ("-32", "-64")
 
