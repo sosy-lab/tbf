@@ -6,6 +6,12 @@ test-case generators, create a test harness for generated tests
 and execute them.
 
 TBF is no longer maintained.
+Since [Test-Comp](https://test-comp.sosy-lab.org/) provides a uniform
+interface for test-suite generators and an exhaustive comparison,
+TBF is no longer necessary.
+If you are interested in comparing test-suite generators,
+you can use the [archives submitted to Test-Comp](https://test-comp.sosy-lab.org/2019/systems.php)
+or take a look at the [competition results](https://test-comp.sosy-lab.org/2019/results/results-verified/).
 
 ## Requirements
 
