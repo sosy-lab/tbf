@@ -5,6 +5,8 @@ It is able to prepare C programs for a handful of prominent
 test-case generators, create a test harness for generated tests
 and execute them.
 
+TBF is no longer maintained.
+
 ## Requirements
 
   - Python 3.5 or later
